@@ -1,0 +1,191 @@
+<?php
+
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\ChangePasswordRequest;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\ProfileRequest;
+use App\Http\Requests\RegisterRequest;
+use App\Services\AuthService;
+use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Illuminate\View\View;
+
+class AuthController extends Controller
+{
+    protected AuthService $authService;
+
+    public function __construct(AuthService $authService)
+    {
+        $this->authService = $authService;
+    }
+
+    /**
+     * Afficher le formulaire de connexion
+     */
+    public function showLoginForm(): View
+    {
+        return view('auth.login');
+    }
+
+    /**
+     * Traiter la connexion
+     */
+    public function login(LoginRequest $request): RedirectResponse
+    {
+        $credentials = $request->validated();
+        $remember = $request->boolean('remember');
+
+        if (!$this->authService->login($credentials['email'], $credentials['password'], $remember)) {
+            return back()
+                ->withInput($request->only('email'))
+                ->with('error', 'Les identifiants fournis sont incorrects ou le compte n\'est pas actif.');
+        }
+
+        return redirect()->route('dashboard');
+    }
+
+    /**
+     * Afficher le formulaire d'enregistrement
+     */
+    public function showRegisterForm(): View
+    {
+        return view('auth.register');
+    }
+
+    /**
+     * Traiter l'enregistrement
+     */
+    public function register(RegisterRequest $request)
+    {
+        $this->authService->register($request->validated());
+
+        return redirect()->route('login')
+            ->with('success', 'Compte créé avec succès. Veuillez attendre l\'activation par un administrateur.');
+    }
+
+    /**
+     * Se déconnecter
+     */
+    public function logout(): RedirectResponse
+    {
+        $this->authService->logout();
+
+        return redirect()->route('login');
+    }
+
+    public function showForgotPasswordForm(): View
+    {
+        return view('auth.forgot-password');
+    }
+
+    public function sendResetLink(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+        ], [
+            'email.required' => 'L\'adresse email est obligatoire.',
+            'email.email' => 'L\'adresse email doit être valide.',
+        ]);
+
+        $status = Password::sendResetLink($request->only('email'));
+
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with('success', __($status))
+            : back()->withInput($request->only('email'))->withErrors(['email' => __($status)]);
+    }
+
+    public function showResetPasswordForm(string $token, Request $request): View
+    {
+        return view('auth.reset-password', [
+            'token' => $token,
+            'email' => $request->query('email'),
+        ]);
+    }
+
+    public function resetPassword(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'token' => ['required'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ], [
+            'email.required' => 'L\'adresse email est obligatoire.',
+            'email.email' => 'L\'adresse email doit être valide.',
+            'password.required' => 'Le nouveau mot de passe est obligatoire.',
+            'password.min' => 'Le nouveau mot de passe doit contenir au moins 8 caractères.',
+            'password.confirmed' => 'La confirmation du mot de passe ne correspond pas.',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, string $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password),
+                    'remember_token' => Str::random(60),
+                ])->save();
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+            ? redirect()->route('login')->with('status', __($status))
+            : back()->withInput($request->only('email'))->withErrors(['email' => __($status)]);
+    }
+
+    /**
+     * Afficher le formulaire de changement de mot de passe
+     */
+    public function showChangePasswordForm(): View
+    {
+        return view('auth.profile', [
+            'user' => auth()->user(),
+            'activeProfileTab' => 'password',
+        ]);
+    }
+
+    /**
+     * Afficher le profil de l'utilisateur connecté
+     */
+    public function showProfileForm(): View
+    {
+        return view('auth.profile', [
+            'user' => auth()->user(),
+            'activeProfileTab' => request('tab', old('profile_tab', session('profile_tab', 'info'))),
+        ]);
+    }
+
+    /**
+     * Mettre à jour les informations personnelles de l'utilisateur connecté
+     */
+    public function updateProfile(ProfileRequest $request): RedirectResponse
+    {
+        $request->user()->update($request->validated());
+
+        return back()
+            ->with('success', 'Votre profil a été mis à jour avec succès.')
+            ->with('profile_tab', 'info');
+    }
+
+    /**
+     * Traiter le changement de mot de passe
+     */
+    public function changePassword(ChangePasswordRequest $request): RedirectResponse
+    {
+        $user = auth()->user();
+        $credentials = $request->validated();
+
+        if (!$this->authService->changePassword($user, $credentials['old_password'], $credentials['new_password'])) {
+            return back()
+                ->with('error', 'L\'ancien mot de passe est incorrect.')
+                ->with('profile_tab', 'password');
+        }
+
+        return back()
+            ->with('success', 'Votre mot de passe a été modifié avec succès.')
+            ->with('profile_tab', 'password');
+    }
+}
