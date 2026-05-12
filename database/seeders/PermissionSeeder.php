@@ -25,6 +25,9 @@ class PermissionSeeder extends Seeder
             // Apprenants
             ['name' => 'Voir les apprenants', 'module' => 'Apprenants', 'slug' => 'view_learners'],
             ['name' => 'Ajouter un apprenant', 'module' => 'Apprenants', 'slug' => 'create_learner'],
+            ['name' => 'Modifier un apprenant', 'module' => 'Apprenants', 'slug' => 'edit_learner'],
+            ['name' => 'Supprimer un apprenant', 'module' => 'Apprenants', 'slug' => 'delete_learner'],
+            ['name' => 'Voir les détails apprenant', 'module' => 'Apprenants', 'slug' => 'view_learner_details'],
 
             // Formations
             ['name' => 'Voir les formations', 'module' => 'Formations', 'slug' => 'view_courses'],
@@ -63,10 +66,16 @@ class PermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::updateOrCreate(
-                ['slug' => $permission['slug']],
-                $permission
-            );
+            $existing = Permission::withTrashed()->where('slug', $permission['slug'])->first();
+            
+            if ($existing) {
+                if ($existing->trashed()) {
+                    $existing->restore();
+                }
+                $existing->update($permission);
+            } else {
+                Permission::create($permission);
+            }
         }
     }
 }

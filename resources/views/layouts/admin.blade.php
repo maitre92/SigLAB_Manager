@@ -2,7 +2,7 @@
 
 @section('title', isset($page_title) ? $page_title : 'Admin')
 
-@section('content')
+@section('layout_content')
 <!-- Page Title -->
 @if (isset($page_title))
     <div class="d-flex justify-content-between align-items-center mb-4 page-header">

@@ -22,6 +22,7 @@ class ProfileRequest extends FormRequest
                 Rule::unique('users')->ignore($this->user()?->id),
             ],
             'phone' => ['nullable', 'string', 'max:20'],
+            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ];
     }
 
@@ -32,6 +33,9 @@ class ProfileRequest extends FormRequest
             'email.required' => 'L\'email est obligatoire.',
             'email.email' => 'Veuillez entrer une adresse email valide.',
             'email.unique' => 'Cet email est déjà utilisé.',
+            'avatar.image' => 'Le fichier doit être une image.',
+            'avatar.mimes' => 'Formats autorisés : JPEG, PNG, JPG, WEBP.',
+            'avatar.max' => 'La taille maximale est de 2Mo.',
         ];
     }
 }

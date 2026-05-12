@@ -36,6 +36,13 @@
         border: 1px solid rgba(255, 255, 255, 0.25);
         font-size: 26px;
         flex: 0 0 auto;
+        overflow: hidden;
+    }
+
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
 
     .profile-card {
@@ -58,7 +65,11 @@
     <div class="profile-hero">
         <div class="d-flex align-items-center gap-3">
             <div class="profile-avatar">
-                <i class="fas fa-user"></i>
+                @if($user->avatar)
+                    <img src="{{ asset('storage/' . $user->avatar) }}" alt="{{ $user->name }}">
+                @else
+                    <i class="fas fa-user"></i>
+                @endif
             </div>
             <div>
                 <h4 class="mb-1">{{ $user->name }}</h4>
@@ -124,7 +135,7 @@
 
             <div class="tab-content">
                 <div class="tab-pane fade {{ $activeTab === 'info' ? 'show active' : '' }}" id="info-panel" role="tabpanel" aria-labelledby="info-tab">
-                    <form method="POST" action="{{ route('profile.update') }}">
+                    <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         <input type="hidden" name="profile_tab" value="info">
@@ -170,6 +181,20 @@
                                        name="phone"
                                        value="{{ old('phone', $user->phone) }}">
                                 @error('phone')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="avatar" class="form-label">
+                                    <i class="fas fa-camera"></i> Photo de profil
+                                </label>
+                                <input type="file"
+                                       class="form-control @error('avatar') is-invalid @enderror"
+                                       id="avatar"
+                                       name="avatar"
+                                       accept="image/jpeg,image/png,image/webp,image/jpg">
+                                @error('avatar')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\ApprenantController;
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -60,6 +61,9 @@ Route::middleware('auth')->group(function () {
 
         // Gestion des utilisateurs
         Route::resource('users', UserController::class);
+
+        // Gestion des apprenants
+        Route::resource('apprenants', ApprenantController::class);
 
         // Paramètres
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings');

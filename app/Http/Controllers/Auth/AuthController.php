@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -163,7 +164,18 @@ class AuthController extends Controller
      */
     public function updateProfile(ProfileRequest $request): RedirectResponse
     {
-        $request->user()->update($request->validated());
+        $user = $request->user();
+        $data = $request->validated();
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $filename = 'avatar_' . time() . '_' . uniqid() . '.' . $request->file('avatar')->getClientOriginalExtension();
+            $data['avatar'] = $request->file('avatar')->storeAs('users/avatars', $filename, 'public');
+        }
+
+        $user->update($data);
 
         return back()
             ->with('success', 'Votre profil a été mis à jour avec succès.')

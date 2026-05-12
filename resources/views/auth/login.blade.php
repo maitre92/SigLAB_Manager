@@ -18,18 +18,52 @@
         body {
             min-height: 100vh;
             margin: 0;
+            background-color: var(--login-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--login-text);
+            overflow: hidden;
+        }
+
+        .split-layout {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .image-side {
+            flex: 1;
+            position: relative;
+            background: url('{{ asset('images/siglab_img1.jpeg') }}') center top/cover no-repeat var(--login-primary);
+        }
+
+        .login-side {
+            flex: 0 0 520px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background:
-                linear-gradient(135deg, rgba(21, 38, 69, 0.92), rgba(64, 96, 160, 0.78)),
-                radial-gradient(circle at top left, rgba(255,255,255,0.28), transparent 34%),
-                var(--login-bg);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: var(--login-text);
+            background-color: var(--login-bg);
             padding: 24px;
+            position: relative;
+            z-index: 10;
         }
 
+        /* The SVG wave divider */
+        .wave-divider {
+            position: absolute;
+            top: 0;
+            right: -1px; /* Align perfectly with the login side */
+            height: 100%;
+            width: 150px;
+            z-index: 5;
+        }
+
+        .wave-divider svg {
+            height: 100%;
+            width: 100%;
+            display: block;
+        }
+
+        /* EXACT ORIGINAL LOGIN CARD STYLES */
         .login-container {
             width: 100%;
             max-width: 520px;
@@ -40,6 +74,7 @@
             border-radius: 8px;
             box-shadow: 0 24px 70px rgba(15, 23, 42, 0.26);
             overflow: hidden;
+            width: 100%;
         }
 
         .login-header {
@@ -129,96 +164,124 @@
         .alert {
             border-radius: 8px;
         }
+
+        @media (max-width: 992px) {
+            .split-layout {
+                flex-direction: column;
+            }
+            .image-side {
+                display: none;
+            }
+            .login-side {
+                flex: 1;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
-    <main class="login-container">
-        <div class="card login-card">
-            <div class="login-header">
-                <div class="brand-mark">
-                    <i class="fas fa-flask"></i>
-                </div>
-                <h1><span style="color:#6f8bd8;">sig</span><span style="color:#ef4444;">LAB</span> Manager</h1>
-                <p>Connectez-vous à votre espace de gestion.</p>
-            </div>
-
-            <div class="login-body">
-                @if($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-circle"></i> <strong>Connexion impossible</strong>
-                        <ul class="mb-0 mt-2">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
-                    </div>
-                @endif
-
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-times-circle"></i> {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
-                    </div>
-                @endif
-
-                @if(session('status'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle"></i> {{ session('status') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
-                    </div>
-                @endif
-
-                <form method="POST" action="{{ route('login') }}">
-                    @csrf
-
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Adresse email</label>
-                        <input type="email"
-                               class="form-control @error('email') is-invalid @enderror"
-                               id="email"
-                               name="email"
-                               value="{{ old('email') }}"
-                               placeholder="nom@exemple.com"
-                               autofocus>
-                        @error('email')
-                            <span class="invalid-feedback">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Mot de passe</label>
-                        <input type="password"
-                               class="form-control @error('password') is-invalid @enderror"
-                               id="password"
-                               name="password"
-                               placeholder="Votre mot de passe">
-                        @error('password')
-                            <span class="invalid-feedback">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <div class="form-check mb-0">
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   name="remember"
-                                   id="remember"
-                                   {{ old('remember') ? 'checked' : '' }}>
-                            <label class="form-check-label" for="remember">
-                                Se souvenir de moi
-                            </label>
-                        </div>
-                        <a class="login-link" href="{{ route('password.request') }}">Mot de passe oublié ?</a>
-                    </div>
-
-                    <button type="submit" class="btn btn-login">
-                        <i class="fas fa-right-to-bracket"></i> Se connecter
-                    </button>
-                </form>
+    <div class="split-layout">
+        <!-- Image Side (Left) -->
+        <div class="image-side">
+            <!-- Wavy oblique SVG divider -->
+            <div class="wave-divider">
+                <svg viewBox="0 0 100 1000" preserveAspectRatio="none">
+                    <path d="M100,0 L0,0 C40,250 -40,500 60,750 C110,875 0,1000 0,1000 L100,1000 Z" fill="#e8efff" />
+                </svg>
             </div>
         </div>
-    </main>
+
+        <!-- Login Side (Right) -->
+        <div class="login-side">
+            <main class="login-container">
+                <div class="card login-card">
+                    <div class="login-header">
+                        <div class="brand-mark">
+                            <i class="fas fa-flask"></i>
+                        </div>
+                        <h1><span style="color:#6f8bd8;">sig</span><span style="color:#ef4444;">LAB</span> Manager</h1>
+                        <p>Connectez-vous à votre espace de gestion.</p>
+                    </div>
+
+                    <div class="login-body">
+                        @if($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-circle"></i> <strong>Connexion impossible</strong>
+                                <ul class="mb-0 mt-2">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                            </div>
+                        @endif
+
+                        @if(session('error'))
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="fas fa-times-circle"></i> {{ session('error') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                            </div>
+                        @endif
+
+                        @if(session('status'))
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle"></i> {{ session('status') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                            </div>
+                        @endif
+
+                        <form method="POST" action="{{ route('login') }}">
+                            @csrf
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Adresse email</label>
+                                <input type="email"
+                                       class="form-control @error('email') is-invalid @enderror"
+                                       id="email"
+                                       name="email"
+                                       value="{{ old('email') }}"
+                                       placeholder="nom@exemple.com"
+                                       autofocus>
+                                @error('email')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Mot de passe</label>
+                                <input type="password"
+                                       class="form-control @error('password') is-invalid @enderror"
+                                       id="password"
+                                       name="password"
+                                       placeholder="Votre mot de passe">
+                                @error('password')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           name="remember"
+                                           id="remember"
+                                           {{ old('remember') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="remember">
+                                        Se souvenir de moi
+                                    </label>
+                                </div>
+                                <a class="login-link" href="{{ route('password.request') }}">Mot de passe oublié ?</a>
+                            </div>
+
+                            <button type="submit" class="btn btn-login">
+                                <i class="fas fa-right-to-bracket"></i> Se connecter
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

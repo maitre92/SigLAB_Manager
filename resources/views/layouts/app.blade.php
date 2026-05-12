@@ -512,7 +512,7 @@
 
         <!-- Main Content -->
         <div class="main-content">
-            @yield('content')
+            @yield('layout_content')
         </div>
     </div>
 

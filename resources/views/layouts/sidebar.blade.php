@@ -14,6 +14,7 @@
             @php
                 $user = Auth::user();
                 $canViewLearners = $user && ($user->isSuperAdmin() || $user->hasPermission('view_learners'));
+                $canCreateLearner = $user && ($user->isSuperAdmin() || $user->hasPermission('create_learner'));
                 $canViewCourses = $user && ($user->isSuperAdmin() || $user->hasPermission('view_courses'));
                 $canViewPedagogical = $user && ($user->isSuperAdmin() || $user->hasAnyPermission([ 'view_pedagogical', 'view_attendance', 'view_evaluations', 'view_exams', 'view_grades' ]));
                 $canViewAttendance = $user && ($user->isSuperAdmin() || $user->hasPermission('view_attendance'));
@@ -30,9 +31,25 @@
 
             <!-- Gestion des Apprenants -->
             @if($user && $canViewLearners)
-                <a class="nav-link" href="#apprenants">
-                    <i class="fas fa-graduation-cap"></i> <span class="nav-text">Apprenants</span>
-                </a>
+                <div class="nav-item dropdown-menu-like">
+                    <a class="nav-link {{ request()->routeIs('admin.apprenants.*') ? 'active' : '' }}" 
+                       href="#" data-bs-toggle="collapse" data-bs-target="#apprenants-menu">
+                        <i class="fas fa-graduation-cap"></i> <span class="nav-text">Apprenants</span>
+                        <i class="fas fa-chevron-down ms-auto" style="font-size: 12px;"></i>
+                    </a>
+                    <div class="collapse {{ request()->routeIs('admin.apprenants.*') ? 'show' : '' }}" id="apprenants-menu">
+                        <a class="nav-link" style="padding-left: 40px; font-size: 13px;" 
+                           href="{{ route('admin.apprenants.index') }}">
+                            <i class="fas fa-list"></i> <span class="nav-text">Liste apprenants</span>
+                        </a>
+                        @if($canCreateLearner)
+                            <a class="nav-link" style="padding-left: 40px; font-size: 13px;" 
+                               href="{{ route('admin.apprenants.create') }}">
+                                <i class="fas fa-plus-circle"></i> <span class="nav-text">Ajouter apprenant</span>
+                            </a>
+                        @endif
+                    </div>
+                </div>
             @endif
 
             <!-- Gestion des Formations -->
