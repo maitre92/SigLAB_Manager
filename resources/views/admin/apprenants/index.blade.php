@@ -4,8 +4,8 @@
 
 @section('actions')
     @can('create_learner')
-        <a href="{{ route('admin.apprenants.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Ajouter un apprenant
+        <a href="{{ route('admin.apprenants.create') }}" class="btn text-white shadow-sm" style="background-color: var(--navbar-bg);">
+            <i class="fas fa-plus-circle me-1"></i> Ajouter un apprenant
         </a>
     @endcan
 @endsection
@@ -13,11 +13,11 @@
 @section('content')
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-        <form method="GET" action="{{ route('admin.apprenants.index') }}" class="row g-2 align-items-center flex-grow-1 me-3">
+        <form method="GET" action="{{ route('admin.apprenants.index') }}" class="row g-2 align-items-center flex-grow-1">
             <div class="col-md-4">
                 <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
-                    <input type="text" name="search" class="form-control" placeholder="Rechercher par nom, matricule, email..." value="{{ request('search') }}">
+                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0" placeholder="Rechercher par nom, matricule, email..." value="{{ request('search') }}">
                 </div>
             </div>
             <div class="col-md-3">
@@ -42,19 +42,12 @@
                         <i class="fas fa-times"></i> Réinitialiser
                     </a>
                 @else
-                    <button type="submit" class="btn btn-sm btn-outline-primary w-100">
-                        Filtrer
+                    <button type="submit" class="btn btn-sm btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i> Filtrer
                     </button>
                 @endif
             </div>
         </form>
-        @can('create_learner')
-            <div>
-                <a href="{{ route('admin.apprenants.create') }}" class="btn btn-primary btn-sm text-nowrap">
-                    <i class="fas fa-plus"></i> Apprenant
-                </a>
-            </div>
-        @endcan
     </div>
     
     <div class="table-responsive">
@@ -88,7 +81,14 @@
                             <div class="text-muted small">{{ $apprenant->email ?? 'Sans email' }}</div>
                         </td>
                         <td>{{ $apprenant->telephone ?? '-' }}</td>
-                        <td><span class="text-muted">&mdash;</span></td> <!-- Espace réservé pour la future relation formations -->
+                        <td>
+                            @forelse($apprenant->formations as $formation)
+                                <span class="badge bg-info text-dark" style="font-size: 0.75rem;">{{ $formation->code }}</span>
+                                @if(!$loop->last) <br> @endif
+                            @empty
+                                <span class="text-muted small">Aucune</span>
+                            @endforelse
+                        </td>
                         <td>
                             <span class="badge bg-{{ $apprenant->statut->color() ?? 'secondary' }}">
                                 {{ $apprenant->statut->label() ?? $apprenant->statut }}

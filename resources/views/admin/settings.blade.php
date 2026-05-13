@@ -119,7 +119,7 @@
                                    id="permission_search"
                                    class="form-control"
                                    value="{{ $permissionSearch ?? '' }}"
-                                   placeholder="Rechercher par nom, module ou slug"
+                                   placeholder="Rechercher par nom, module ou identifiant"
                                    autocomplete="off">
                         </div>
                         <div class="col-md-4">
@@ -134,7 +134,7 @@
                                 <tr>
                                     <th>Nom</th>
                                     <th>Module</th>
-                                    <th>Slug</th>
+                                    <th>Identifiant</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>

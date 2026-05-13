@@ -123,6 +123,16 @@ class Apprenant extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /**
+     * Formations auxquelles l'apprenant est inscrit
+     */
+    public function formations()
+    {
+        return $this->belongsToMany(Formation::class, 'inscriptions')
+            ->withPivot('id', 'date_inscription', 'montant_total', 'montant_paye', 'statut')
+            ->withTimestamps();
+    }
+
     // ─── Scopes ──────────────────────────────────────────────────
 
     /**

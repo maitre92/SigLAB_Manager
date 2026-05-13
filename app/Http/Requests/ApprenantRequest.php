@@ -39,6 +39,7 @@ class ApprenantRequest extends FormRequest
             'telephone_parent' => ['nullable', 'string', 'max:20'],
             'observations' => ['nullable', 'string', 'max:5000'],
             'remove_photo' => ['nullable', 'boolean'],
+            'formation_id' => ['nullable', 'exists:formations,id'],
         ];
 
         // Photo : obligatoire seulement si souhaité, toujours validée en format/taille

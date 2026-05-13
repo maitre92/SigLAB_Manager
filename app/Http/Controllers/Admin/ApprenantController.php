@@ -63,6 +63,8 @@ class ApprenantController extends Controller
         return view('admin.apprenants.create', [
             'statuts' => collect(ApprenantStatut::cases())->mapWithKeys(fn($s) => [$s->value => $s->label()])->toArray(),
             'niveaux' => collect(NiveauEtude::cases())->mapWithKeys(fn($n) => [$n->value => $n->label()])->toArray(),
+            'formations' => \App\Models\Formation::where('statut', 'planifiee')->orWhere('statut', 'en_cours')->get(),
+            'selectedFormationId' => request('formation_id'),
             'page_title' => 'Ajouter un apprenant',
             'active_menu' => 'apprenants',
         ]);
@@ -121,6 +123,7 @@ class ApprenantController extends Controller
             'apprenant' => $apprenant,
             'statuts' => collect(ApprenantStatut::cases())->mapWithKeys(fn($s) => [$s->value => $s->label()])->toArray(),
             'niveaux' => collect(NiveauEtude::cases())->mapWithKeys(fn($n) => [$n->value => $n->label()])->toArray(),
+            'formations' => \App\Models\Formation::where('statut', 'planifiee')->orWhere('statut', 'en_cours')->get(),
             'page_title' => 'Modifier : ' . $apprenant->nom_complet,
             'active_menu' => 'apprenants',
         ]);

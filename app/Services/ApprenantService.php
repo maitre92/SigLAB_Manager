@@ -18,6 +18,10 @@ class ApprenantService
      */
     public function create(array $data): Apprenant
     {
+        // Gestion de l'inscription à une formation
+        $formationId = $data['formation_id'] ?? null;
+        unset($data['formation_id']);
+
         // Gestion de l'upload de photo
         if (isset($data['photo']) && $data['photo'] instanceof UploadedFile) {
             $data['photo'] = $this->uploadPhoto($data['photo']);
@@ -25,11 +29,22 @@ class ApprenantService
 
         $apprenant = Apprenant::create($data);
 
+        // Inscription si une formation est sélectionnée
+        if ($formationId) {
+            $formation = \App\Models\Formation::find($formationId);
+            $apprenant->formations()->attach($formationId, [
+                'date_inscription' => now(),
+                'montant_total' => $formation->cout ?? 0,
+                'statut' => 'en_attente',
+                'created_by' => auth()->id()
+            ]);
+        }
+
         ActivityLog::log(
             action: 'create_apprenant',
             subject: 'Apprenant',
             subjectId: $apprenant->id,
-            description: "L'apprenant {$apprenant->nom_complet} ({$apprenant->matricule}) a été créé"
+            description: "L'apprenant {$apprenant->nom_complet} ({$apprenant->matricule}) a été créé" . ($formationId ? " et inscrit à la formation {$formation->nom}" : "")
         );
 
         return $apprenant;
@@ -40,6 +55,10 @@ class ApprenantService
      */
     public function update(Apprenant $apprenant, array $data): bool
     {
+        // Gestion de la nouvelle inscription
+        $formationId = $data['formation_id'] ?? null;
+        unset($data['formation_id']);
+
         // Gestion de l'upload de photo
         if (isset($data['photo']) && $data['photo'] instanceof UploadedFile) {
             // Supprimer l'ancienne photo
@@ -70,6 +89,24 @@ class ApprenantService
         }
 
         $result = $apprenant->update($data);
+
+        // Inscription si une formation est sélectionnée et que l'apprenant n'y est pas déjà inscrit
+        if ($result && $formationId && !$apprenant->formations->contains($formationId)) {
+            $formation = \App\Models\Formation::find($formationId);
+            $apprenant->formations()->attach($formationId, [
+                'date_inscription' => now(),
+                'montant_total' => $formation->cout ?? 0,
+                'statut' => 'en_attente',
+                'created_by' => auth()->id()
+            ]);
+            
+            ActivityLog::log(
+                action: 'enroll_apprenant',
+                subject: 'Apprenant',
+                subjectId: $apprenant->id,
+                description: "L'apprenant {$apprenant->nom_complet} a été inscrit à la formation {$formation->nom} lors de sa modification"
+            );
+        }
 
         if ($result && !empty($changes)) {
             ActivityLog::log(
@@ -145,7 +182,7 @@ class ApprenantService
             $query->byNiveauEtude($niveauEtude);
         }
 
-        return $query->orderBy('created_at', 'desc')->paginate($perPage);
+        return $query->with('formations')->orderBy('created_at', 'desc')->paginate($perPage);
     }
 
     /**

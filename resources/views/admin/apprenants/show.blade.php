@@ -195,12 +195,62 @@
 
                     </div>
 
-                    <!-- Tab: Formations (Placeholder) -->
+                    <!-- Tab: Formations -->
                     <div class="tab-pane fade" id="formations" role="tabpanel" aria-labelledby="formations-tab">
-                        <div class="text-center py-5">
-                            <i class="fas fa-book text-muted mb-3" style="font-size: 3rem; opacity: 0.2;"></i>
-                            <h5>Module Formations à venir</h5>
-                            <p class="text-muted">L'historique des formations de cet apprenant s'affichera ici.</p>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>Formation</th>
+                                        <th>Date Inscription</th>
+                                        <th>Statut</th>
+                                        <th>Montant</th>
+                                        <th>Reste à payer</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($apprenant->formations as $formation)
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold">{{ $formation->nom }}</div>
+                                            <small class="text-muted">{{ $formation->code }}</small>
+                                        </td>
+                                        <td>{{ $formation->pivot->date_inscription ? \Carbon\Carbon::parse($formation->pivot->date_inscription)->format('d/m/Y') : '---' }}</td>
+                                        <td>
+                                            @php
+                                                $statutColors = [
+                                                    'validee' => 'success',
+                                                    'en_attente' => 'warning',
+                                                    'annulee' => 'danger',
+                                                    'terminee' => 'info'
+                                                ];
+                                                $color = $statutColors[$formation->pivot->statut] ?? 'secondary';
+                                            @endphp
+                                            <span class="badge bg-{{ $color }}">{{ ucfirst($formation->pivot->statut) }}</span>
+                                        </td>
+                                        <td>{{ number_format($formation->pivot->montant_total, 0, ',', ' ') }} FCFA</td>
+                                        <td class="text-danger fw-bold">
+                                            {{ number_format($formation->pivot->montant_total - $formation->pivot->montant_paye, 0, ',', ' ') }} FCFA
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="{{ route('admin.formations.show', $formation) }}" class="btn btn-sm btn-outline-info rounded-circle"><i class="fas fa-eye"></i></a>
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            Cet apprenant n'est inscrit à aucune formation.
+                                        </td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3">
+                            <a href="{{ route('admin.formations.index') }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-plus me-1"></i> Nouvelle inscription
+                            </a>
                         </div>
                     </div>
 

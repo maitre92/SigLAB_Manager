@@ -115,6 +115,22 @@
                             </select>
                             @error('statut')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
+
+                        <div class="col-md-12">
+                            <label for="formation_id" class="form-label">Nouvelle inscription (Optionnel)</label>
+                            <select class="form-select @error('formation_id') is-invalid @enderror" id="formation_id" name="formation_id">
+                                <option value="">-- Sélectionner pour ajouter une inscription --</option>
+                                @foreach($formations as $formation)
+                                    @if(!$apprenant->formations->contains($formation->id))
+                                        <option value="{{ $formation->id }}" {{ old('formation_id') == $formation->id ? 'selected' : '' }}>
+                                            {{ $formation->code }} - {{ $formation->nom }} ({{ number_format($formation->cout, 0, ',', ' ') }} FCFA)
+                                        </option>
+                                    @endif
+                                @endforeach
+                            </select>
+                            <div class="form-text">Note : Cela ajoutera une nouvelle inscription sans supprimer les précédentes.</div>
+                            @error('formation_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
                     </div>
                 </div>
             </div>
@@ -183,8 +199,8 @@
             <!-- Actions -->
             <div class="card border-0 shadow-sm bg-light">
                 <div class="card-body d-grid gap-2">
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="fas fa-save me-2"></i> Mettre à jour
+                    <button type="submit" class="btn text-white btn-lg shadow" style="background-color: var(--navbar-bg);">
+                        <i class="fas fa-save me-2"></i> Mettre à jour l'apprenant
                     </button>
                     <a href="{{ route('admin.apprenants.show', $apprenant) }}" class="btn btn-outline-secondary">
                         Annuler

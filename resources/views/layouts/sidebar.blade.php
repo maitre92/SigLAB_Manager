@@ -15,13 +15,13 @@
                 $user = Auth::user();
                 $canViewLearners = $user && ($user->isSuperAdmin() || $user->hasPermission('view_learners'));
                 $canCreateLearner = $user && ($user->isSuperAdmin() || $user->hasPermission('create_learner'));
-                $canViewCourses = $user && ($user->isSuperAdmin() || $user->hasPermission('view_courses'));
+                $canViewCourses = $user && ($user->isSuperAdmin() || $user->hasAnyPermission(['voir_formations', 'view_courses']));
+                $canCreateCourse = $user && ($user->isSuperAdmin() || $user->hasAnyPermission(['ajouter_formation', 'create_course']));
                 $canViewPedagogical = $user && ($user->isSuperAdmin() || $user->hasAnyPermission([ 'view_pedagogical', 'view_attendance', 'view_evaluations', 'view_exams', 'view_grades' ]));
                 $canViewAttendance = $user && ($user->isSuperAdmin() || $user->hasPermission('view_attendance'));
                 $canViewEvaluations = $user && ($user->isSuperAdmin() || $user->hasPermission('view_evaluations'));
                 $canViewExams = $user && ($user->isSuperAdmin() || $user->hasPermission('view_exams'));
                 $canViewGrades = $user && ($user->isSuperAdmin() || $user->hasPermission('view_grades'));
-                $canViewSchedules = $user && ($user->isSuperAdmin() || $user->hasPermission('view_schedules'));
                 $canViewFinances = $user && ($user->isSuperAdmin() || $user->hasAnyPermission([ 'view_finances', 'view_payments', 'view_expenses', 'view_revenue' ]));
                 $canViewPayments = $user && ($user->isSuperAdmin() || $user->hasPermission('view_payments'));
                 $canViewExpenses = $user && ($user->isSuperAdmin() || $user->hasPermission('view_expenses'));
@@ -54,9 +54,29 @@
 
             <!-- Gestion des Formations -->
             @if($user && $canViewCourses)
-                <a class="nav-link" href="#formations">
-                    <i class="fas fa-book"></i> <span class="nav-text">Formations</span>
-                </a>
+                <div class="nav-item dropdown-menu-like">
+                    <a class="nav-link {{ request()->routeIs('admin.formations.*') || request()->routeIs('admin.categories-formations.*') ? 'active' : '' }}" 
+                       href="#" data-bs-toggle="collapse" data-bs-target="#formations-menu">
+                        <i class="fas fa-book"></i> <span class="nav-text">Gestion des formations</span>
+                        <i class="fas fa-chevron-down ms-auto" style="font-size: 12px;"></i>
+                    </a>
+                    <div class="collapse {{ request()->routeIs('admin.formations.*') || request()->routeIs('admin.categories-formations.*') ? 'show' : '' }}" id="formations-menu">
+                        <a class="nav-link" style="padding-left: 40px; font-size: 13px;" 
+                           href="{{ route('admin.formations.index') }}">
+                            <i class="fas fa-list"></i> <span class="nav-text">Liste formations</span>
+                        </a>
+                        @if($canCreateCourse)
+                            <a class="nav-link" style="padding-left: 40px; font-size: 13px;" 
+                               href="{{ route('admin.formations.create') }}">
+                                <i class="fas fa-plus-circle"></i> <span class="nav-text">Ajouter formation</span>
+                            </a>
+                        @endif
+                        <a class="nav-link" style="padding-left: 40px; font-size: 13px;" 
+                           href="{{ route('admin.categories-formations.index') }}">
+                            <i class="fas fa-tags"></i> <span class="nav-text">Catégories formations</span>
+                        </a>
+                    </div>
+                </div>
             @endif
 
             <!-- Gestion Pédagogique -->
@@ -91,12 +111,6 @@
                 </div>
             @endif
 
-            <!-- Emplois du Temps -->
-            @if($user && $canViewSchedules)
-                <a class="nav-link" href="#emplois">
-                    <i class="fas fa-calendar-alt"></i> <span class="nav-text">Emplois du Temps</span>
-                </a>
-            @endif
 
             <!-- Gestion Financière -->
             @if($user && $canViewFinances)

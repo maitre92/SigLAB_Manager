@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Shared\Traits\HasPermissions;
 use App\Shared\Enums\UserRole;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * @method bool hasPermission(string $permission)
@@ -88,5 +89,12 @@ class User extends Authenticatable
         return $this->permissions()
             ->where('is_active', true)
             ->exists();
+    }
+
+    public function formationsAnimees(): BelongsToMany
+    {
+        return $this->belongsToMany(Formation::class, 'formation_formateur')
+            ->withPivot('role', 'assigned_at')
+            ->withTimestamps();
     }
 }

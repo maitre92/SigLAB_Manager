@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ApprenantController;
+use App\Http\Controllers\Admin\FormationController;
+use App\Http\Controllers\Admin\CategorieFormationController;
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -64,6 +66,14 @@ Route::middleware('auth')->group(function () {
 
         // Gestion des apprenants
         Route::resource('apprenants', ApprenantController::class);
+
+        // Gestion des formations
+        Route::get('formations/formateur/{formateur}', [FormationController::class, 'byFormateur'])->name('formations.formateur');
+        Route::patch('formations/{formation}/status', [FormationController::class, 'updateStatus'])->name('formations.status');
+        Route::resource('formations', FormationController::class);
+        Route::resource('categories-formations', CategorieFormationController::class)
+            ->parameters(['categories-formations' => 'categorieFormation'])
+            ->only(['index', 'store', 'update', 'destroy']);
 
         // Paramètres
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings');

@@ -113,6 +113,20 @@
                             </select>
                             @error('statut')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
+
+                        <div class="col-md-12">
+                            <label for="formation_id" class="form-label">Inscription à une formation (Optionnel)</label>
+                            <select class="form-select @error('formation_id') is-invalid @enderror" id="formation_id" name="formation_id">
+                                <option value="">-- Ne pas inscrire immédiatement --</option>
+                                @foreach($formations as $formation)
+                                    <option value="{{ $formation->id }}" {{ (old('formation_id', $selectedFormationId) == $formation->id) ? 'selected' : '' }}>
+                                        {{ $formation->code }} - {{ $formation->nom }} ({{ number_format($formation->cout, 0, ',', ' ') }} FCFA)
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">Vous pourrez inscrire l'apprenant plus tard si vous ne le faites pas maintenant.</div>
+                            @error('formation_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
                     </div>
                 </div>
             </div>
@@ -170,8 +184,8 @@
             <!-- Actions -->
             <div class="card border-0 shadow-sm bg-light">
                 <div class="card-body d-grid gap-2">
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="fas fa-save me-2"></i> Enregistrer
+                    <button type="submit" class="btn text-white btn-lg shadow" style="background-color: var(--navbar-bg);">
+                        <i class="fas fa-save me-2"></i> Enregistrer l'apprenant
                     </button>
                     <a href="{{ route('admin.apprenants.index') }}" class="btn btn-outline-secondary">
                         Annuler
