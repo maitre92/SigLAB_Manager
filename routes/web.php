@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ApprenantController;
 use App\Http\Controllers\Admin\FormationController;
 use App\Http\Controllers\Admin\CategorieFormationController;
+use App\Http\Controllers\Admin\PedagogieController;
+use App\Http\Controllers\Admin\AttestationController;
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -84,12 +86,31 @@ Route::middleware('auth')->group(function () {
         Route::put('/permissions/{permission}', [SettingsController::class, 'updatePermission'])->name('permissions.update');
         Route::delete('/permissions/{permission}', [SettingsController::class, 'destroyPermission'])->name('permissions.destroy');
         Route::post('/permissions/assign', [SettingsController::class, 'assignPermissions'])->name('permissions.assign');
+
+        // Gestion Pédagogique
+        Route::prefix('pedagogie')->name('pedagogie.')->group(function () {
+            Route::get('/presences', [PedagogieController::class, 'presences'])->name('presences');
+            Route::post('/presences', [PedagogieController::class, 'storePresences'])->name('presences.store');
+            
+            Route::get('/evaluations', [PedagogieController::class, 'evaluations'])->name('evaluations');
+            Route::post('/evaluations', [PedagogieController::class, 'storeEvaluation'])->name('evaluations.store');
+            
+            Route::get('/examens', [PedagogieController::class, 'examens'])->name('examens');
+            // Les examens utilisent la même logique que les évaluations mais filtrés par type 'examen'
+            
+            Route::get('/notes', [PedagogieController::class, 'notes'])->name('notes');
+            Route::get('/notes/evaluation/{evaluation}', [PedagogieController::class, 'editNotes'])->name('notes.edit');
+            Route::post('/notes/evaluation/{evaluation}', [PedagogieController::class, 'storeNotes'])->name('notes.store');
+        });
+
+        // Gestion des Attestations
+        Route::resource('attestations', AttestationController::class);
     });
 
     /**
-     * Routes Dashboard utilisateur
+     * Routes Dashboard utilisateur (redirige vers admin par défaut si admin)
      */
     Route::get('/dashboard', function () {
-        return view('dashboard');
+        return redirect()->route('admin.dashboard');
     })->name('dashboard');
 });

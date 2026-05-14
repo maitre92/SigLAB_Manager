@@ -6,8 +6,8 @@
         <nav class="nav flex-column">
             
             <!-- Dashboard -->
-            <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" 
-               href="{{ route('dashboard') }}">
+            <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" 
+               href="{{ route('admin.dashboard') }}">
                 <i class="fas fa-home"></i> <span class="nav-text">Dashboard</span>
             </a>
 
@@ -82,28 +82,37 @@
             <!-- Gestion Pédagogique -->
             @if($user && $canViewPedagogical)
                 <div class="nav-item dropdown-menu-like">
-                    <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#pedagogique-menu">
-                        <i class="fas fa-chalkboard"></i> Pédagogique
+                    <a class="nav-link {{ request()->routeIs('admin.pedagogie.*') ? 'active' : '' }}" 
+                       href="#" data-bs-toggle="collapse" data-bs-target="#pedagogique-menu">
+                        <i class="fas fa-chalkboard"></i> <span class="nav-text">Pédagogique</span>
                         <i class="fas fa-chevron-down ms-auto" style="font-size: 12px;"></i>
                     </a>
-                    <div class="collapse" id="pedagogique-menu">
+                    <div class="collapse {{ request()->routeIs('admin.pedagogie.*') ? 'show' : '' }}" id="pedagogique-menu">
                         @if($canViewAttendance)
-                            <a class="nav-link" style="padding-left: 40px; font-size: 13px;" href="#presences">
+                            <a class="nav-link {{ request()->routeIs('admin.pedagogie.presences') ? 'active' : '' }}" 
+                               style="padding-left: 40px; font-size: 13px;" 
+                               href="{{ route('admin.pedagogie.presences') }}">
                                 <i class="fas fa-clipboard-check"></i> <span class="nav-text">Présences</span>
                             </a>
                         @endif
                         @if($canViewEvaluations)
-                            <a class="nav-link" style="padding-left: 40px; font-size: 13px;" href="#evaluations">
+                            <a class="nav-link {{ request()->routeIs('admin.pedagogie.evaluations') ? 'active' : '' }}" 
+                               style="padding-left: 40px; font-size: 13px;" 
+                               href="{{ route('admin.pedagogie.evaluations') }}">
                                 <i class="fas fa-chart-line"></i> <span class="nav-text">Évaluations</span>
                             </a>
                         @endif
                         @if($canViewExams)
-                            <a class="nav-link" style="padding-left: 40px; font-size: 13px;" href="#examens">
+                            <a class="nav-link {{ request()->routeIs('admin.pedagogie.examens') ? 'active' : '' }}" 
+                               style="padding-left: 40px; font-size: 13px;" 
+                               href="{{ route('admin.pedagogie.examens') }}">
                                 <i class="fas fa-pencil-alt"></i> <span class="nav-text">Examens</span>
                             </a>
                         @endif
                         @if($canViewGrades)
-                            <a class="nav-link" style="padding-left: 40px; font-size: 13px;" href="#notes">
+                            <a class="nav-link {{ request()->routeIs('admin.pedagogie.notes') ? 'active' : '' }}" 
+                               style="padding-left: 40px; font-size: 13px;" 
+                               href="{{ route('admin.pedagogie.notes') }}">
                                 <i class="fas fa-star"></i> <span class="nav-text">Notes</span>
                             </a>
                         @endif
@@ -142,7 +151,8 @@
 
             <!-- Attestations -->
             @if($user && $canViewCertificates)
-                <a class="nav-link" href="#attestations">
+                <a class="nav-link {{ request()->routeIs('admin.attestations.*') ? 'active' : '' }}" 
+                   href="{{ route('admin.attestations.index') }}">
                     <i class="fas fa-certificate"></i> <span class="nav-text">Attestations</span>
                 </a>
             @endif

@@ -30,8 +30,6 @@ class PermissionSeeder extends Seeder
             ['name' => 'Voir les détails apprenant', 'module' => 'Apprenants', 'slug' => 'view_learner_details'],
 
             // Formations
-            ['name' => 'Voir les formations', 'module' => 'Formations', 'slug' => 'view_courses'],
-            ['name' => 'Ajouter une formation', 'module' => 'Formations', 'slug' => 'create_course'],
             ['name' => 'Voir les formations', 'module' => 'Formations', 'slug' => 'voir_formations', 'action' => 'view', 'order' => 30],
             ['name' => 'Ajouter une formation', 'module' => 'Formations', 'slug' => 'ajouter_formation', 'action' => 'create', 'order' => 31],
             ['name' => 'Modifier une formation', 'module' => 'Formations', 'slug' => 'modifier_formation', 'action' => 'edit', 'order' => 32],

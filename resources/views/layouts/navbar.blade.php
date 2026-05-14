@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-md sticky-top" id="navbar">
     <div class="container-fluid">
-        <a class="navbar-brand" href="{{ route('dashboard') }}">
+        <a class="navbar-brand" href="{{ route('admin.dashboard') }}">
             <i class="fas fa-flask"></i>
             <span style="color: var(--primary-color); font-weight: 700;">sig</span>
             <span style="color: #ef4444; font-weight: 700;">LAB</span>

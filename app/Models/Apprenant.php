@@ -22,6 +22,7 @@ class Apprenant extends Model
         'photo',
         'sexe',
         'date_naissance',
+        'lieu_naissance',
         'telephone',
         'email',
         'adresse',
@@ -131,6 +132,22 @@ class Apprenant extends Model
         return $this->belongsToMany(Formation::class, 'inscriptions')
             ->withPivot('id', 'date_inscription', 'montant_total', 'montant_paye', 'statut')
             ->withTimestamps();
+    }
+
+    /**
+     * Notes de l'apprenant
+     */
+    public function notes()
+    {
+        return $this->hasMany(Note::class);
+    }
+
+    /**
+     * Présences de l'apprenant
+     */
+    public function presences()
+    {
+        return $this->hasMany(Presence::class);
     }
 
     // ─── Scopes ──────────────────────────────────────────────────

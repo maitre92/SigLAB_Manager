@@ -75,4 +75,20 @@ class Formation extends Model
             ->withPivot('id', 'date_inscription', 'montant_total', 'montant_paye', 'statut')
             ->withTimestamps();
     }
+
+    /**
+     * Évaluations de cette formation
+     */
+    public function evaluations()
+    {
+        return $this->hasMany(Evaluation::class);
+    }
+
+    /**
+     * Présences de cette formation
+     */
+    public function presences()
+    {
+        return $this->hasMany(Presence::class);
+    }
 }
