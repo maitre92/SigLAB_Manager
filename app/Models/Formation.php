@@ -76,6 +76,11 @@ class Formation extends Model
             ->withTimestamps();
     }
 
+    public function inscriptions()
+    {
+        return $this->hasMany(Inscription::class);
+    }
+
     /**
      * Évaluations de cette formation
      */

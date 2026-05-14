@@ -134,6 +134,11 @@ class Apprenant extends Model
             ->withTimestamps();
     }
 
+    public function inscriptions()
+    {
+        return $this->hasMany(Inscription::class);
+    }
+
     /**
      * Notes de l'apprenant
      */

@@ -125,24 +125,25 @@
             @if($user && $canViewFinances)
                 <div class="nav-section-title mt-4">Finances</div>
                 <div class="nav-item dropdown-menu-like">
-                    <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#finances-menu">
-                        <i class="fas fa-money-bill-wave"></i> Gestion Financière
+                    <a class="nav-link {{ request()->routeIs('admin.finances.*') ? 'active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#finances-menu">
+                        <i class="fas fa-money-bill-wave"></i> <span class="nav-text">Gestion Financière</span>
                         <i class="fas fa-chevron-down ms-auto" style="font-size: 12px;"></i>
                     </a>
-                    <div class="collapse" id="finances-menu">
+                    <div class="collapse {{ request()->routeIs('admin.finances.*') ? 'show' : '' }}" id="finances-menu">
+                        <a class="nav-link {{ request()->routeIs('admin.finances.index') ? 'active' : '' }}" 
+                           style="padding-left: 40px; font-size: 13px;" href="{{ route('admin.finances.index') }}">
+                            <i class="fas fa-chart-pie"></i> <span class="nav-text">Vue d'ensemble</span>
+                        </a>
                         @if($canViewPayments)
-                            <a class="nav-link" style="padding-left: 40px; font-size: 13px;" href="#paiements">
+                            <a class="nav-link {{ request()->routeIs('admin.finances.payments') ? 'active' : '' }}" 
+                               style="padding-left: 40px; font-size: 13px;" href="{{ route('admin.finances.payments') }}">
                                 <i class="fas fa-credit-card"></i> <span class="nav-text">Paiements</span>
                             </a>
                         @endif
                         @if($canViewExpenses)
-                            <a class="nav-link" style="padding-left: 40px; font-size: 13px;" href="#depenses">
+                            <a class="nav-link {{ request()->routeIs('admin.finances.expenses') ? 'active' : '' }}" 
+                               style="padding-left: 40px; font-size: 13px;" href="{{ route('admin.finances.expenses') }}">
                                 <i class="fas fa-shopping-cart"></i> <span class="nav-text">Dépenses</span>
-                            </a>
-                        @endif
-                        @if($canViewRevenue)
-                            <a class="nav-link" style="padding-left: 40px; font-size: 13px;" href="#recettes">
-                                <i class="fas fa-coins"></i> <span class="nav-text">Recettes</span>
                             </a>
                         @endif
                     </div>

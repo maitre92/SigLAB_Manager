@@ -61,20 +61,25 @@ class User extends Authenticatable
         $this->save();
     }
 
-    /**
-     * Vérifier si l'utilisateur est superadmin
-     */
     public function isSuperAdmin(): bool
     {
-        return isset($this->role) && $this->role === UserRole::SUPERADMIN->value;
+        if (!$this->role) {
+            return false;
+        }
+        
+        $roleValue = $this->role instanceof UserRole ? $this->role->value : (string) $this->role;
+        return $roleValue === UserRole::SUPERADMIN->value;
     }
 
-    /**
-     * Vérifier si l'utilisateur a les droits d'administrateur
-     */
     public function isAdmin(): bool
     {
-        return $this->isSuperAdmin() || $this->hasAnyActivePermission();
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        $roleValue = $this->role instanceof UserRole ? $this->role->value : (string) $this->role;
+        
+        return $roleValue === UserRole::ADMIN->value || $this->hasAnyActivePermission();
     }
 
     /**

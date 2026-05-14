@@ -103,6 +103,16 @@ Route::middleware('auth')->group(function () {
             Route::post('/notes/evaluation/{evaluation}', [PedagogieController::class, 'storeNotes'])->name('notes.store');
         });
 
+        // Gestion Financière
+        Route::prefix('finances')->name('finances.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\FinanceController::class, 'index'])->name('index');
+            Route::get('/paiements', [App\Http\Controllers\Admin\FinanceController::class, 'payments'])->name('payments');
+            Route::post('/paiements', [App\Http\Controllers\Admin\FinanceController::class, 'storePayment'])->name('payments.store');
+            Route::get('/depenses', [App\Http\Controllers\Admin\FinanceController::class, 'expenses'])->name('expenses');
+            Route::post('/depenses', [App\Http\Controllers\Admin\FinanceController::class, 'storeExpense'])->name('expenses.store');
+            Route::get('/paiements/{paiement}/recu', [App\Http\Controllers\Admin\FinanceController::class, 'receipt'])->name('payments.receipt');
+        });
+
         // Gestion des Attestations
         Route::resource('attestations', AttestationController::class);
     });
