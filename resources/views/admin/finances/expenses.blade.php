@@ -4,7 +4,7 @@
 <div class="row g-4">
     <div class="col-lg-4">
         <div class="card border-0 shadow-sm sticky-top" style="top: 20px; z-index: 10;">
-            <div class="card-header bg-white py-3 border-0">
+            <div class="card-header bg-white py-3 border-0" style="background-color: var(--navbar-bg);border-radius: 10px;">
                 <h6 class="mb-0 fw-bold"><i class="fas fa-plus-circle text-danger me-2"></i> Nouvelle Dépense</h6>
             </div>
             <div class="card-body">
@@ -38,7 +38,7 @@
                         <label class="form-label small fw-bold">Description</label>
                         <textarea name="description" class="form-control" rows="3" placeholder="Détails de l'achat..."></textarea>
                     </div>
-                    <button type="submit" class="btn btn-danger w-100 fw-bold">
+                    <button type="submit" class="btn btn text-white w-100 fw-bold"style="background-color: var(--navbar-bg);">
                         <i class="fas fa-save me-1"></i> Enregistrer
                     </button>
                 </form>

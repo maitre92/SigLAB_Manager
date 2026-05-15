@@ -18,7 +18,7 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary w-100 py-2 shadow-sm" style="border-radius: 10px;">
+                    <button type="submit" class="text-white w-100 py-2 shadow-sm" style="background-color: var(--navbar-bg);border-radius: 10px;">
                         <i class="fas fa-filter me-2"></i> Afficher les résultats
                     </button>
                 </div>

@@ -4,7 +4,7 @@
 <div class="row g-4">
     <!-- Quick Stats -->
     <div class="col-xl-3 col-md-6">
-        <div class="card border-0 shadow-sm stat-card h-100 overflow-hidden" style="background: linear-gradient(45deg, #4e54c8 0%, #8f94fb 100%);">
+        <div class="card border-0 shadow-sm stat-card h-100 overflow-hidden" style="background-color: var(--navbar-bg);">
             <div class="card-body p-3 text-white">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div class="stat-icon-wrapper">
@@ -22,7 +22,7 @@
     </div>
 
     <div class="col-xl-3 col-md-6">
-        <div class="card border-0 shadow-sm stat-card h-100 overflow-hidden" style="background: linear-gradient(45deg, #11998e 0%, #38ef7d 100%);">
+        <div class="card border-0 shadow-sm stat-card h-100 overflow-hidden" style="background-color: var(--navbar-bg);">
             <div class="card-body p-3 text-white">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div class="stat-icon-wrapper">
@@ -40,7 +40,7 @@
     </div>
 
     <div class="col-xl-3 col-md-6">
-        <div class="card border-0 shadow-sm stat-card h-100 overflow-hidden" style="background: linear-gradient(45deg, #f2994a 0%, #f2c94c 100%);">
+        <div class="card border-0 shadow-sm stat-card h-100 overflow-hidden" style="background-color: var(--navbar-bg);">
             <div class="card-body p-3 text-white">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div class="stat-icon-wrapper">
@@ -58,7 +58,7 @@
     </div>
 
     <div class="col-xl-3 col-md-6">
-        <div class="card border-0 shadow-sm stat-card h-100 overflow-hidden" style="background: linear-gradient(45deg, #ee0979 0%, #ff6a00 100%);">
+        <div class="card border-0 shadow-sm stat-card h-100 overflow-hidden" style="background-color: var(--navbar-bg);">
             <div class="card-body p-3 text-white">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div class="stat-icon-wrapper">

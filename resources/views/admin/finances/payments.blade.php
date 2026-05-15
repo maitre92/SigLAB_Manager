@@ -50,7 +50,7 @@
                         <label class="form-label small fw-bold">Notes</label>
                         <textarea name="notes" class="form-control" rows="2" placeholder="Commentaire..."></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                    <button type="submit" class="btn btn text-white w-100 fw-bold"style="background-color: var(--navbar-bg);">
                         <i class="fas fa-save me-1"></i> Valider le paiement
                     </button>
                 </form>

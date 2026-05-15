@@ -3,7 +3,7 @@
 @section('content')
 <div class="row g-4 mb-4">
     <div class="col-xl-4">
-        <div class="card border-0 shadow-sm bg-primary text-white p-3">
+        <div class="card border-0 shadow-sm  text-white p-3" style="background-color: var(--navbar-bg);">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="bg-white bg-opacity-25 rounded-pill p-2" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
@@ -17,7 +17,7 @@
         </div>
     </div>
     <div class="col-xl-4">
-        <div class="card border-0 shadow-sm bg-danger text-white p-3">
+        <div class="card border-0 shadow-sm text-white p-3" style="background-color: var(--navbar-bg);">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="bg-white bg-opacity-25 rounded-pill p-2" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
@@ -31,7 +31,7 @@
         </div>
     </div>
     <div class="col-xl-4">
-        <div class="card border-0 shadow-sm {{ $balance >= 0 ? 'bg-success' : 'bg-warning' }} text-white p-3">
+        <div class="card border-0 shadow-sm {{ $balance >= 0 ? 'background-color: var(--navbar-bg);' : 'bg-warning' }} text-white p-3"style="background-color: var(--navbar-bg);">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="bg-white bg-opacity-25 rounded-pill p-2" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
@@ -64,7 +64,7 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-3">
-                    <a href="{{ route('admin.finances.payments') }}" class="btn btn-primary py-3 fw-bold">
+                    <a href="{{ route('admin.finances.payments') }}" class="btn btn py-3 fw-bold text-white" style="background-color: var(--navbar-bg);">
                         <i class="fas fa-plus-circle me-2"></i> Nouveau Paiement
                     </a>
                     <a href="{{ route('admin.finances.expenses') }}" class="btn btn-outline-danger py-3 fw-bold">
