@@ -116,6 +116,11 @@
                                 <i class="fas fa-star"></i> <span class="nav-text">Notes</span>
                             </a>
                         @endif
+                        <a class="nav-link {{ request()->routeIs('admin.pedagogie.resultats') ? 'active' : '' }}" 
+                           style="padding-left: 40px; font-size: 13px;" 
+                           href="{{ route('admin.pedagogie.resultats') }}">
+                            <i class="fas fa-poll"></i> <span class="nav-text">Résultats</span>
+                        </a>
                     </div>
                 </div>
             @endif

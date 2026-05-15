@@ -101,6 +101,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/notes', [PedagogieController::class, 'notes'])->name('notes');
             Route::get('/notes/evaluation/{evaluation}', [PedagogieController::class, 'editNotes'])->name('notes.edit');
             Route::post('/notes/evaluation/{evaluation}', [PedagogieController::class, 'storeNotes'])->name('notes.store');
+            
+            Route::get('/resultats', [PedagogieController::class, 'resultats'])->name('resultats');
         });
 
         // Gestion Financière

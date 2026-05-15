@@ -39,6 +39,9 @@
                             </span>
                         </td>
                         <td class="text-end">
+                            <a href="{{ route('admin.pedagogie.resultats', ['formation_id' => $ex->formation_id]) }}" class="btn btn-sm btn-outline-primary" title="Voir les résultats">
+                                <i class="fas fa-eye"></i> Résultats
+                            </a>
                             <a href="{{ route('admin.pedagogie.notes.edit', $ex) }}" class="btn btn-sm btn-outline-info" title="Saisir les notes">
                                 <i class="fas fa-edit"></i> Notes
                             </a>

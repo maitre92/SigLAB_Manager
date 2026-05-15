@@ -176,4 +176,34 @@ class PedagogieController extends Controller
 
         return redirect()->route('admin.pedagogie.notes')->with('success', 'Notes enregistrées avec succès.');
     }
+
+    /**
+     * Display a summary of results for a formation.
+     */
+    public function resultats(Request $request)
+    {
+        $page_title = 'Résultats des Examens & Évaluations';
+        $formationId = $request->get('formation_id');
+        $formations = Formation::all();
+        
+        $apprenants = [];
+        $evaluations = [];
+        $notes = [];
+        $formation = null;
+
+        if ($formationId) {
+            $formation = Formation::with(['apprenants', 'evaluations.notes'])->findOrFail($formationId);
+            $apprenants = $formation->apprenants;
+            $evaluations = $formation->evaluations()->orderBy('date_evaluation', 'asc')->get();
+            
+            // Re-organize notes for easier access in view: $notes[apprenant_id][evaluation_id]
+            foreach ($evaluations as $eval) {
+                foreach ($eval->notes as $note) {
+                    $notes[$note->apprenant_id][$eval->id] = $note->valeur;
+                }
+            }
+        }
+
+        return view('admin.pedagogie.resultats', compact('formations', 'formation', 'apprenants', 'evaluations', 'notes', 'page_title', 'formationId'));
+    }
 }
