@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Formation;
 use App\Models\CategorieFormation;
 use App\Models\User;
+use App\Shared\Enums\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Arr;
+use Illuminate\Validation\ValidationException;
 
 class FormationController extends Controller
 {
@@ -44,7 +47,7 @@ class FormationController extends Controller
     public function create()
     {
         $categories = CategorieFormation::where('is_active', true)->orderBy('nom')->get();
-        $formateurs = User::where('role', '!=', \App\Shared\Enums\UserRole::SUPERADMIN->value)
+        $formateurs = User::where('role', '!=', UserRole::SUPERADMIN->value)
             ->orderBy('name')
             ->get();
         return view('admin.formations.create', compact('categories', 'formateurs'));
@@ -59,6 +62,7 @@ class FormationController extends Controller
             'type' => 'required|in:Présentiel,En ligne,Hybride',
             'duree_heures' => 'nullable|integer|min:0',
             'cout' => 'nullable|numeric|min:0',
+            'frais_inscription' => 'nullable|numeric|min:0',
             'capacite_max' => 'nullable|integer|min:0',
             'niveau' => 'nullable|string|max:100',
             'statut' => 'required|in:planifiee,en_cours,terminee,suspendue',
@@ -68,15 +72,19 @@ class FormationController extends Controller
             'emploi_du_temps' => 'nullable|string',
             'formateurs' => 'nullable|array',
             'formateurs.*' => 'exists:users,id',
+            'formateur_commissions' => 'nullable|array',
+            'formateur_commissions.*' => 'nullable|integer|in:20,30,40,50,60,70',
         ]);
+
+        $formateurIds = Arr::pull($validated, 'formateurs', []);
+        $pourcentages = Arr::pull($validated, 'formateur_commissions', []);
+        $this->validateFormateurPercentages($formateurIds, $pourcentages);
 
         $validated['created_by'] = Auth::id();
 
         $formation = Formation::create($validated);
 
-        if ($request->has('formateurs')) {
-            $formation->formateurs()->sync($request->formateurs);
-        }
+        $formation->formateurs()->sync($this->buildFormateurSyncData($formateurIds, $pourcentages));
 
         return redirect()->route('admin.formations.index')->with('success', 'Formation créée avec succès.');
     }
@@ -90,11 +98,15 @@ class FormationController extends Controller
     public function edit(Formation $formation)
     {
         $categories = CategorieFormation::where('is_active', true)->orderBy('nom')->get();
-        $formateurs = User::where('role', '!=', \App\Shared\Enums\UserRole::SUPERADMIN->value)
+        $formateurs = User::where('role', '!=', UserRole::SUPERADMIN->value)
             ->orderBy('name')
             ->get();
         $selectedFormateurs = $formation->formateurs->pluck('id')->toArray();
-        return view('admin.formations.edit', compact('formation', 'categories', 'formateurs', 'selectedFormateurs'));
+        $selectedPourcentages = $formation->formateurs
+            ->pluck('pivot.pourcentage_commission', 'id')
+            ->filter()
+            ->toArray();
+        return view('admin.formations.edit', compact('formation', 'categories', 'formateurs', 'selectedFormateurs', 'selectedPourcentages'));
     }
 
     public function update(Request $request, Formation $formation)
@@ -106,6 +118,7 @@ class FormationController extends Controller
             'type' => 'required|in:Présentiel,En ligne,Hybride',
             'duree_heures' => 'nullable|integer|min:0',
             'cout' => 'nullable|numeric|min:0',
+            'frais_inscription' => 'nullable|numeric|min:0',
             'capacite_max' => 'nullable|integer|min:0',
             'niveau' => 'nullable|string|max:100',
             'statut' => 'required|in:planifiee,en_cours,terminee,suspendue',
@@ -115,15 +128,17 @@ class FormationController extends Controller
             'emploi_du_temps' => 'nullable|string',
             'formateurs' => 'nullable|array',
             'formateurs.*' => 'exists:users,id',
+            'formateur_commissions' => 'nullable|array',
+            'formateur_commissions.*' => 'nullable|integer|in:20,30,40,50,60,70',
         ]);
+
+        $formateurIds = Arr::pull($validated, 'formateurs', []);
+        $pourcentages = Arr::pull($validated, 'formateur_commissions', []);
+        $this->validateFormateurPercentages($formateurIds, $pourcentages);
 
         $formation->update($validated);
 
-        if ($request->has('formateurs')) {
-            $formation->formateurs()->sync($request->formateurs);
-        } else {
-            $formation->formateurs()->detach();
-        }
+        $formation->formateurs()->sync($this->buildFormateurSyncData($formateurIds, $pourcentages));
 
         return redirect()->route('admin.formations.index')->with('success', 'Formation mise à jour avec succès.');
     }
@@ -149,5 +164,46 @@ class FormationController extends Controller
         $formation->update(['statut' => $validated['statut']]);
 
         return back()->with('success', 'Le statut de la formation a été mis à jour.');
+    }
+
+    private function validateFormateurPercentages(array $formateurIds, array $pourcentages): void
+    {
+        $ids = array_map('intval', $formateurIds);
+        $allowed = [20, 30, 40, 50, 60, 70];
+
+        $formateurs = User::whereIn('id', $ids)
+            ->where('role', UserRole::FORMATEUR->value)
+            ->get(['id', 'name']);
+
+        $errors = [];
+
+        foreach ($formateurs as $formateur) {
+            $percentage = $pourcentages[$formateur->id] ?? null;
+
+            if (!$percentage || !in_array((int) $percentage, $allowed, true)) {
+                $errors["formateur_commissions.{$formateur->id}"] = "Veuillez sélectionner le pourcentage de commission pour {$formateur->name}.";
+            }
+        }
+
+        if ($errors) {
+            throw ValidationException::withMessages($errors);
+        }
+    }
+
+    private function buildFormateurSyncData(array $formateurIds, array $pourcentages): array
+    {
+        return collect($formateurIds)
+            ->filter()
+            ->unique()
+            ->mapWithKeys(function ($id) use ($pourcentages) {
+                return [
+                    (int) $id => [
+                        'role' => 'formateur',
+                        'pourcentage_commission' => isset($pourcentages[$id]) ? (int) $pourcentages[$id] : null,
+                        'assigned_at' => now(),
+                    ],
+                ];
+            })
+            ->toArray();
     }
 }

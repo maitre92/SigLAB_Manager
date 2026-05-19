@@ -34,7 +34,7 @@ class ApprenantService
             $formation = \App\Models\Formation::find($formationId);
             $apprenant->formations()->attach($formationId, [
                 'date_inscription' => now(),
-                'montant_total' => $formation->cout ?? 0,
+                'montant_total' => ($formation->cout ?? 0) + ($formation->frais_inscription ?? 0),
                 'statut' => 'en_attente',
                 'created_by' => auth()->id()
             ]);
@@ -95,7 +95,7 @@ class ApprenantService
             $formation = \App\Models\Formation::find($formationId);
             $apprenant->formations()->attach($formationId, [
                 'date_inscription' => now(),
-                'montant_total' => $formation->cout ?? 0,
+                'montant_total' => ($formation->cout ?? 0) + ($formation->frais_inscription ?? 0),
                 'statut' => 'en_attente',
                 'created_by' => auth()->id()
             ]);

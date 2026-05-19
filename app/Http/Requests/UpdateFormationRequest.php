@@ -26,6 +26,7 @@ class UpdateFormationRequest extends FormRequest
             'type' => ['required', Rule::in(array_map(fn($type) => $type->value, FormationType::cases()))],
             'duree_heures' => ['required', 'integer', 'min:1', 'max:10000'],
             'cout' => ['required', 'numeric', 'min:0', 'max:999999999.99'],
+            'frais_inscription' => ['nullable', 'numeric', 'min:0', 'max:999999999.99'],
             'capacite_max' => ['nullable', 'integer', 'min:1', 'max:10000'],
             'niveau' => ['nullable', 'string', 'max:100'],
             'statut' => ['required', Rule::in(array_map(fn($statut) => $statut->value, FormationStatut::cases()))],
@@ -35,6 +36,8 @@ class UpdateFormationRequest extends FormRequest
             'emploi_du_temps' => ['nullable', 'string', 'max:5000'],
             'formateurs' => ['nullable', 'array'],
             'formateurs.*' => ['integer', 'exists:users,id'],
+            'formateur_commissions' => ['nullable', 'array'],
+            'formateur_commissions.*' => ['nullable', 'integer', Rule::in([20, 30, 40, 50, 60, 70])],
         ];
     }
 }

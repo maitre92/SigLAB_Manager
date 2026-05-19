@@ -96,6 +96,13 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
+                                <label class="form-label fw-bold">Frais d'inscription (FCFA)</label>
+                                <div class="input-group">
+                                    <input type="number" name="frais_inscription" class="form-control" value="{{ old('frais_inscription', 0) }}" min="0">
+                                    <span class="input-group-text">FCFA</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
                                 <label class="form-label fw-bold">Capacité Max</label>
                                 <div class="input-group">
                                     <input type="number" name="capacite_max" class="form-control" value="{{ old('capacite_max', 0) }}" min="0">
@@ -191,6 +198,7 @@
                                         </option>
                                     @endforeach
                                 </select>
+                                <div id="formateur_percentage_inputs"></div>
                             </div>
                         </div>
                     </div>
@@ -204,6 +212,31 @@
             </div>
         </div>
     </form>
+</div>
+
+<div class="modal fade" id="formateurPercentageModal" tabindex="-1" aria-labelledby="formateurPercentageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header text-white" style="background-color: var(--navbar-bg);">
+                <h5 class="modal-title" id="formateurPercentageModalLabel">Commission du formateur</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Sélectionnez le pourcentage de commission pour <strong id="percentageFormateurName"></strong>.</p>
+                <select id="formateurPercentageSelect" class="form-select">
+                    <option value="">-- Choisir un pourcentage --</option>
+                    @foreach([20, 30, 40, 50, 60, 70] as $percentage)
+                        <option value="{{ $percentage }}">{{ $percentage }}%</option>
+                    @endforeach
+                </select>
+                <div class="invalid-feedback">Le pourcentage de commission est obligatoire.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="saveFormateurPercentage">Valider</button>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -223,6 +256,14 @@ document.addEventListener('DOMContentLoaded', function() {
         role: opt.dataset.role,
         selected: opt.selected
     }));
+    const selectedPercentages = @json(old('formateur_commissions', []));
+    const percentageInputs = document.getElementById('formateur_percentage_inputs');
+    const percentageModalElement = document.getElementById('formateurPercentageModal');
+    const percentageModal = percentageModalElement ? new bootstrap.Modal(percentageModalElement) : null;
+    const percentageSelect = document.getElementById('formateurPercentageSelect');
+    const percentageFormateurName = document.getElementById('percentageFormateurName');
+    const savePercentageButton = document.getElementById('saveFormateurPercentage');
+    let pendingPercentageFormateur = null;
 
     let choicesInstance = new Choices(selectElement, {
         removeItemButton: true,
@@ -255,6 +296,7 @@ document.addEventListener('DOMContentLoaded', function() {
             removeItemButton: true,
             placeholderValue: 'Sélectionner des formateurs',
         });
+        renderPercentageInputs();
     }
 
     showAllCheckbox.addEventListener('change', updateTrainerList);
@@ -266,7 +308,54 @@ document.addEventListener('DOMContentLoaded', function() {
         allOptions.forEach(opt => {
             opt.selected = selectedValues.includes(opt.value);
         });
+        renderPercentageInputs();
     });
+
+    selectElement.addEventListener('addItem', function(event) {
+        const value = String(event.detail.value);
+        const option = allOptions.find(opt => opt.value === value);
+
+        if (option?.role === roleFormateur && !selectedPercentages[value]) {
+            pendingPercentageFormateur = option;
+            percentageFormateurName.textContent = option.label.replace(/\s*\([^)]*\)\s*$/, '');
+            percentageSelect.value = '';
+            percentageModal?.show();
+        }
+    });
+
+    savePercentageButton?.addEventListener('click', function() {
+        if (!pendingPercentageFormateur || !percentageSelect.value) {
+            percentageSelect.classList.add('is-invalid');
+            return;
+        }
+
+        selectedPercentages[pendingPercentageFormateur.value] = percentageSelect.value;
+        percentageSelect.classList.remove('is-invalid');
+        pendingPercentageFormateur = null;
+        renderPercentageInputs();
+        percentageModal?.hide();
+    });
+
+    function renderPercentageInputs() {
+        if (!percentageInputs) {
+            return;
+        }
+
+        const selectedValues = Array.from(selectElement.selectedOptions).map(opt => String(opt.value));
+        percentageInputs.innerHTML = '';
+
+        selectedValues.forEach(value => {
+            if (!selectedPercentages[value]) {
+                return;
+            }
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = `formateur_commissions[${value}]`;
+            input.value = selectedPercentages[value];
+            percentageInputs.appendChild(input);
+        });
+    }
 
     // 2. Code Generation
     const nomInput = document.getElementById('formation_nom');
@@ -328,6 +417,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const form = document.getElementById('formationForm');
     form.onsubmit = function() {
+        const missingCommission = Array.from(selectElement.selectedOptions).find(opt => {
+            return opt.dataset.role === roleFormateur && !selectedPercentages[String(opt.value)];
+        });
+
+        if (missingCommission) {
+            pendingPercentageFormateur = allOptions.find(opt => opt.value === String(missingCommission.value));
+            percentageFormateurName.textContent = missingCommission.text.replace(/\s*\([^)]*\)\s*$/, '');
+            percentageSelect.value = '';
+            percentageSelect.classList.remove('is-invalid');
+            percentageModal?.show();
+            return false;
+        }
+
         const rows = document.querySelectorAll('.schedule-row');
         const scheduleData = [];
         rows.forEach(row => {
@@ -338,6 +440,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (start || end || activity) scheduleData.push({ day, start, end, activity });
         });
         document.getElementById('emploi_du_temps_json').value = JSON.stringify(scheduleData);
+        return true;
     };
 });
 </script>

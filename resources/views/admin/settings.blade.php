@@ -56,6 +56,16 @@
                             </thead>
                             <tbody>
                                 @foreach($users ?? [] as $u)
+                                    @php
+                                        $currentRole = \App\Shared\Enums\UserRole::tryFrom(Auth::user()->role);
+                                        $targetRole = \App\Shared\Enums\UserRole::tryFrom($u->role);
+                                        $canToggleAccount = (Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('edit_user'))
+                                            && Auth::id() !== $u->id
+                                            && $targetRole
+                                            && !in_array($targetRole, [\App\Shared\Enums\UserRole::SUPERADMIN, \App\Shared\Enums\UserRole::ADMIN], true)
+                                            && ($currentRole === \App\Shared\Enums\UserRole::SUPERADMIN || ($currentRole && $currentRole->canManage($targetRole)));
+                                        $isAccountActive = (bool) $u->is_active && (string) $u->status === \App\Shared\Enums\UserStatus::ACTIVE->value;
+                                    @endphp
                                     <tr>
                                         <td>{{ $u->name }}</td>
                                         <td>{{ $u->email }}</td>
@@ -71,11 +81,28 @@
                                                             data-name="{{ $u->name }}"
                                                             data-email="{{ $u->email }}"
                                                             data-phone="{{ $u->phone }}"
+                                                            data-specialite="{{ $u->specialite }}"
+                                                            data-diplome="{{ $u->diplome }}"
+                                                            data-adresse="{{ $u->adresse }}"
                                                             data-role="{{ $u->role }}"
                                                             data-status="{{ $u->status }}"
                                                             data-active="{{ $u->is_active ? '1' : '0' }}">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
+                                                @endif
+                                                @if($canToggleAccount)
+                                                    <form method="POST"
+                                                          action="{{ $isAccountActive ? route('admin.users.deactivate', $u) : route('admin.users.activate', $u) }}"
+                                                          class="d-inline toggle-user-form"
+                                                          data-message="{{ $isAccountActive ? 'Désactiver ce compte utilisateur ?' : 'Activer ce compte utilisateur ?' }}">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <button type="submit"
+                                                                class="btn btn-sm {{ $isAccountActive ? 'btn-outline-warning' : 'btn-outline-success' }}"
+                                                                title="{{ $isAccountActive ? 'Désactiver' : 'Activer' }}">
+                                                            <i class="fas {{ $isAccountActive ? 'fa-user-slash' : 'fa-user-check' }}"></i>
+                                                        </button>
+                                                    </form>
                                                 @endif
                                                 @if(Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('delete_user'))
                                                     <form method="POST" action="{{ route('admin.users.destroy', $u) }}" class="d-inline delete-user-form">
@@ -457,7 +484,7 @@
                 <input type="hidden" name="back_to_settings" value="1">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="new_user_name" class="form-label">Nom</label>
+                        <label for="new_user_name" class="form-label">Prénom & Nom</label>
                         <input type="text" name="name" id="new_user_name" class="form-control" required>
                     </div>
                     <div class="mb-3">
@@ -467,6 +494,28 @@
                     <div class="mb-3">
                         <label for="new_user_phone" class="form-label">Téléphone</label>
                         <input type="text" name="phone" id="new_user_phone" class="form-control">
+                    </div>
+                    <div id="settings_formateur_fields" class="border rounded p-3 mb-3 d-none">
+                        <h6 class="mb-3">Informations formateur</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="new_user_specialite" class="form-label">Spécialité</label>
+                                <input type="text" name="specialite" id="new_user_specialite" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="new_user_diplome" class="form-label">Diplôme</label>
+                                <select name="diplome" id="new_user_diplome" class="form-select">
+                                    <option value="">-- Sélectionner --</option>
+                                    @foreach(['DUT', 'BTS', 'LICENCE', 'MASTER', 'DEA', 'DOCTORAT', 'AUTRE'] as $diplome)
+                                        <option value="{{ $diplome }}">{{ $diplome }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="new_user_adresse" class="form-label">Adresse</label>
+                                <input type="text" name="adresse" id="new_user_adresse" class="form-control">
+                            </div>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="new_user_password" class="form-label" id="settings_user_password_label">Mot de passe</label>
@@ -707,6 +756,30 @@
         });
     });
 
+    document.querySelectorAll('.toggle-user-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            Swal.fire({
+                title: 'Confirmation',
+                text: this.dataset.message || 'Confirmer cette action ?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Oui',
+                cancelButtonText: 'Annuler',
+                customClass: {
+                    confirmButton: 'btn btn-primary me-2',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false
+            }).then(result => {
+                if (result.isConfirmed) {
+                    this.submit();
+                }
+            });
+        });
+    });
+
     const settingsUserModalElement = document.getElementById('createUserModal');
     const settingsUserModal = settingsUserModalElement ? new bootstrap.Modal(settingsUserModalElement) : null;
     const settingsUserForm = document.getElementById('settingsUserForm');
@@ -719,8 +792,22 @@
     const settingsPasswordLabel = document.getElementById('settings_user_password_label');
     const settingsPasswordConfirmationLabel = document.getElementById('settings_user_password_confirmation_label');
     const settingsPasswordHelp = document.getElementById('settings_user_password_help');
+    const settingsUserRole = document.getElementById('new_user_role');
+    const settingsFormateurFields = document.getElementById('settings_formateur_fields');
+    const settingsFormateurInputs = [
+        document.getElementById('new_user_specialite'),
+        document.getElementById('new_user_diplome'),
+        document.getElementById('new_user_adresse')
+    ].filter(Boolean);
+    const roleFormateurValue = "{{ \App\Shared\Enums\UserRole::FORMATEUR->value }}";
     const settingsUserStoreUrl = "{{ route('admin.users.store') }}";
     const settingsUserUpdateBase = "{{ url('admin/users') }}";
+
+    function toggleSettingsFormateurFields() {
+        const isFormateur = settingsUserRole?.value === roleFormateurValue;
+        settingsFormateurFields?.classList.toggle('d-none', !isFormateur);
+        settingsFormateurInputs.forEach(input => input.required = isFormateur);
+    }
 
     function prepareCreateUserModal() {
         if (!settingsUserForm) {
@@ -739,9 +826,11 @@
         settingsPasswordConfirmationLabel.textContent = 'Confirmer le mot de passe';
         settingsPasswordHelp.classList.add('d-none');
         document.getElementById('new_user_active').checked = true;
+        toggleSettingsFormateurFields();
     }
 
     document.getElementById('btn-create-user')?.addEventListener('click', prepareCreateUserModal);
+    settingsUserRole?.addEventListener('change', toggleSettingsFormateurFields);
 
     document.querySelectorAll('.btn-edit-user').forEach(button => {
         button.addEventListener('click', function() {
@@ -760,6 +849,9 @@
             document.getElementById('new_user_email').value = this.dataset.email || '';
             document.getElementById('new_user_phone').value = this.dataset.phone || '';
             document.getElementById('new_user_role').value = this.dataset.role || '';
+            document.getElementById('new_user_specialite').value = this.dataset.specialite || '';
+            document.getElementById('new_user_diplome').value = this.dataset.diplome || '';
+            document.getElementById('new_user_adresse').value = this.dataset.adresse || '';
             document.getElementById('new_user_status').value = this.dataset.status || 'active';
             document.getElementById('new_user_active').checked = this.dataset.active === '1';
 
@@ -768,6 +860,7 @@
             settingsPasswordLabel.textContent = 'Mot de passe (optionnel)';
             settingsPasswordConfirmationLabel.textContent = 'Confirmer le mot de passe';
             settingsPasswordHelp.classList.remove('d-none');
+            toggleSettingsFormateurFields();
 
             settingsUserModal.show();
         });

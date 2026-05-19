@@ -64,6 +64,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard/stats', [AdminDashboardController::class, 'getStats'])->name('dashboard.stats');
 
         // Gestion des utilisateurs
+        Route::patch('users/{user}/activate', [UserController::class, 'activate'])->name('users.activate');
+        Route::patch('users/{user}/deactivate', [UserController::class, 'deactivate'])->name('users.deactivate');
         Route::resource('users', UserController::class);
 
         // Gestion des apprenants

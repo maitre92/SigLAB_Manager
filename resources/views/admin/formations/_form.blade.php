@@ -98,6 +98,11 @@
                     @error('cout')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="mb-3">
+                    <label for="frais_inscription" class="form-label">Frais d'inscription</label>
+                    <input type="number" min="0" step="0.01" class="form-control @error('frais_inscription') is-invalid @enderror" id="frais_inscription" name="frais_inscription" value="{{ old('frais_inscription', $formation->frais_inscription) }}">
+                    @error('frais_inscription')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="mb-3">
                     <label for="capacite_max" class="form-label">Capacité maximale</label>
                     <input type="number" min="1" class="form-control @error('capacite_max') is-invalid @enderror" id="capacite_max" name="capacite_max" value="{{ old('capacite_max', $formation->capacite_max) }}">
                     @error('capacite_max')<div class="invalid-feedback">{{ $message }}</div>@enderror

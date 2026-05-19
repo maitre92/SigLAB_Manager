@@ -129,6 +129,77 @@
         width: 18px;
     }
 
+    @media (max-width: 767.98px) {
+        #navbar .container-fluid {
+            flex-wrap: nowrap;
+            gap: 8px;
+        }
+
+        #navbar .navbar-brand {
+            flex: 1 1 auto;
+            min-width: 0;
+            font-size: 18px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        #navbar .navbar-toggler {
+            flex: 0 0 auto;
+            padding: 4px 8px;
+        }
+
+        #navbarNav {
+            display: flex !important;
+            flex: 0 0 auto;
+            width: auto;
+        }
+
+        #navbarNav .navbar-nav {
+            flex-direction: row;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #navbarNav .nav-item {
+            flex: 0 0 auto;
+        }
+
+        #navbarNav .nav-link {
+            margin-left: 0;
+            padding: 6px;
+        }
+
+        #themeSelector,
+        #darkModeToggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            margin-right: 0 !important;
+            padding: 0;
+        }
+
+        #themeSelector {
+            font-size: 0;
+        }
+
+        #themeSelector i {
+            font-size: 14px;
+        }
+
+        #userDropdown span {
+            display: none;
+        }
+
+        #navbar .dropdown-menu {
+            z-index: 1100;
+            min-width: 190px;
+            max-width: calc(100vw - 24px);
+        }
+    }
+
     /* Theme Color Variables */
     :root {
         --primary-color: #4060a0;

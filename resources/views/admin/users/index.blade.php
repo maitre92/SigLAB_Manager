@@ -44,6 +44,16 @@
             </thead>
             <tbody>
                 @forelse ($users as $user)
+                    @php
+                        $currentRole = \App\Shared\Enums\UserRole::tryFrom(Auth::user()->role);
+                        $targetRole = \App\Shared\Enums\UserRole::tryFrom($user->role);
+                        $canToggleAccount = (Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('edit_user'))
+                            && Auth::id() !== $user->id
+                            && $targetRole
+                            && !in_array($targetRole, [\App\Shared\Enums\UserRole::SUPERADMIN, \App\Shared\Enums\UserRole::ADMIN], true)
+                            && ($currentRole === \App\Shared\Enums\UserRole::SUPERADMIN || ($currentRole && $currentRole->canManage($targetRole)));
+                        $isAccountActive = (bool) $user->is_active && (string) $user->status === \App\Shared\Enums\UserStatus::ACTIVE->value;
+                    @endphp
                     <tr>
                         <td>{{ $user->name }}</td>
                         <td>{{ $user->email }}</td>
@@ -73,11 +83,27 @@
                                             data-name="{{ $user->name }}"
                                             data-email="{{ $user->email }}"
                                             data-phone="{{ $user->phone }}"
+                                            data-specialite="{{ $user->specialite }}"
+                                            data-diplome="{{ $user->diplome }}"
+                                            data-adresse="{{ $user->adresse }}"
                                             data-role="{{ $user->role }}"
                                             data-status="{{ $user->status }}">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                 @endcan
+                                @if($canToggleAccount)
+                                    <form method="POST"
+                                          action="{{ $isAccountActive ? route('admin.users.deactivate', $user) : route('admin.users.activate', $user) }}"
+                                          onsubmit="return confirm('{{ $isAccountActive ? 'Désactiver ce compte utilisateur ?' : 'Activer ce compte utilisateur ?' }}')">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit"
+                                                class="btn {{ $isAccountActive ? 'btn-outline-warning' : 'btn-outline-success' }}"
+                                                title="{{ $isAccountActive ? 'Désactiver' : 'Activer' }}">
+                                            <i class="fas {{ $isAccountActive ? 'fa-user-slash' : 'fa-user-check' }}"></i>
+                                        </button>
+                                    </form>
+                                @endif
                                 @can('delete_user')
                                     <button type="button" 
                                             class="btn btn-outline-danger btn-delete-user" 
@@ -127,7 +153,7 @@
                     
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label for="name" class="form-label">Nom complet <span class="text-danger">*</span></label>
+                            <label for="name" class="form-label">Prénom & Nom <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="name" name="name" required>
                             <div class="invalid-feedback" id="name-error"></div>
                         </div>
@@ -142,6 +168,34 @@
                             <label for="phone" class="form-label">Téléphone</label>
                             <input type="text" class="form-control" id="phone" name="phone">
                             <div class="invalid-feedback" id="phone-error"></div>
+                        </div>
+
+                        <div class="col-12 d-none" id="formateurFields">
+                            <div class="border rounded p-3">
+                                <h6 class="mb-3">Informations formateur</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="specialite" class="form-label">Spécialité</label>
+                                        <input type="text" class="form-control" id="specialite" name="specialite">
+                                        <div class="invalid-feedback" id="specialite-error"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="diplome" class="form-label">Diplôme</label>
+                                        <select class="form-select" id="diplome" name="diplome">
+                                            <option value="">-- Sélectionner --</option>
+                                            @foreach(['DUT', 'BTS', 'LICENCE', 'MASTER', 'DEA', 'DOCTORAT', 'AUTRE'] as $diplome)
+                                                <option value="{{ $diplome }}">{{ $diplome }}</option>
+                                            @endforeach
+                                        </select>
+                                        <div class="invalid-feedback" id="diplome-error"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="adresse" class="form-label">Adresse</label>
+                                        <input type="text" class="form-control" id="adresse" name="adresse">
+                                        <div class="invalid-feedback" id="adresse-error"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="col-md-6">
@@ -227,6 +281,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const userForm = document.getElementById('userForm');
     const modalTitle = document.getElementById('userModalLabel');
     const submitBtn = document.getElementById('submitBtn');
+    const roleSelect = document.getElementById('role');
+    const formateurFields = document.getElementById('formateurFields');
+    const formateurInputs = ['specialite', 'diplome', 'adresse']
+        .map(id => document.getElementById(id))
+        .filter(Boolean);
+    const roleFormateur = "{{ \App\Shared\Enums\UserRole::FORMATEUR->value }}";
     
     // URLs
     const storeUrl = "{{ route('admin.users.store') }}";
@@ -245,6 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('passwordLabel').innerHTML = 'Mot de passe <span class="text-danger">*</span>';
         document.getElementById('passwordConfirmLabel').innerHTML = 'Confirmer le mot de passe <span class="text-danger">*</span>';
         document.getElementById('passwordHelp').style.display = 'none';
+        toggleFormateurFields();
         
         userModal.show();
     });
@@ -259,6 +320,9 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('name').value = this.dataset.name || '';
             document.getElementById('email').value = this.dataset.email || '';
             document.getElementById('phone').value = this.dataset.phone || '';
+            document.getElementById('specialite').value = this.dataset.specialite || '';
+            document.getElementById('diplome').value = this.dataset.diplome || '';
+            document.getElementById('adresse').value = this.dataset.adresse || '';
             document.getElementById('role').value = this.dataset.role || '';
             document.getElementById('status').value = this.dataset.status || '';
             document.getElementById('user_id').value = id;
@@ -274,10 +338,13 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('passwordLabel').innerHTML = 'Mot de passe <span class="text-muted">(optionnel)</span>';
             document.getElementById('passwordConfirmLabel').innerHTML = 'Confirmer le mot de passe';
             document.getElementById('passwordHelp').style.display = 'block';
+            toggleFormateurFields();
             
             userModal.show();
         });
     });
+
+    roleSelect?.addEventListener('change', toggleFormateurFields);
     
     // Supprimer un utilisateur
     document.querySelectorAll('.btn-delete-user').forEach(btn => {
@@ -346,6 +413,13 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('user_id').value = '';
         clearErrors();
         document.getElementById('modalAlert').innerHTML = '';
+        toggleFormateurFields();
+    }
+
+    function toggleFormateurFields() {
+        const isFormateur = roleSelect?.value === roleFormateur;
+        formateurFields?.classList.toggle('d-none', !isFormateur);
+        formateurInputs.forEach(input => input.required = isFormateur);
     }
     
     function clearErrors() {

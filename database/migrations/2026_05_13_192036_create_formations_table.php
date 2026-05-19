@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('type', 50);
             $table->unsignedInteger('duree_heures')->default(0);
             $table->decimal('cout', 12, 2)->default(0);
+            $table->decimal('frais_inscription', 12, 2)->default(0);
             $table->unsignedInteger('capacite_max')->nullable();
             $table->string('niveau', 100)->nullable();
             $table->string('statut', 50)->default('planifiee');

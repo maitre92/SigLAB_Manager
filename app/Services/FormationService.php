@@ -32,8 +32,9 @@ class FormationService
     public function create(array $data): Formation
     {
         $formateurIds = Arr::pull($data, 'formateurs', []);
+        $pourcentages = Arr::pull($data, 'formateur_commissions', []);
         $formation = Formation::create($data);
-        $this->syncFormateurs($formation, $formateurIds);
+        $this->syncFormateurs($formation, $formateurIds, $pourcentages);
 
         ActivityLog::log(
             action: 'create_formation',
@@ -48,6 +49,7 @@ class FormationService
     public function update(Formation $formation, array $data): bool
     {
         $formateurIds = Arr::pull($data, 'formateurs', []);
+        $pourcentages = Arr::pull($data, 'formateur_commissions', []);
         $changes = [];
 
         foreach ($data as $key => $value) {
@@ -60,7 +62,7 @@ class FormationService
         }
 
         $result = $formation->update($data);
-        $this->syncFormateurs($formation, $formateurIds);
+        $this->syncFormateurs($formation, $formateurIds, $pourcentages);
 
         if ($result) {
             ActivityLog::log(
@@ -91,12 +93,18 @@ class FormationService
         return $result;
     }
 
-    private function syncFormateurs(Formation $formation, ?array $formateurIds): void
+    private function syncFormateurs(Formation $formation, ?array $formateurIds, ?array $pourcentages = []): void
     {
         $syncData = collect($formateurIds ?? [])
             ->filter()
             ->unique()
-            ->mapWithKeys(fn($id) => [$id => ['role' => 'formateur', 'assigned_at' => now()]])
+            ->mapWithKeys(fn($id) => [
+                $id => [
+                    'role' => 'formateur',
+                    'pourcentage_commission' => isset($pourcentages[$id]) ? (int) $pourcentages[$id] : null,
+                    'assigned_at' => now(),
+                ],
+            ])
             ->toArray();
 
         $formation->formateurs()->sync($syncData);

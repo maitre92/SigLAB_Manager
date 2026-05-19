@@ -18,6 +18,7 @@ class Formation extends Model
         'type',
         'duree_heures',
         'cout',
+        'frais_inscription',
         'capacite_max',
         'niveau',
         'statut',
@@ -32,6 +33,7 @@ class Formation extends Model
         'date_debut' => 'date',
         'date_fin' => 'date',
         'cout' => 'decimal:2',
+        'frais_inscription' => 'decimal:2',
         'duree_heures' => 'integer',
         'capacite_max' => 'integer',
     ];
@@ -44,7 +46,7 @@ class Formation extends Model
     public function formateurs()
     {
         return $this->belongsToMany(User::class, 'formation_formateur')
-                    ->withPivot('role', 'assigned_at')
+                    ->withPivot('role', 'pourcentage_commission', 'assigned_at')
                     ->withTimestamps();
     }
 

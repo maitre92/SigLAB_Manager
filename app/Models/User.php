@@ -25,6 +25,9 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+        'specialite',
+        'diplome',
+        'adresse',
         'avatar',
         'role',
         'status',
@@ -99,7 +102,7 @@ class User extends Authenticatable
     public function formationsAnimees(): BelongsToMany
     {
         return $this->belongsToMany(Formation::class, 'formation_formateur')
-            ->withPivot('role', 'assigned_at')
+            ->withPivot('role', 'pourcentage_commission', 'assigned_at')
             ->withTimestamps();
     }
 }

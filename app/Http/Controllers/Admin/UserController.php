@@ -25,7 +25,7 @@ class UserController extends Controller
         $this->middleware('auth');
         $this->middleware('permission:view_users')->only(['index', 'show']);
         $this->middleware('permission:create_user')->only(['create', 'store']);
-        $this->middleware('permission:edit_user')->only(['edit', 'update']);
+        $this->middleware('permission:edit_user')->only(['edit', 'update', 'activate', 'deactivate']);
         $this->middleware('permission:delete_user')->only(['destroy']);
     }
 
@@ -48,6 +48,19 @@ class UserController extends Controller
 
         if ($currentRole !== UserRole::SUPERADMIN && !$currentRole->canManage($targetRole)) {
             abort(403, 'Accès refusé.');
+        }
+    }
+
+    private function authorizeActivationTarget(User $target): void
+    {
+        $this->authorizeTarget($target);
+
+        if (auth()->id() === $target->id) {
+            abort(403, 'Vous ne pouvez pas activer ou désactiver votre propre compte.');
+        }
+
+        if (in_array($target->role, [UserRole::SUPERADMIN->value, UserRole::ADMIN->value], true)) {
+            abort(403, 'Les comptes Super Administrateur et Administrateur ne peuvent pas être activés ou désactivés depuis cette action.');
         }
     }
 
@@ -240,7 +253,7 @@ class UserController extends Controller
      */
     public function activate(User $user): RedirectResponse
     {
-        $this->authorizeTarget($user);
+        $this->authorizeActivationTarget($user);
         $this->userService->activate($user);
 
         return back()->with('success', 'L\'utilisateur a été activé avec succès.');
@@ -251,7 +264,7 @@ class UserController extends Controller
      */
     public function deactivate(User $user): RedirectResponse
     {
-        $this->authorizeTarget($user);
+        $this->authorizeActivationTarget($user);
         $this->userService->deactivate($user);
 
         return back()->with('success', 'L\'utilisateur a été désactivé avec succès.');

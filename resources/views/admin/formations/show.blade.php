@@ -120,6 +120,10 @@
                             <p class="fw-bold text-success"><i class="fas fa-money-bill-wave me-2"></i> {{ number_format($formation->cout, 2, ',', ' ') }} FCFA</p>
                         </div>
                         <div class="col-md-4">
+                            <h6 class="text-muted text-uppercase small fw-bold">Frais d'inscription</h6>
+                            <p class="fw-bold text-success"><i class="fas fa-file-invoice-dollar me-2"></i> {{ number_format($formation->frais_inscription, 2, ',', ' ') }} FCFA</p>
+                        </div>
+                        <div class="col-md-4">
                             <h6 class="text-muted text-uppercase small fw-bold">Capacité</h6>
                             <p class="fw-bold"><i class="fas fa-users me-2 text-primary"></i> {{ $formation->capacite_max ?: 'Illimitée' }}</p>
                         </div>

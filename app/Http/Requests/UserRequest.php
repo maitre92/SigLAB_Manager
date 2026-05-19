@@ -22,6 +22,7 @@ class UserRequest extends FormRequest
             fn(UserRole $role) => $role->value,
             UserRole::assignableBy($this->user())
         );
+        $diplomesFormateur = ['DUT', 'BTS', 'LICENCE', 'MASTER', 'DEA', 'DOCTORAT', 'AUTRE'];
         
         $rules = [
             'name' => ['required', 'string', 'max:255'],
@@ -31,6 +32,9 @@ class UserRequest extends FormRequest
                 Rule::unique('users')->ignore($userId)
             ],
             'phone' => ['nullable', 'string', 'max:20'],
+            'specialite' => ['nullable', 'required_if:role,' . UserRole::FORMATEUR->value, 'string', 'max:255'],
+            'diplome' => ['nullable', 'required_if:role,' . UserRole::FORMATEUR->value, 'string', Rule::in($diplomesFormateur)],
+            'adresse' => ['nullable', 'required_if:role,' . UserRole::FORMATEUR->value, 'string', 'max:255'],
             'role' => ['required', 'string', Rule::in($assignableRoles)],
             'status' => ['required', 'string', Rule::in(array_map(fn($s) => $s->value, UserStatus::cases()))],
         ];
@@ -59,6 +63,10 @@ class UserRequest extends FormRequest
             'role.required' => 'Le rôle est obligatoire.',
             'role.in' => 'Vous ne pouvez attribuer que les rôles autorisés par votre niveau.',
             'status.required' => 'Le statut est obligatoire.',
+            'specialite.required_if' => 'La spécialité est obligatoire pour un formateur.',
+            'diplome.required_if' => 'Le diplôme est obligatoire pour un formateur.',
+            'diplome.in' => 'Veuillez sélectionner un diplôme valide.',
+            'adresse.required_if' => 'L\'adresse est obligatoire pour un formateur.',
         ];
     }
 }

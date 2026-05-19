@@ -42,6 +42,36 @@
                             @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
+                        <div class="col-12 {{ old('role', $user->role) === \App\Shared\Enums\UserRole::FORMATEUR->value ? '' : 'd-none' }}" id="formateurFields">
+                            <div class="border rounded p-3">
+                                <h6 class="mb-3">Informations formateur</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="specialite" class="form-label">Spécialité</label>
+                                        <input type="text" class="form-control @error('specialite') is-invalid @enderror"
+                                               id="specialite" name="specialite" value="{{ old('specialite', $user->specialite) }}">
+                                        @error('specialite')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="diplome" class="form-label">Diplôme</label>
+                                        <select class="form-select @error('diplome') is-invalid @enderror" id="diplome" name="diplome">
+                                            <option value="">-- Sélectionner --</option>
+                                            @foreach(['DUT', 'BTS', 'LICENCE', 'MASTER', 'DEA', 'DOCTORAT', 'AUTRE'] as $diplome)
+                                                <option value="{{ $diplome }}" {{ old('diplome', $user->diplome) === $diplome ? 'selected' : '' }}>{{ $diplome }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('diplome')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="adresse" class="form-label">Adresse</label>
+                                        <input type="text" class="form-control @error('adresse') is-invalid @enderror"
+                                               id="adresse" name="adresse" value="{{ old('adresse', $user->adresse) }}">
+                                        @error('adresse')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="col-md-6">
                             <label for="role" class="form-label">Rôle <span class="text-danger">*</span></label>
                             @php
@@ -109,4 +139,26 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('js')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const roleSelect = document.getElementById('role');
+    const formateurFields = document.getElementById('formateurFields');
+    const formateurInputs = ['specialite', 'diplome', 'adresse']
+        .map(id => document.getElementById(id))
+        .filter(Boolean);
+    const roleFormateur = "{{ \App\Shared\Enums\UserRole::FORMATEUR->value }}";
+
+    function toggleFormateurFields() {
+        const isFormateur = roleSelect?.value === roleFormateur;
+        formateurFields?.classList.toggle('d-none', !isFormateur);
+        formateurInputs.forEach(input => input.required = isFormateur);
+    }
+
+    roleSelect?.addEventListener('change', toggleFormateurFields);
+    toggleFormateurFields();
+});
+</script>
 @endsection

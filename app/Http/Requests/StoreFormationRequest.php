@@ -24,6 +24,7 @@ class StoreFormationRequest extends FormRequest
             'type' => ['required', Rule::in(array_map(fn($type) => $type->value, FormationType::cases()))],
             'duree_heures' => ['required', 'integer', 'min:1', 'max:10000'],
             'cout' => ['required', 'numeric', 'min:0', 'max:999999999.99'],
+            'frais_inscription' => ['nullable', 'numeric', 'min:0', 'max:999999999.99'],
             'capacite_max' => ['nullable', 'integer', 'min:1', 'max:10000'],
             'niveau' => ['nullable', 'string', 'max:100'],
             'statut' => ['required', Rule::in(array_map(fn($statut) => $statut->value, FormationStatut::cases()))],
@@ -33,6 +34,8 @@ class StoreFormationRequest extends FormRequest
             'emploi_du_temps' => ['nullable', 'string', 'max:5000'],
             'formateurs' => ['nullable', 'array'],
             'formateurs.*' => ['integer', 'exists:users,id'],
+            'formateur_commissions' => ['nullable', 'array'],
+            'formateur_commissions.*' => ['nullable', 'integer', Rule::in([20, 30, 40, 50, 60, 70])],
         ];
     }
 
@@ -45,6 +48,7 @@ class StoreFormationRequest extends FormRequest
             'duree_heures.required' => 'La durée est obligatoire.',
             'duree_heures.min' => 'La durée doit être supérieure à zéro.',
             'cout.required' => 'Le coût est obligatoire.',
+            'frais_inscription.min' => 'Le frais d\'inscription ne peut pas être négatif.',
             'date_fin.after_or_equal' => 'La date de fin doit être postérieure ou égale à la date de début.',
         ];
     }

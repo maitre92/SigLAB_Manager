@@ -2,7 +2,7 @@
 
 @section('title', 'Mon Profil')
 
-@section('content')
+@section('layout_content')
 @php
     $activeTab = in_array(($activeProfileTab ?? 'info'), ['info', 'password'], true) ? ($activeProfileTab ?? 'info') : 'info';
     if ($errors->has('old_password') || $errors->has('new_password')) {
