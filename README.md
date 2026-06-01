@@ -4,7 +4,9 @@ Application Laravel de gestion administrative, pédagogique et financière pour 
 
 ## Présentation
 
-**sigLAB Manager** permet de gérer le cycle complet d'une formation: utilisateurs, apprenants, formations, groupes de formation, inscriptions, présences, évaluations, paiements, dépenses, commissions formateurs et attestations.
+**sigLAB Manager** permet de gérer le cycle complet d'un centre de formation: utilisateurs, apprenants, formations, inscriptions, suivi pédagogique, paiements, dépenses, commissions formateurs et attestations.
+
+Une évolution est en cours pour organiser les formations par **groupes de formation**. Pour le moment, cette évolution est surtout appliquée aux modules **Gestion des formations** et **Apprenants / inscriptions**. Les autres modules doivent encore être alignés proprement sur `groupe_formation_id`.
 
 Le projet est construit avec Laravel et utilise une interface d'administration responsive.
 
@@ -18,8 +20,7 @@ Le projet est construit avec Laravel et utilise une interface d'administration r
 - Génération PDF de l'emploi du temps d'un groupe de formation.
 - Gestion pédagogique: présences, évaluations, examens, notes et résultats.
 - Gestion financière: paiements apprenants, reçus, dépenses et paiements/commissions formateurs.
-- Gestion des attestations par groupe de formation.
-- Contrôle du paiement complet avant génération d'une attestation.
+- Gestion des attestations.
 
 ## Modules importants
 
@@ -30,7 +31,9 @@ Les formations représentent l'offre pédagogique globale. Les opérations concr
 - création et modification des groupes;
 - attribution du formateur principal et des formateurs associés;
 - suivi du statut: planifiée, en cours, terminée ou suspendue;
-- liaison des inscriptions, présences, évaluations, notes, dépenses et attestations au groupe.
+- liaison des apprenants et inscriptions au groupe.
+
+Important: l'intégration des groupes est effective côté formations et inscriptions/apprenants. Les modules pédagogie, finances et attestations doivent encore être vérifiés et finalisés avant d'être considérés comme complètement basés sur les groupes.
 
 Routes principales:
 
@@ -52,7 +55,7 @@ admin/apprenants
 
 ### Pédagogie
 
-Le suivi pédagogique est basé sur les groupes de formation:
+Le module pédagogique existe déjà pour:
 
 - feuille de présence;
 - création des évaluations et examens;
@@ -68,6 +71,8 @@ admin/pedagogie/examens
 admin/pedagogie/notes
 admin/pedagogie/resultats
 ```
+
+Etat actuel avec les groupes: à finaliser. Les écrans et contrôleurs doivent être revus pour utiliser de façon cohérente `groupe_formation_id` au lieu d'une simple formation.
 
 ### Finances
 
@@ -87,9 +92,13 @@ admin/finances/depenses
 admin/finances/formateurs
 ```
 
+Etat actuel avec les groupes: à finaliser. Les paiements, reçus, dépenses et commissions doivent être vérifiés pour afficher et enregistrer le bon groupe de formation quand il existe.
+
 ### Attestations
 
-Les attestations sont générées pour un apprenant inscrit à un groupe de formation terminé. La génération vérifie aussi que les frais de formation sont totalement payés.
+Les attestations existent déjà dans l'application.
+
+Etat actuel avec les groupes: à finaliser. La logique doit être vérifiée pour générer une attestation à partir du bon groupe de formation, contrôler l'inscription de l'apprenant dans ce groupe et vérifier le paiement complet.
 
 Route principale:
 
@@ -198,21 +207,35 @@ routes/
 
 ### Formation par groupe
 
-Ajout du module **groupes de formation**:
+Ajout du module **groupes de formation** pour la gestion des formations et des inscriptions:
 
 - nouveau contrôleur `GroupeFormationController`;
 - nouveau modèle `GroupeFormation`;
 - nouvelles vues dans `resources/views/admin/groupes-formations`;
-- nouvelles migrations pour créer les groupes et rattacher les opérations au champ `groupe_formation_id`;
-- adaptation des inscriptions, présences, évaluations, notes, paiements, dépenses et attestations aux groupes de formation.
+- nouvelles migrations pour créer les groupes et ajouter le champ `groupe_formation_id` aux tables concernées;
+- adaptation principale des formations, groupes de formation, apprenants et inscriptions.
 
-### Attestations
+### Travail restant pour le binôme
 
-La génération d'attestation est maintenant liée au groupe de formation et vérifie que l'apprenant a entièrement payé sa formation avant création.
+Les modules suivants doivent encore être alignés et testés avec les groupes de formation:
 
-### Pédagogie
+- **Pédagogie**: présences, évaluations, examens, notes et résultats.
+- **Finances**: paiements apprenants, reçus, dépenses, paiements formateurs et commissions.
+- **Attestations**: génération par groupe, vérification de l'inscription au groupe et contrôle du paiement complet.
 
-Les présences, évaluations, examens, notes et résultats s'appuient maintenant sur les groupes de formation afin de mieux suivre chaque cohorte.
+Points techniques à vérifier:
+
+- utiliser `groupe_formation_id` dans les formulaires, validations et requêtes;
+- charger les relations `groupeFormation`, `formation` et `apprenants` sans casser les anciennes données;
+- afficher le nom/code du groupe dans les listes, reçus, résultats et attestations;
+- éviter de mélanger une formation catalogue avec un groupe réel;
+- tester les migrations sur une base contenant déjà des formations, apprenants, inscriptions, paiements et attestations.
+
+Tant que ces vérifications ne sont pas terminées, considérer que les groupes de formation sont opérationnels seulement pour:
+
+- le module Gestion des formations;
+- le module Groupes de formation;
+- les inscriptions des apprenants.
 
 ## Git
 
