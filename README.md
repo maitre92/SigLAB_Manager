@@ -85,7 +85,7 @@ php artisan key:generate
 Éditer le fichier `.env` avec vos identifiants DB, puis :
 ```bash
 php artisan migrate
-php artisan seed:run
+php artisan db:seed
 ```
 
 5. **Installer les assets (optionnel)**
@@ -324,18 +324,122 @@ Si `php artisan` échoue avec une erreur MySQL, vérifier que XAMPP/MySQL est d�
 
 - Les permissions dynamiques sont lues au boot via `AppServiceProvider`. Après création d'une nouvelle permission, elle est visible en base immédiatement, mais une nouvelle requête peut être nécessaire pour que la Gate dynamique soit disponible.
 - `AppServiceProvider` vérifie les tables avec `hasTableSafely()` afin que les commandes artisan (`route:list`, `php -l`, etc.) restent utilisables même si MySQL est arrêté.
-- Le reset password nécessite une configuration mail fonctionnelle pour envoyer le lien. En local, utilisez Mailtrap### 📚 Gestion des Formations (Mis à jour - Mai 2026)
+- Le reset password nécessite une configuration mail fonctionnelle pour envoyer le lien. En local, utilisez Mailtrap.
+
+### Gestion des formations, groupes et inscriptions (mis à jour - juin 2026)
+
+Le modèle métier de la formation est maintenant séparé en deux niveaux :
+
+```text
+Formation
+    -> Groupes de formation
+        -> Apprenants
+```
+
+- **Formation** : programme général ou catalogue.
+  Exemples : Développement Web, Réseau Informatique, Anglais.
+- **GroupeFormation** : organisation réelle d'une formation.
+  Exemples : Développement Web G1, Développement Web G2, Réseau G1.
+
+Cette séparation permet d'organiser une même formation plusieurs fois avec des dates, salles, formateurs et apprenants différents.
+
+#### Règles métier
+
+- Une formation peut avoir plusieurs groupes.
+- Un groupe appartient à une seule formation.
+- Un apprenant est inscrit dans un groupe, pas directement dans une formation.
+- Un groupe possède un formateur principal obligatoire.
+- Un groupe peut avoir plusieurs formateurs secondaires.
+- Le statut opérationnel est porté par le groupe : `planifiee`, `en_cours`, `terminee`, `suspendue`.
+- Le statut d'une formation n'est plus utilisé dans l'interface métier ; la formation reste un élément de catalogue.
+- Les présences, évaluations, examens, notes, résultats, attestations et commissions formateurs sont rattachés au groupe.
+- `formation_id` reste utilisé pour identifier le programme catalogue.
+- `groupe_formation_id` porte les opérations concrètes.
+
+#### Tables et modèles principaux
+
+- `formations` / `App\Models\Formation`
+- `groupes_formation` / `App\Models\GroupeFormation`
+- `groupe_formation_formateur` : pivot des formateurs associés au groupe
+- `inscriptions.groupe_formation_id`
+- `presences.groupe_formation_id`
+- `evaluations.groupe_formation_id`
+- `notes.groupe_formation_id`
+- `attestations.groupe_formation_id`
+- `depenses.groupe_formation_id`
+
+#### Migration des données existantes
+
+Les migrations de juin 2026 créent automatiquement un groupe `G1` pour chaque formation existante, puis recopient les anciennes données liées à `formation_id` vers le nouveau `groupe_formation_id`.
+
+Après mise à jour du code, exécuter :
+
+```bash
+php artisan migrate
+```
+
+Si la commande échoue, vérifier que MySQL/XAMPP est démarré et que `.env` pointe bien vers la base `siglab_manager`.
+
+#### Navigation admin
+
+Dans la sidebar, le menu **Gestion des formations** suit maintenant cet ordre :
+
+1. Catégories formations
+2. Ajouter formation
+3. Liste formations
+4. Groupes de formation
+
+Le module **Groupes de formation** possède une page dédiée avec filtres et actions rapides :
+
+- créer un groupe ;
+- modifier un groupe ;
+- changer rapidement le statut d'un groupe depuis la liste ;
+- inscrire un apprenant dans un groupe ;
+- imprimer l'emploi du temps ;
+- archiver un groupe.
+
+Le statut d'un groupe se change depuis :
+
+```text
+Gestion des formations -> Groupes de formation -> colonne Statut
+```
+
+La liste des formations ne propose plus de filtre ou de changement de statut. Les compteurs du tableau de bord qui représentaient les sessions actives se basent désormais sur les groupes en cours.
+
+#### Emploi du temps
+
+L'emploi du temps est géré au niveau du groupe. Le formulaire de groupe utilise le même constructeur que les formations :
+
+- bouton `Add row` ;
+- jour ;
+- heure de début ;
+- heure de fin ;
+- activité/module ;
+- suppression de ligne.
+
+Les données sont enregistrées en JSON dans `emploi_du_temps`.
+
+Une page imprimable A4 est disponible depuis l'action PDF du groupe :
+
+```text
+admin/groupes-formations/{groupe}/emploi-du-temps/pdf
+```
+
+Le navigateur permet ensuite d'imprimer ou d'enregistrer le document en PDF.
+
+### 📚 Gestion des Formations (Mis à jour - Mai/Juin 2026)
 - **Fonctionnalités Clés** :
     - **Création Assistée** : Génération automatique de codes de formation uniques.
     - **Gestion des Formateurs** : Filtrage par rôle avec option de switch dynamique.
-    - **Emploi du Temps** : Saisie dynamique intégrée à la formation.
-    - **Quick Switcher** : Changement de statut rapide depuis la vue "Détails".
+    - **Groupes de Formation** : Organisation concrète par groupe, formateur principal, dates, salle, apprenants et emploi du temps.
+    - **Emploi du Temps** : Saisie dynamique intégrée au groupe, avec impression/enregistrement PDF.
+    - **Quick Switcher** : Changement de statut rapide depuis la liste des groupes.
 - **Interface** : Actions explicites et boutons standardisés.
 
-### 🎓 Gestion des Apprenants & Inscriptions (Mis à jour - Mai 2026)
+### 🎓 Gestion des Apprenants & Inscriptions (Mis à jour - Juin 2026)
 - **Fonctionnalités** :
-    - **Inscriptions** : Liaison directe entre apprenants et formations.
-    - **Visibilité** : Affichage des codes formations dans la liste des apprenants.
+    - **Inscriptions** : Liaison des apprenants aux groupes de formation.
+    - **Visibilité** : Affichage des codes groupes dans la liste des apprenants.
     - **Workflow** : Inscription possible à la création ou modification d'un dossier.
 
 ---
@@ -343,13 +447,13 @@ Si `php artisan` échoue avec une erreur MySQL, vérifier que XAMPP/MySQL est d�
 ### 🔐 Sécurité & UI
 - **Permissions** : Accès aux boutons (Ajouter, Modifier, Supprimer) strictement contrôlé par les droits utilisateur. Seul le `Super Administrateur` a un accès total par défaut.
 - **Identifiants** : Remplacement du terme "Slug" par **"Identifiant"** dans toute l'interface pour une meilleure clarté.
-- **Sidebar** : Retrait du menu "Emploi du temps" (désormais inclus dans les formations).
+- **Sidebar** : Le module Groupes de formation est accessible directement dans Gestion des formations.
 
 ---
 
 ### 🚀 Roadmap & Prochaines Étapes
-1. **Paiements** : Suivi financier complet (versements, soldes).
-2. **Pédagogie** : Gestion des présences et des notes.
-3. **Documents** : Génération d'attestations PDF automatisée.
+1. **Paiements** : Suivi financier complet par inscription et groupe.
+2. **Pédagogie** : Gestion des présences, évaluations, examens, notes et résultats par groupe.
+3. **Documents** : Attestations et emplois du temps imprimables/enregistrables en PDF.
 
-*Fin de la mise à jour README - Mai 2026*
+*Fin de la mise à jour README - Juin 2026*

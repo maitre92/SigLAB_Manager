@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Formation;
 use App\Models\CategorieFormation;
+use App\Models\GroupeFormation;
 use App\Models\User;
 use App\Shared\Enums\UserRole;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ class FormationController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Formation::with(['categorie', 'formateurs']);
+        $query = Formation::with(['categorie', 'formateurs', 'groupes.formateurPrincipal'])->withCount('groupes');
 
         if ($request->has('search')) {
             $search = $request->get('search');
@@ -28,10 +29,6 @@ class FormationController extends Controller
 
         if ($request->has('categorie_id') && $request->categorie_id != '') {
             $query->where('categorie_formation_id', $request->categorie_id);
-        }
-
-        if ($request->has('statut') && $request->statut != '') {
-            $query->where('statut', $request->statut);
         }
 
         if ($request->has('type') && $request->type != '') {
@@ -65,11 +62,9 @@ class FormationController extends Controller
             'frais_inscription' => 'nullable|numeric|min:0',
             'capacite_max' => 'nullable|integer|min:0',
             'niveau' => 'nullable|string|max:100',
-            'statut' => 'required|in:planifiee,en_cours,terminee,suspendue',
             'salle' => 'nullable|string|max:255',
             'date_debut' => 'nullable|date',
             'date_fin' => 'nullable|date|after_or_equal:date_debut',
-            'emploi_du_temps' => 'nullable|string',
             'formateurs' => 'nullable|array',
             'formateurs.*' => 'exists:users,id',
             'formateur_commissions' => 'nullable|array',
@@ -81,17 +76,19 @@ class FormationController extends Controller
         $this->validateFormateurPercentages($formateurIds, $pourcentages);
 
         $validated['created_by'] = Auth::id();
+        $validated['statut'] = 'planifiee';
 
         $formation = Formation::create($validated);
 
         $formation->formateurs()->sync($this->buildFormateurSyncData($formateurIds, $pourcentages));
+        $this->syncDefaultGroupeFromFormation($formation, $formateurIds, $pourcentages);
 
         return redirect()->route('admin.formations.index')->with('success', 'Formation créée avec succès.');
     }
 
     public function show(Formation $formation)
     {
-        $formation->load(['categorie', 'formateurs', 'creator']);
+        $formation->load(['categorie', 'formateurs', 'creator', 'groupes.formateurPrincipal', 'groupes.formateurs']);
         return view('admin.formations.show', compact('formation'));
     }
 
@@ -121,11 +118,9 @@ class FormationController extends Controller
             'frais_inscription' => 'nullable|numeric|min:0',
             'capacite_max' => 'nullable|integer|min:0',
             'niveau' => 'nullable|string|max:100',
-            'statut' => 'required|in:planifiee,en_cours,terminee,suspendue',
             'salle' => 'nullable|string|max:255',
             'date_debut' => 'nullable|date',
             'date_fin' => 'nullable|date|after_or_equal:date_debut',
-            'emploi_du_temps' => 'nullable|string',
             'formateurs' => 'nullable|array',
             'formateurs.*' => 'exists:users,id',
             'formateur_commissions' => 'nullable|array',
@@ -139,6 +134,7 @@ class FormationController extends Controller
         $formation->update($validated);
 
         $formation->formateurs()->sync($this->buildFormateurSyncData($formateurIds, $pourcentages));
+        $this->syncDefaultGroupeFromFormation($formation, $formateurIds, $pourcentages);
 
         return redirect()->route('admin.formations.index')->with('success', 'Formation mise à jour avec succès.');
     }
@@ -153,17 +149,6 @@ class FormationController extends Controller
     {
         $formations = $formateur->formations()->with('categorie')->latest()->paginate(10);
         return view('admin.formations.index', compact('formations', 'formateur'));
-    }
-
-    public function updateStatus(Request $request, Formation $formation)
-    {
-        $validated = $request->validate([
-            'statut' => 'required|in:planifiee,en_cours,terminee,suspendue',
-        ]);
-
-        $formation->update(['statut' => $validated['statut']]);
-
-        return back()->with('success', 'Le statut de la formation a été mis à jour.');
     }
 
     private function validateFormateurPercentages(array $formateurIds, array $pourcentages): void
@@ -205,5 +190,43 @@ class FormationController extends Controller
                 ];
             })
             ->toArray();
+    }
+
+    private function syncDefaultGroupeFromFormation(Formation $formation, array $formateurIds, array $pourcentages): void
+    {
+        $principalId = collect($formateurIds)->filter()->first();
+
+        $groupe = GroupeFormation::firstOrCreate(
+            ['formation_id' => $formation->id, 'code' => $formation->code . '-G1'],
+            [
+                'nom' => $formation->nom . ' G1',
+                'created_by' => $formation->created_by,
+            ]
+        );
+
+        $groupe->update([
+            'nom' => $groupe->nom ?: $formation->nom . ' G1',
+            'formateur_principal_id' => $principalId ?: $groupe->formateur_principal_id,
+            'capacite_max' => $formation->capacite_max,
+            'salle' => $formation->salle,
+            'date_debut' => $formation->date_debut,
+            'date_fin' => $formation->date_fin,
+        ]);
+
+        $groupe->formateurs()->sync(
+            collect($formateurIds)
+                ->filter()
+                ->unique()
+                ->mapWithKeys(function ($id) use ($principalId, $pourcentages) {
+                    return [
+                        (int) $id => [
+                            'role' => ((int) $id === (int) $principalId) ? 'principal' : 'intervenant',
+                            'taux_commission' => isset($pourcentages[$id]) ? (int) $pourcentages[$id] : null,
+                            'assigned_at' => now(),
+                        ],
+                    ];
+                })
+                ->toArray()
+        );
     }
 }

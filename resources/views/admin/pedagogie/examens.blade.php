@@ -17,7 +17,7 @@
                 <tr>
                     <th>Date</th>
                     <th>Titre</th>
-                    <th>Formation</th>
+                    <th>Groupe</th>
                     <th>Coeff.</th>
                     <th>Statut</th>
                     <th class="text-end">Actions</th>
@@ -31,7 +31,10 @@
                             <div class="fw-bold">{{ $ex->titre }}</div>
                             <small class="text-muted">{{ $ex->description }}</small>
                         </td>
-                        <td>{{ $ex->formation->nom }}</td>
+                        <td>
+                            <div class="fw-bold">{{ $ex->groupeFormation->nom ?? 'Groupe non défini' }}</div>
+                            <small class="text-muted">{{ $ex->formation->nom ?? '' }}</small>
+                        </td>
                         <td>{{ number_format($ex->coefficient, 2) }}</td>
                         <td>
                             <span class="badge bg-{{ $ex->statut == 'termine' ? 'success' : ($ex->statut == 'prevu' ? 'primary' : 'danger') }}">
@@ -39,7 +42,7 @@
                             </span>
                         </td>
                         <td class="text-end">
-                            <a href="{{ route('admin.pedagogie.resultats', ['formation_id' => $ex->formation_id]) }}" class="btn btn-sm btn-outline-primary" title="Voir les résultats">
+                            <a href="{{ route('admin.pedagogie.resultats', ['groupe_formation_id' => $ex->groupe_formation_id]) }}" class="btn btn-sm btn-outline-primary" title="Voir les résultats">
                                 <i class="fas fa-eye"></i> Résultats
                             </a>
                             <a href="{{ route('admin.pedagogie.notes.edit', $ex) }}" class="btn btn-sm btn-outline-info" title="Saisir les notes">
@@ -73,10 +76,10 @@
                 <input type="hidden" name="type" value="examen">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Formation</label>
-                        <select name="formation_id" class="form-select" required>
-                            @foreach($formations as $f)
-                                <option value="{{ $f->id }}">{{ $f->nom }}</option>
+                        <label class="form-label">Groupe de formation</label>
+                        <select name="groupe_formation_id" class="form-select" required>
+                            @foreach($groupesFormation as $groupe)
+                                <option value="{{ $groupe->id }}">{{ $groupe->nom }} - {{ $groupe->formation->nom ?? 'Formation' }}</option>
                             @endforeach
                         </select>
                     </div>

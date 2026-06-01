@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ApprenantController;
 use App\Http\Controllers\Admin\FormationController;
+use App\Http\Controllers\Admin\GroupeFormationController;
 use App\Http\Controllers\Admin\CategorieFormationController;
 use App\Http\Controllers\Admin\PedagogieController;
 use App\Http\Controllers\Admin\AttestationController;
@@ -74,7 +75,13 @@ Route::middleware('auth')->group(function () {
 
         // Gestion des formations
         Route::get('formations/formateur/{formateur}', [FormationController::class, 'byFormateur'])->name('formations.formateur');
-        Route::patch('formations/{formation}/status', [FormationController::class, 'updateStatus'])->name('formations.status');
+        Route::get('groupes-formations/{groupesFormation}/emploi-du-temps/pdf', [GroupeFormationController::class, 'emploiDuTempsPdf'])
+            ->name('groupes-formations.emploi-du-temps.pdf');
+        Route::patch('groupes-formations/{groupesFormation}/status', [GroupeFormationController::class, 'updateStatus'])
+            ->name('groupes-formations.status');
+        Route::resource('groupes-formations', GroupeFormationController::class)
+            ->parameters(['groupes-formations' => 'groupesFormation'])
+            ->except(['show']);
         Route::resource('formations', FormationController::class);
         Route::resource('categories-formations', CategorieFormationController::class)
             ->parameters(['categories-formations' => 'categorieFormation'])

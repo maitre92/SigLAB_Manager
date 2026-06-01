@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Catégories de formations')
+@section('title', 'Catégories de formation')
 
 @section('actions')
     <a href="{{ route('admin.formations.index') }}" class="btn btn-outline-secondary">

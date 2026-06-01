@@ -63,8 +63,10 @@ class ApprenantController extends Controller
         return view('admin.apprenants.create', [
             'statuts' => collect(ApprenantStatut::cases())->mapWithKeys(fn($s) => [$s->value => $s->label()])->toArray(),
             'niveaux' => collect(NiveauEtude::cases())->mapWithKeys(fn($n) => [$n->value => $n->label()])->toArray(),
-            'formations' => \App\Models\Formation::where('statut', 'planifiee')->orWhere('statut', 'en_cours')->get(),
+            'formations' => \App\Models\Formation::orderBy('nom')->get(),
+            'groupesFormation' => \App\Models\GroupeFormation::with('formation')->whereIn('statut', ['planifiee', 'en_cours'])->orderBy('nom')->get(),
             'selectedFormationId' => request('formation_id'),
+            'selectedGroupeFormationId' => request('groupe_formation_id'),
             'page_title' => 'Ajouter un apprenant',
             'active_menu' => 'apprenants',
         ]);
@@ -107,7 +109,7 @@ class ApprenantController extends Controller
      */
     public function show(Apprenant $apprenant): View
     {
-        $apprenant->load(['inscriptions.formation', 'inscriptions.paiements.creator']);
+        $apprenant->load(['inscriptions.formation', 'inscriptions.groupeFormation', 'inscriptions.paiements.creator']);
         
         return view('admin.apprenants.show', [
             'apprenant' => $apprenant,
@@ -125,7 +127,8 @@ class ApprenantController extends Controller
             'apprenant' => $apprenant,
             'statuts' => collect(ApprenantStatut::cases())->mapWithKeys(fn($s) => [$s->value => $s->label()])->toArray(),
             'niveaux' => collect(NiveauEtude::cases())->mapWithKeys(fn($n) => [$n->value => $n->label()])->toArray(),
-            'formations' => \App\Models\Formation::where('statut', 'planifiee')->orWhere('statut', 'en_cours')->get(),
+            'formations' => \App\Models\Formation::orderBy('nom')->get(),
+            'groupesFormation' => \App\Models\GroupeFormation::with('formation')->whereIn('statut', ['planifiee', 'en_cours'])->orderBy('nom')->get(),
             'page_title' => 'Modifier : ' . $apprenant->nom_complet,
             'active_menu' => 'apprenants',
         ]);

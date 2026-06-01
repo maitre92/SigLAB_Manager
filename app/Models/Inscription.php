@@ -13,6 +13,7 @@ class Inscription extends Model
     protected $fillable = [
         'apprenant_id',
         'formation_id',
+        'groupe_formation_id',
         'date_inscription',
         'montant_total',
         'montant_paye',
@@ -29,12 +30,17 @@ class Inscription extends Model
 
     public function apprenant()
     {
-        return $this->belongsTo(Apprenant::class);
+        return $this->belongsTo(Apprenant::class)->withTrashed();
     }
 
     public function formation()
     {
-        return $this->belongsTo(Formation::class);
+        return $this->belongsTo(Formation::class)->withTrashed();
+    }
+
+    public function groupeFormation()
+    {
+        return $this->belongsTo(GroupeFormation::class, 'groupe_formation_id')->withTrashed();
     }
 
     public function paiements()

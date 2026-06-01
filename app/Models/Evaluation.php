@@ -12,7 +12,7 @@ class Evaluation extends Model
 
     protected $fillable = [
         'formation_id',
-        'groupe_id',
+        'groupe_formation_id',
         'titre',
         'type',
         'date_evaluation',
@@ -31,9 +31,9 @@ class Evaluation extends Model
         return $this->belongsTo(Formation::class);
     }
 
-    public function groupe()
+    public function groupeFormation()
     {
-        return $this->belongsTo(Groupe::class);
+        return $this->belongsTo(GroupeFormation::class, 'groupe_formation_id')->withTrashed();
     }
 
     public function notes()

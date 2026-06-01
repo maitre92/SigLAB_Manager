@@ -130,6 +130,42 @@
             box-shadow: 0 0 0 0.2rem rgba(64, 96, 160, 0.16);
         }
 
+        .password-field {
+            position: relative;
+        }
+
+        .password-field .form-control {
+            padding-right: 48px;
+        }
+
+        .password-field .form-control.is-invalid {
+            background-position: right 48px center;
+            padding-right: 78px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            transform: translateY(-50%);
+            width: 34px;
+            height: 34px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toggle-password:hover,
+        .toggle-password:focus {
+            color: var(--login-primary);
+            background: rgba(64, 96, 160, 0.08);
+            outline: none;
+        }
+
         .invalid-feedback {
             display: block;
         }
@@ -249,11 +285,20 @@
 
                             <div class="mb-3">
                                 <label for="password" class="form-label">Mot de passe</label>
-                                <input type="password"
-                                       class="form-control @error('password') is-invalid @enderror"
-                                       id="password"
-                                       name="password"
-                                       placeholder="Votre mot de passe">
+                                <div class="password-field">
+                                    <input type="password"
+                                           class="form-control @error('password') is-invalid @enderror"
+                                           id="password"
+                                           name="password"
+                                           placeholder="Votre mot de passe">
+                                    <button type="button"
+                                            class="toggle-password"
+                                            aria-label="Afficher le mot de passe"
+                                            aria-pressed="false"
+                                            data-password-toggle="password">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                                 @error('password')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
@@ -284,5 +329,20 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.querySelectorAll('[data-password-toggle]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const passwordInput = document.getElementById(button.dataset.passwordToggle);
+                const icon = button.querySelector('i');
+                const isHidden = passwordInput.type === 'password';
+
+                passwordInput.type = isHidden ? 'text' : 'password';
+                button.setAttribute('aria-label', isHidden ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+                button.setAttribute('aria-pressed', isHidden ? 'true' : 'false');
+                icon.classList.toggle('fa-eye', !isHidden);
+                icon.classList.toggle('fa-eye-slash', isHidden);
+            });
+        });
+    </script>
 </body>
 </html>

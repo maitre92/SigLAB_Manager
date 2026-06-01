@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Mon Profil')
+@section('title', 'Mon profil')
 
 @section('layout_content')
 @php

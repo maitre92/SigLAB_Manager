@@ -11,7 +11,7 @@
                 <tr>
                     <th>Date</th>
                     <th>Évaluation / Examen</th>
-                    <th>Formation</th>
+                    <th>Groupe</th>
                     <th>Notes saisies</th>
                     <th class="text-end">Actions</th>
                 </tr>
@@ -20,7 +20,7 @@
                 @forelse($evaluations as $eval)
                     @php
                         $notesCount = $eval->notes->count();
-                        $apprenantsCount = $eval->formation->apprenants->count();
+                        $apprenantsCount = $eval->groupeFormation?->apprenants->count() ?? $eval->formation->apprenants->count();
                     @endphp
                     <tr>
                         <td>{{ $eval->date_evaluation->format('d/m/Y') }}</td>
@@ -30,7 +30,10 @@
                                 {{ ucfirst($eval->type) }}
                             </span>
                         </td>
-                        <td>{{ $eval->formation->nom }}</td>
+                        <td>
+                            <div class="fw-bold">{{ $eval->groupeFormation->nom ?? 'Groupe non défini' }}</div>
+                            <small class="text-muted">{{ $eval->formation->nom }}</small>
+                        </td>
                         <td>
                             <div class="progress" style="height: 10px; width: 100px;">
                                 <div class="progress-bar bg-success" role="progressbar" 

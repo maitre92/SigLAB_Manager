@@ -39,6 +39,7 @@ class ApprenantRequest extends FormRequest
             'telephone_parent' => ['nullable', 'string', 'max:20'],
             'observations' => ['nullable', 'string', 'max:5000'],
             'remove_photo' => ['nullable', 'boolean'],
+            'groupe_formation_id' => ['nullable', 'exists:groupes_formation,id'],
             'formation_id' => ['nullable', 'exists:formations,id'],
         ];
 

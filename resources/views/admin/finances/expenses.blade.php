@@ -1,5 +1,7 @@
 @extends('layouts.admin')
 
+@section('title', 'Dépenses')
+
 @section('content')
 <div class="row g-4">
     <div class="col-lg-4">

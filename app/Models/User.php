@@ -105,4 +105,11 @@ class User extends Authenticatable
             ->withPivot('role', 'pourcentage_commission', 'assigned_at')
             ->withTimestamps();
     }
+
+    public function groupesFormationAnimees(): BelongsToMany
+    {
+        return $this->belongsToMany(GroupeFormation::class, 'groupe_formation_formateur', 'formateur_id', 'groupe_formation_id')
+            ->withPivot('role', 'taux_commission', 'observations', 'assigned_at')
+            ->withTimestamps();
+    }
 }

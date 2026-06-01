@@ -82,8 +82,8 @@
                         </td>
                         <td>{{ $apprenant->telephone ?? '-' }}</td>
                         <td>
-                            @forelse($apprenant->formations as $formation)
-                                <span class="badge bg-info text-dark" style="font-size: 0.75rem;">{{ $formation->code }}</span>
+                            @forelse($apprenant->groupesFormation as $groupe)
+                                <span class="badge bg-info text-dark" style="font-size: 0.75rem;">{{ $groupe->code }}</span>
                                 @if(!$loop->last) <br> @endif
                             @empty
                                 <span class="text-muted small">Aucune</span>

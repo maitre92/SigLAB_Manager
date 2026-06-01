@@ -11,6 +11,7 @@ class Note extends Model
 
     protected $fillable = [
         'evaluation_id',
+        'groupe_formation_id',
         'apprenant_id',
         'valeur',
         'commentaire',
@@ -23,6 +24,11 @@ class Note extends Model
     public function evaluation()
     {
         return $this->belongsTo(Evaluation::class);
+    }
+
+    public function groupeFormation()
+    {
+        return $this->belongsTo(GroupeFormation::class, 'groupe_formation_id')->withTrashed();
     }
 
     public function apprenant()

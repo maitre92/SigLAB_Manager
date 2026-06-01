@@ -1,5 +1,7 @@
 @extends('layouts.admin')
 
+@section('title', 'Rémunérations formateurs')
+
 @section('content')
 <div class="row g-4">
     <div class="col-lg-4">
@@ -12,11 +14,11 @@
                     @csrf
                     
                     <div class="mb-3">
-                        <label class="form-label small fw-bold"><i class="fas fa-graduation-cap text-muted me-1"></i> Formation</label>
-                        <select id="formation_select" name="formation_id" class="form-select" required>
-                            <option value="">Sélectionner une formation...</option>
-                            @foreach($formations as $form)
-                                <option value="{{ $form->id }}">{{ $form->nom }}</option>
+                        <label class="form-label small fw-bold"><i class="fas fa-users text-muted me-1"></i> Groupe</label>
+                        <select id="groupe_select" name="groupe_formation_id" class="form-select" required>
+                            <option value="">Sélectionner un groupe...</option>
+                            @foreach($groupesFormation as $groupe)
+                                <option value="{{ $groupe->id }}">{{ $groupe->nom }} - {{ $groupe->formation->nom ?? 'Formation' }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -24,7 +26,7 @@
                     <div class="mb-3">
                         <label class="form-label small fw-bold"><i class="fas fa-chalkboard-teacher text-muted me-1"></i> Formateur</label>
                         <select id="trainer_select" name="user_id" class="form-select" required disabled>
-                            <option value="">Sélectionner d'abord la formation...</option>
+                            <option value="">Sélectionner d'abord le groupe...</option>
                         </select>
                     </div>
 
@@ -115,7 +117,7 @@
                     <thead class="bg-light text-uppercase" style="font-size: 0.7rem;">
                         <tr>
                             <th class="px-4">Date</th>
-                            <th>Formateur / Formation</th>
+                            <th>Formateur / Groupe</th>
                             <th>Mode / Réf</th>
                             <th class="text-end">Montant Versé</th>
                             <th class="text-center px-4">Action</th>
@@ -128,7 +130,7 @@
                                 <td>
                                     <div class="fw-bold">{{ $p->trainer->name ?? $p->beneficiaire }}</div>
                                     <span class="badge bg-light text-dark border small" style="font-size: 0.65rem;">
-                                        {{ $p->formation->nom ?? 'N/A' }}
+                                        {{ $p->groupeFormation->nom ?? $p->formation->nom ?? 'N/A' }}
                                     </span>
                                 </td>
                                 <td>
@@ -193,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Charger les données pré-calculées depuis Laravel
     const formationsData = @json($formationsData);
 
-    const formationSelect = document.getElementById('formation_select');
+    const formationSelect = document.getElementById('groupe_select');
     const trainerSelect = document.getElementById('trainer_select');
     const commissionSummary = document.getElementById('commission_summary');
     
@@ -216,7 +218,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return new Intl.NumberFormat('fr-FR').format(value) + ' FCFA';
     }
 
-    // Changement de formation
+    // Changement de groupe
     formationSelect.addEventListener('change', function() {
         const formationId = this.value;
         
@@ -237,11 +239,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Trouver les détails de la formation
+        // Trouver les détails du groupe
         selectedFormation = formationsData.find(f => f.id == formationId);
 
         if (!selectedFormation || selectedFormation.formateurs.length === 0) {
-            trainerSelect.innerHTML = '<option value="">Aucun formateur pour cette formation</option>';
+            trainerSelect.innerHTML = '<option value="">Aucun formateur pour ce groupe</option>';
             trainerSelect.disabled = true;
             return;
         }

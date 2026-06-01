@@ -2,17 +2,17 @@
 
 @section('content')
 <div class="container-fluid p-0">
-    <!-- Filtre par formation -->
+    <!-- Filtre par groupe -->
     <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px; overflow: hidden;">
         <div class="card-body p-4 bg-white">
             <form action="{{ route('admin.pedagogie.resultats') }}" method="GET" class="row align-items-end g-3">
                 <div class="col-md-8">
-                    <label class="form-label fw-bold text-muted small text-uppercase mb-2">Sélectionnez une formation pour voir les résultats</label>
-                    <select name="formation_id" class="form-select border-0 bg-light py-2 px-3" style="border-radius: 10px;" onchange="this.form.submit()">
-                        <option value="">-- Choisir une formation --</option>
-                        @foreach($formations as $f)
-                            <option value="{{ $f->id }}" {{ $formationId == $f->id ? 'selected' : '' }}>
-                                {{ $f->nom }} ({{ $f->code }})
+                    <label class="form-label fw-bold text-muted small text-uppercase mb-2">Sélectionnez un groupe pour voir les résultats</label>
+                    <select name="groupe_formation_id" class="form-select border-0 bg-light py-2 px-3" style="border-radius: 10px;" onchange="this.form.submit()">
+                        <option value="">-- Choisir un groupe --</option>
+                        @foreach($groupesFormation as $groupe)
+                            <option value="{{ $groupe->id }}" {{ $groupeFormationId == $groupe->id ? 'selected' : '' }}>
+                                {{ $groupe->nom }} - {{ $groupe->formation->nom ?? 'Formation' }}
                             </option>
                         @endforeach
                     </select>
@@ -26,11 +26,12 @@
         </div>
     </div>
 
-    @if($formation)
+    @if($groupeFormation)
         <div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
             <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="mb-0 fw-bold text-dark">Résultats : {{ $formation->nom }}</h6>
+                    <h6 class="mb-0 fw-bold text-dark">Résultats : {{ $groupeFormation->nom }}</h6>
+                    <small class="text-muted d-block">{{ $groupeFormation->formation->nom ?? '' }}</small>
                     <small class="text-muted">{{ $apprenants->count() }} Apprenants | {{ $evaluations->count() }} Évaluations</small>
                 </div>
                 <button onclick="window.print()" class="btn btn-sm btn-outline-secondary shadow-sm">
@@ -106,7 +107,7 @@
                             @empty
                                 <tr>
                                     <td colspan="{{ $evaluations->count() + 2 }}" class="text-center py-5 text-muted">
-                                        Aucun apprenant inscrit à cette formation.
+                                        Aucun apprenant inscrit à ce groupe.
                                     </td>
                                 </tr>
                             @endforelse
@@ -128,20 +129,20 @@
                 </div>
             </div>
         </div>
-    @elseif($formationId)
+    @elseif($groupeFormationId)
         <div class="text-center py-5">
             <div class="mb-3">
                 <i class="fas fa-search fa-3x text-light"></i>
             </div>
-            <h5 class="text-muted">Aucune donnée trouvée pour cette formation</h5>
+            <h5 class="text-muted">Aucune donnée trouvée pour ce groupe</h5>
         </div>
     @else
         <div class="text-center py-5 bg-white shadow-sm" style="border-radius: 15px;">
             <div class="mb-3">
                 <i class="fas fa-graduation-cap fa-4x" style="color: #e2e8f0;"></i>
             </div>
-            <h5 class="text-dark">Sélectionnez une formation</h5>
-            <p class="text-muted">Choisissez une formation ci-dessus pour visualiser le récapitulatif des notes.</p>
+            <h5 class="text-dark">Sélectionnez un groupe</h5>
+            <p class="text-muted">Choisissez un groupe ci-dessus pour visualiser le récapitulatif des notes.</p>
         </div>
     @endif
 </div>

@@ -25,7 +25,6 @@ class Formation extends Model
         'salle',
         'date_debut',
         'date_fin',
-        'emploi_du_temps',
         'created_by',
     ];
 
@@ -48,6 +47,11 @@ class Formation extends Model
         return $this->belongsToMany(User::class, 'formation_formateur')
                     ->withPivot('role', 'pourcentage_commission', 'assigned_at')
                     ->withTimestamps();
+    }
+
+    public function groupes()
+    {
+        return $this->hasMany(GroupeFormation::class);
     }
 
     public function creator()

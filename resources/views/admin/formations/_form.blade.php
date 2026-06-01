@@ -71,11 +71,6 @@
                         <input type="date" class="form-control @error('date_fin') is-invalid @enderror" id="date_fin" name="date_fin" value="{{ old('date_fin', $formation->date_fin?->format('Y-m-d')) }}">
                         @error('date_fin')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-12">
-                        <label for="emploi_du_temps" class="form-label">Emploi du temps</label>
-                        <textarea class="form-control @error('emploi_du_temps') is-invalid @enderror" id="emploi_du_temps" name="emploi_du_temps" rows="3" placeholder="Ex: Lundi, mercredi et vendredi de 18h à 20h">{{ old('emploi_du_temps', $formation->emploi_du_temps) }}</textarea>
-                        @error('emploi_du_temps')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
                 </div>
             </div>
         </div>
@@ -111,15 +106,6 @@
                     <label for="niveau" class="form-label">Niveau</label>
                     <input type="text" class="form-control @error('niveau') is-invalid @enderror" id="niveau" name="niveau" value="{{ old('niveau', $formation->niveau) }}" placeholder="Débutant, intermédiaire...">
                     @error('niveau')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-                <div class="mb-0">
-                    <label for="statut" class="form-label">Statut <span class="text-danger">*</span></label>
-                    <select class="form-select @error('statut') is-invalid @enderror" id="statut" name="statut" required>
-                        @foreach($statuts as $value => $label)
-                            <option value="{{ $value }}" {{ old('statut', $formation->statut->value ?? $formation->statut) === $value ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                    @error('statut')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
             </div>
         </div>

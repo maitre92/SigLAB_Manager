@@ -115,17 +115,17 @@
                         </div>
 
                         <div class="col-md-12">
-                            <label for="formation_id" class="form-label">Inscription à une formation (Optionnel)</label>
-                            <select class="form-select @error('formation_id') is-invalid @enderror" id="formation_id" name="formation_id">
+                            <label for="groupe_formation_id" class="form-label">Inscription à un groupe de formation (Optionnel)</label>
+                            <select class="form-select @error('groupe_formation_id') is-invalid @enderror" id="groupe_formation_id" name="groupe_formation_id">
                                 <option value="">-- Ne pas inscrire immédiatement --</option>
-                                @foreach($formations as $formation)
-                                    <option value="{{ $formation->id }}" {{ (old('formation_id', $selectedFormationId) == $formation->id) ? 'selected' : '' }}>
-                                        {{ $formation->code }} - {{ $formation->nom }} ({{ number_format($formation->cout, 0, ',', ' ') }} FCFA)
+                                @foreach($groupesFormation as $groupe)
+                                    <option value="{{ $groupe->id }}" {{ (old('groupe_formation_id', $selectedGroupeFormationId) == $groupe->id || (!$selectedGroupeFormationId && $selectedFormationId == $groupe->formation_id)) ? 'selected' : '' }}>
+                                        {{ $groupe->code }} - {{ $groupe->nom }} / {{ $groupe->formation->nom ?? 'Formation' }} ({{ number_format($groupe->formation->cout ?? 0, 0, ',', ' ') }} FCFA)
                                     </option>
                                 @endforeach
                             </select>
-                            <div class="form-text">Vous pourrez inscrire l'apprenant plus tard si vous ne le faites pas maintenant.</div>
-                            @error('formation_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <div class="form-text">Les apprenants sont inscrits dans un groupe concret, pas directement dans le catalogue de formation.</div>
+                            @error('groupe_formation_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                     </div>
                 </div>

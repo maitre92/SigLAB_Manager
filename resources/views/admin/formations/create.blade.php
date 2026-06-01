@@ -60,7 +60,7 @@
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label class="form-label fw-bold">Type de formation <span class="text-danger">*</span></label>
                                 <select name="type" class="form-select" required>
                                     <option value="Présentiel" {{ old('type') == 'Présentiel' ? 'selected' : '' }}>Présentiel</option>
@@ -68,18 +68,9 @@
                                     <option value="Hybride" {{ old('type') == 'Hybride' ? 'selected' : '' }}>Hybride</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label class="form-label fw-bold">Niveau</label>
                                 <input type="text" name="niveau" class="form-control" value="{{ old('niveau') }}" placeholder="ex: Débutant, Intermédiaire...">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Statut <span class="text-danger">*</span></label>
-                                <select name="statut" class="form-select" required>
-                                    <option value="planifiee" {{ old('statut') == 'planifiee' ? 'selected' : '' }}>Planifiée</option>
-                                    <option value="en_cours" {{ old('statut') == 'en_cours' ? 'selected' : '' }}>En cours</option>
-                                    <option value="terminee" {{ old('statut') == 'terminee' ? 'selected' : '' }}>Terminée</option>
-                                    <option value="suspendue" {{ old('statut') == 'suspendue' ? 'selected' : '' }}>Suspendue</option>
-                                </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Durée (Heures)</label>
@@ -110,53 +101,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Emploi du temps -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header text-white d-flex justify-content-between align-items-center" style="background-color: var(--navbar-bg);">
-                        <h5 class="card-title mb-0"><i class="fas fa-calendar-alt me-2"></i> Emploi du temps</h5>
-                        <button type="button" class="btn btn-sm btn-light" id="addScheduleRow">
-                            <i class="fas fa-plus me-1"></i> Add row
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle" id="scheduleTable">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Jour</th>
-                                        <th>Heure Début</th>
-                                        <th>Heure Fin</th>
-                                        <th>Activité / Module</th>
-                                        <th style="width: 50px;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr class="schedule-row">
-                                        <td>
-                                            <select name="schedule[0][day]" class="form-select form-select-sm">
-                                                <option value="Lundi">Lundi</option>
-                                                <option value="Mardi">Mardi</option>
-                                                <option value="Mercredi">Mercredi</option>
-                                                <option value="Jeudi">Jeudi</option>
-                                                <option value="Vendredi">Vendredi</option>
-                                                <option value="Samedi">Samedi</option>
-                                                <option value="Dimanche">Dimanche</option>
-                                            </select>
-                                        </td>
-                                        <td><input type="time" name="schedule[0][start]" class="form-control form-control-sm"></td>
-                                        <td><input type="time" name="schedule[0][end]" class="form-control form-control-sm"></td>
-                                        <td><input type="text" name="schedule[0][activity]" class="form-control form-control-sm"></td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-sm btn-outline-danger remove-row"><i class="fas fa-times"></i></button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <input type="hidden" name="emploi_du_temps" id="emploi_du_temps_json">
                     </div>
                 </div>
             </div>
@@ -375,46 +319,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // 3. Dynamic Schedule Rows
-    const scheduleTable = document.getElementById('scheduleTable').getElementsByTagName('tbody')[0];
-    const addRowBtn = document.getElementById('addScheduleRow');
-    let rowCount = 1;
-
-    addRowBtn.addEventListener('click', function() {
-        const newRow = scheduleTable.insertRow();
-        newRow.className = 'schedule-row';
-        newRow.innerHTML = `
-            <td>
-                <select name="schedule[${rowCount}][day]" class="form-select form-select-sm">
-                    <option value="Lundi">Lundi</option>
-                    <option value="Mardi">Mardi</option>
-                    <option value="Mercredi">Mercredi</option>
-                    <option value="Jeudi">Jeudi</option>
-                    <option value="Vendredi">Vendredi</option>
-                    <option value="Samedi">Samedi</option>
-                    <option value="Dimanche">Dimanche</option>
-                </select>
-            </td>
-            <td><input type="time" name="schedule[${rowCount}][start]" class="form-control form-control-sm"></td>
-            <td><input type="time" name="schedule[${rowCount}][end]" class="form-control form-control-sm"></td>
-            <td><input type="text" name="schedule[${rowCount}][activity]" class="form-control form-control-sm"></td>
-            <td class="text-center">
-                <button type="button" class="btn btn-sm btn-outline-danger remove-row"><i class="fas fa-times"></i></button>
-            </td>
-        `;
-        rowCount++;
-        attachRemoveEvent();
-    });
-
-    function attachRemoveEvent() {
-        document.querySelectorAll('.remove-row').forEach(btn => {
-            btn.onclick = function() {
-                if (scheduleTable.rows.length > 1) this.closest('tr').remove();
-            };
-        });
-    }
-    attachRemoveEvent();
-
     const form = document.getElementById('formationForm');
     form.onsubmit = function() {
         const missingCommission = Array.from(selectElement.selectedOptions).find(opt => {
@@ -430,16 +334,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
 
-        const rows = document.querySelectorAll('.schedule-row');
-        const scheduleData = [];
-        rows.forEach(row => {
-            const day = row.querySelector('select').value;
-            const start = row.querySelectorAll('input')[0].value;
-            const end = row.querySelectorAll('input')[1].value;
-            const activity = row.querySelectorAll('input')[2].value;
-            if (start || end || activity) scheduleData.push({ day, start, end, activity });
-        });
-        document.getElementById('emploi_du_temps_json').value = JSON.stringify(scheduleData);
         return true;
     };
 });

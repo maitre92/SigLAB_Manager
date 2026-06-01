@@ -13,7 +13,8 @@
                     <div>
                         <h4 class="mb-1">{{ $evaluation->titre }}</h4>
                         <p class="text-muted mb-0">
-                            <i class="fas fa-book me-1"></i> {{ $evaluation->formation->nom }} | 
+                            <i class="fas fa-users me-1"></i> {{ $evaluation->groupeFormation->nom ?? 'Groupe non défini' }} |
+                            <i class="fas fa-book me-1"></i> {{ $evaluation->formation->nom }} |
                             <i class="fas fa-calendar me-1"></i> {{ $evaluation->date_evaluation->format('d/m/Y') }}
                         </p>
                     </div>

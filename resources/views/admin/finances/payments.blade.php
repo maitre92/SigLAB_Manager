@@ -1,5 +1,7 @@
 @extends('layouts.admin')
 
+@section('title', 'Paiements')
+
 @section('content')
 <div class="row g-4">
     <div class="col-lg-4">
@@ -11,11 +13,11 @@
                 <form action="{{ route('admin.finances.payments.store') }}" method="POST">
                     @csrf
                     <div class="mb-3">
-                        <label class="form-label small fw-bold"><i class="fas fa-graduation-cap text-muted me-1"></i> Formation</label>
-                        <select id="formation_select" class="form-select" required>
-                            <option value="">Sélectionner une formation...</option>
-                            @foreach($inscriptions->pluck('formation')->unique('id')->sortBy('nom') as $form)
-                                <option value="{{ $form->id }}">{{ $form->nom }}</option>
+                        <label class="form-label small fw-bold"><i class="fas fa-users text-muted me-1"></i> Groupe</label>
+                        <select id="groupe_select" class="form-select" required>
+                            <option value="">Sélectionner un groupe...</option>
+                            @foreach($inscriptions->pluck('groupeFormation')->filter()->unique('id')->sortBy('nom') as $groupe)
+                                <option value="{{ $groupe->id }}">{{ $groupe->nom }} - {{ $groupe->formation->nom ?? 'Formation' }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -23,7 +25,7 @@
                     <div class="mb-3">
                         <label class="form-label small fw-bold"><i class="fas fa-user text-muted me-1"></i> Apprenant</label>
                         <select id="inscription_select" name="inscription_id" class="form-select" required disabled>
-                            <option value="">Sélectionner d'abord la formation...</option>
+                            <option value="">Sélectionner d'abord le groupe...</option>
                         </select>
                     </div>
 
@@ -105,10 +107,9 @@
                     <thead class="bg-light text-uppercase" style="font-size: 0.7rem;">
                         <tr>
                             <th class="px-4">Reçu / Date</th>
-                            <th>Apprenant / Formation</th>
+                            <th>Apprenant</th>
                             <th>Mode</th>
-                            <th class="text-end">Montant Payé</th>
-                            <th class="text-end text-danger">Reste à payer</th>
+                            <th class="text-end">Montant</th>
                             <th class="text-center px-4">Action</th>
                         </tr>
                     </thead>
@@ -120,8 +121,8 @@
                                     <small class="text-muted">{{ $p->date_paiement->format('d/m/Y') }}</small>
                                 </td>
                                 <td>
-                                    <div class="fw-bold">{{ $p->inscription->apprenant->nom_complet ?? 'Apprenant inconnu'}}</div>
-                                    <small class="text-muted">{{ $p->inscription->formation->nom ?? 'Formation inconnue' }}</small>
+                                    <div class="fw-bold">{{ $p->inscription?->apprenant?->nom_complet ?? 'Apprenant supprimé' }}</div>
+                                    <small class="text-muted">{{ $p->inscription?->groupeFormation?->nom ?? $p->inscription?->formation?->nom ?? 'Groupe supprimé' }}</small>
                                 </td>
                                 <td>
                                     <span class="badge rounded-pill bg-light text-dark border">{{ ucfirst($p->mode_paiement) }}</span>
@@ -132,16 +133,6 @@
                                 <td class="text-end fw-bold text-success">
                                     {{ number_format($p->montant, 0, ',', ' ') }} FCFA
                                 </td>
-                                <td class="text-end fw-bold text-danger">
-                                    @php
-                                        $reste = $p->inscription->montant_total - $p->inscription->montant_paye;
-                                    @endphp
-                                    @if($reste <= 0)
-                                        <span class="badge bg-success small">Soldé</span>
-                                    @else
-                                        {{ number_format($reste, 0, ',', ' ') }} FCFA
-                                    @endif
-                                </td>
                                 <td class="text-center px-4">
                                     <a href="{{ route('admin.finances.payments.receipt', $p) }}" target="_blank" class="btn btn-sm btn-light border" title="Imprimer le reçu">
                                         <i class="fas fa-print text-primary"></i>
@@ -149,7 +140,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="text-center py-5 text-muted">Aucun paiement enregistré</td></tr>
+                            <tr><td colspan="4" class="text-center py-5 text-muted">Aucun paiement enregistré</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -170,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Les données des inscriptions passées depuis le serveur
     const inscriptions = @json($inscriptions);
 
-    const formationSelect = document.getElementById('formation_select');
+    const groupeSelect = document.getElementById('groupe_select');
     const inscriptionSelect = document.getElementById('inscription_select');
     const financialSummary = document.getElementById('financial_summary');
     const summaryTotal = document.getElementById('summary_total');
@@ -189,9 +180,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return new Intl.NumberFormat('fr-FR').format(value) + ' FCFA';
     }
 
-    // Changement de formation
-    formationSelect.addEventListener('change', function() {
-        const formationId = this.value;
+    // Changement de groupe
+    groupeSelect.addEventListener('change', function() {
+        const groupeId = this.value;
         
         // Vider le select des inscriptions/apprenants
         inscriptionSelect.innerHTML = '<option value="">Sélectionner un apprenant...</option>';
@@ -203,16 +194,16 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = false;
         selectedInscription = null;
 
-        if (!formationId) {
+        if (!groupeId) {
             inscriptionSelect.disabled = true;
             return;
         }
 
-        // Filtrer les inscriptions pour la formation sélectionnée
-        const filtered = inscriptions.filter(ins => ins.formation_id == formationId);
+        // Filtrer les inscriptions pour le groupe sélectionné
+        const filtered = inscriptions.filter(ins => ins.groupe_formation_id == groupeId);
 
         if (filtered.length === 0) {
-            inscriptionSelect.innerHTML = '<option value="">Aucun apprenant inscrit à cette formation</option>';
+            inscriptionSelect.innerHTML = '<option value="">Aucun apprenant inscrit à ce groupe</option>';
             inscriptionSelect.disabled = true;
             return;
         }
@@ -338,4 +329,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
-

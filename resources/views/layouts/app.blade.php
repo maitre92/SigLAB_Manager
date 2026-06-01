@@ -399,10 +399,35 @@
             margin-bottom: 30px;
         }
 
+        .breadcrumb {
+            --bs-breadcrumb-divider-color: #6b7280;
+            font-size: 14px;
+        }
+
+        .breadcrumb a {
+            color: var(--primary-color);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--secondary-color);
+            text-decoration: underline;
+        }
+
+        .breadcrumb-item.active {
+            color: #6b7280;
+        }
+
         .page-header h1 {
             font-size: 28px;
             font-weight: 700;
             color: #333;
+        }
+
+        html.dark-mode .breadcrumb-item.active,
+        html.dark-mode .breadcrumb {
+            color: #a8b0c0;
         }
 
         html.dark-mode .page-header h1 {
@@ -512,7 +537,42 @@
 
         <!-- Main Content -->
         <div class="main-content">
-            @yield('layout_content')
+            @php
+                $hasLayoutContent = trim($__env->yieldContent('layout_content')) !== '';
+                $currentPageTitle = $page_title ?? trim($__env->yieldContent('title'));
+            @endphp
+
+            @if ($hasLayoutContent)
+                @yield('layout_content')
+            @else
+                @if ($currentPageTitle !== '')
+                    <div class="mb-4 page-header">
+                        <nav aria-label="breadcrumb" class="mb-2">
+                            <ol class="breadcrumb mb-0">
+                                @hasSection('breadcrumbs')
+                                    @yield('breadcrumbs')
+                                @else
+                                    <li class="breadcrumb-item">
+                                        <a href="{{ Route::has('dashboard') ? route('dashboard') : url('/') }}">Tableau de bord</a>
+                                    </li>
+                                    <li class="breadcrumb-item active" aria-current="page">{{ $currentPageTitle }}</li>
+                                @endif
+                            </ol>
+                        </nav>
+
+                        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                            <h1 class="mb-0">{{ $currentPageTitle }}</h1>
+                            @hasSection('actions')
+                                <div class="page-actions">
+                                    @yield('actions')
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
+                @yield('content')
+            @endif
         </div>
     </div>
 

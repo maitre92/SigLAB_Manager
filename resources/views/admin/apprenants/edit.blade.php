@@ -117,19 +117,19 @@
                         </div>
 
                         <div class="col-md-12">
-                            <label for="formation_id" class="form-label">Nouvelle inscription (Optionnel)</label>
-                            <select class="form-select @error('formation_id') is-invalid @enderror" id="formation_id" name="formation_id">
+                            <label for="groupe_formation_id" class="form-label">Nouvelle inscription à un groupe (Optionnel)</label>
+                            <select class="form-select @error('groupe_formation_id') is-invalid @enderror" id="groupe_formation_id" name="groupe_formation_id">
                                 <option value="">-- Sélectionner pour ajouter une inscription --</option>
-                                @foreach($formations as $formation)
-                                    @if(!$apprenant->formations->contains($formation->id))
-                                        <option value="{{ $formation->id }}" {{ old('formation_id') == $formation->id ? 'selected' : '' }}>
-                                            {{ $formation->code }} - {{ $formation->nom }} ({{ number_format($formation->cout, 0, ',', ' ') }} FCFA)
+                                @foreach($groupesFormation as $groupe)
+                                    @if(!$apprenant->groupesFormation->contains($groupe->id))
+                                        <option value="{{ $groupe->id }}" {{ old('groupe_formation_id') == $groupe->id ? 'selected' : '' }}>
+                                            {{ $groupe->code }} - {{ $groupe->nom }} / {{ $groupe->formation->nom ?? 'Formation' }} ({{ number_format($groupe->formation->cout ?? 0, 0, ',', ' ') }} FCFA)
                                         </option>
                                     @endif
                                 @endforeach
                             </select>
                             <div class="form-text">Note : Cela ajoutera une nouvelle inscription sans supprimer les précédentes.</div>
-                            @error('formation_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            @error('groupe_formation_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                     </div>
                 </div>

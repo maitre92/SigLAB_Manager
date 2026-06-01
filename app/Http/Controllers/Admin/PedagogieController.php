@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Apprenant;
 use App\Models\Evaluation;
 use App\Models\Formation;
-use App\Models\Groupe;
+use App\Models\GroupeFormation;
 use App\Models\Note;
 use App\Models\Presence;
 use Illuminate\Http\Request;
@@ -20,33 +20,23 @@ class PedagogieController extends Controller
     public function presences(Request $request)
     {
         $date = $request->get('date', date('Y-m-d'));
-        $formationId = $request->get('formation_id');
-        $groupeId = $request->get('groupe_id');
+        $groupeFormationId = $request->get('groupe_formation_id', $request->get('formation_id'));
         $page_title = 'Feuille de Présence';
         
-        $formations = Formation::with('groupes')->where('statut', 'en_cours')->get();
+        $groupesFormation = GroupeFormation::with('formation')->where('statut', 'en_cours')->get();
         $apprenants = [];
         $presences = [];
 
-        if ($groupeId) {
-            $groupe = Groupe::with('apprenants')->findOrFail($groupeId);
-            $formationId = $groupe->formation_id;
-            $apprenants = $groupe->apprenants;
-            $presences = Presence::where('groupe_id', $groupeId)
-                ->where('date', $date)
-                ->get()
-                ->keyBy('apprenant_id');
-        } elseif ($formationId) {
-            $formation = Formation::with('apprenants')->findOrFail($formationId);
-            $apprenants = $formation->apprenants;
-            $presences = Presence::where('formation_id', $formationId)
-                ->whereNull('groupe_id')
+        if ($groupeFormationId) {
+            $groupeFormation = GroupeFormation::with('apprenants')->findOrFail($groupeFormationId);
+            $apprenants = $groupeFormation->apprenants;
+            $presences = Presence::where('groupe_formation_id', $groupeFormationId)
                 ->where('date', $date)
                 ->get()
                 ->keyBy('apprenant_id');
         }
 
-        return view('admin.pedagogie.presences', compact('formations', 'apprenants', 'presences', 'date', 'formationId', 'groupeId', 'page_title'));
+        return view('admin.pedagogie.presences', compact('groupesFormation', 'apprenants', 'presences', 'date', 'groupeFormationId', 'page_title'));
     }
 
     /**
@@ -55,26 +45,26 @@ class PedagogieController extends Controller
     public function storePresences(Request $request)
     {
         $request->validate([
-            'formation_id' => 'required|exists:formations,id',
-            'groupe_id' => 'nullable|exists:groupes,id',
+            'groupe_formation_id' => 'required|exists:groupes_formation,id',
             'date' => 'required|date',
             'presences' => 'required|array',
         ]);
 
-        $formationId = $request->formation_id;
-        $groupeId = $request->groupe_id;
+        $groupeFormation = GroupeFormation::findOrFail($request->groupe_formation_id);
         $date = $request->date;
 
-        DB::transaction(function () use ($request, $formationId, $groupeId, $date) {
+        DB::transaction(function () use ($request, $groupeFormation, $date) {
             foreach ($request->presences as $apprenantId => $statut) {
                 Presence::updateOrCreate(
                     [
-                        'formation_id' => $formationId,
-                        'groupe_id' => $groupeId,
+                        'groupe_formation_id' => $groupeFormation->id,
                         'apprenant_id' => $apprenantId,
                         'date' => $date
                     ],
-                    ['statut' => $statut]
+                    [
+                        'formation_id' => $groupeFormation->formation_id,
+                        'statut' => $statut,
+                    ]
                 );
             }
         });
@@ -88,14 +78,14 @@ class PedagogieController extends Controller
     public function evaluations()
     {
         $page_title = 'Évaluations';
-        $evaluations = Evaluation::with(['formation', 'groupe'])
+        $evaluations = Evaluation::with(['formation', 'groupeFormation'])
             ->where('type', 'evaluation')
             ->orderBy('date_evaluation', 'desc')
             ->get();
         
-        $formations = Formation::with('groupes')->where('statut', 'en_cours')->get();
+        $groupesFormation = GroupeFormation::with('formation')->where('statut', 'en_cours')->get();
 
-        return view('admin.pedagogie.evaluations', compact('evaluations', 'formations', 'page_title'));
+        return view('admin.pedagogie.evaluations', compact('evaluations', 'groupesFormation', 'page_title'));
     }
 
     /**
@@ -104,14 +94,14 @@ class PedagogieController extends Controller
     public function examens()
     {
         $page_title = 'Examens';
-        $examens = Evaluation::with(['formation', 'groupe'])
+        $examens = Evaluation::with(['formation', 'groupeFormation'])
             ->where('type', 'examen')
             ->orderBy('date_evaluation', 'desc')
             ->get();
         
-        $formations = Formation::with('groupes')->where('statut', 'en_cours')->get();
+        $groupesFormation = GroupeFormation::with('formation')->where('statut', 'en_cours')->get();
 
-        return view('admin.pedagogie.examens', compact('examens', 'formations', 'page_title'));
+        return view('admin.pedagogie.examens', compact('examens', 'groupesFormation', 'page_title'));
     }
 
     /**
@@ -120,8 +110,7 @@ class PedagogieController extends Controller
     public function storeEvaluation(Request $request)
     {
         $request->validate([
-            'formation_id' => 'required|exists:formations,id',
-            'groupe_id' => 'nullable|exists:groupes,id',
+            'groupe_formation_id' => 'required|exists:groupes_formation,id',
             'titre' => 'required|string|max:255',
             'type' => 'required|in:evaluation,examen',
             'date_evaluation' => 'required|date',
@@ -129,7 +118,11 @@ class PedagogieController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        Evaluation::create($request->all());
+        $groupeFormation = GroupeFormation::findOrFail($request->groupe_formation_id);
+
+        Evaluation::create($request->only(['groupe_formation_id', 'titre', 'type', 'date_evaluation', 'coefficient', 'description']) + [
+            'formation_id' => $groupeFormation->formation_id,
+        ]);
 
         $message = $request->type == 'examen' ? 'Examen programmé avec succès.' : 'Évaluation créée avec succès.';
         return redirect()->back()->with('success', $message);
@@ -141,7 +134,7 @@ class PedagogieController extends Controller
     public function notes()
     {
         $page_title = 'Gestion des Notes';
-        $evaluations = Evaluation::with(['formation', 'groupe', 'notes'])
+        $evaluations = Evaluation::with(['formation', 'groupeFormation', 'notes'])
             ->orderBy('date_evaluation', 'desc')
             ->get();
 
@@ -154,13 +147,8 @@ class PedagogieController extends Controller
     public function editNotes(Evaluation $evaluation)
     {
         $page_title = 'Saisie des Notes';
-        if ($evaluation->groupe_id) {
-            $evaluation->load('groupe.apprenants', 'notes');
-            $apprenants = $evaluation->groupe->apprenants;
-        } else {
-            $evaluation->load('formation.apprenants', 'notes');
-            $apprenants = $evaluation->formation->apprenants;
-        }
+        $evaluation->load('groupeFormation.apprenants', 'formation.apprenants', 'notes');
+        $apprenants = $evaluation->groupeFormation?->apprenants ?? $evaluation->formation->apprenants;
         $notes = $evaluation->notes->keyBy('apprenant_id');
 
         return view('admin.pedagogie.edit_notes', compact('evaluation', 'apprenants', 'notes', 'page_title'));
@@ -186,6 +174,7 @@ class PedagogieController extends Controller
                             'apprenant_id' => $apprenantId
                         ],
                         [
+                            'groupe_formation_id' => $evaluation->groupe_formation_id,
                             'valeur' => $valeur,
                             'commentaire' => $request->commentaires[$apprenantId] ?? null
                         ]
@@ -203,32 +192,20 @@ class PedagogieController extends Controller
     public function resultats(Request $request)
     {
         $page_title = 'Résultats des Examens & Évaluations';
-        $formationId = $request->get('formation_id');
-        $groupeId = $request->get('groupe_id');
-        $formations = Formation::with('groupes')->get();
+        $groupeFormationId = $request->get('groupe_formation_id', $request->get('formation_id'));
+        $groupesFormation = GroupeFormation::with('formation')->get();
         
         $apprenants = [];
         $evaluations = [];
         $notes = [];
-        $formation = null;
+        $groupeFormation = null;
 
-        if ($groupeId) {
-            $groupe = Groupe::with(['apprenants', 'formation', 'evaluations.notes'])->findOrFail($groupeId);
-            $formation = $groupe->formation;
-            $formationId = $groupe->formation_id;
-            $apprenants = $groupe->apprenants;
-            $evaluations = $groupe->evaluations()->orderBy('date_evaluation', 'asc')->get();
+        if ($groupeFormationId) {
+            $groupeFormation = GroupeFormation::with(['formation', 'apprenants', 'evaluations.notes'])->findOrFail($groupeFormationId);
+            $apprenants = $groupeFormation->apprenants;
+            $evaluations = $groupeFormation->evaluations()->orderBy('date_evaluation', 'asc')->get();
             
-            foreach ($evaluations as $eval) {
-                foreach ($eval->notes as $note) {
-                    $notes[$note->apprenant_id][$eval->id] = $note->valeur;
-                }
-            }
-        } elseif ($formationId) {
-            $formation = Formation::with(['apprenants', 'evaluations.notes'])->findOrFail($formationId);
-            $apprenants = $formation->apprenants;
-            $evaluations = $formation->evaluations()->whereNull('groupe_id')->orderBy('date_evaluation', 'asc')->get();
-            
+            // Re-organize notes for easier access in view: $notes[apprenant_id][evaluation_id]
             foreach ($evaluations as $eval) {
                 foreach ($eval->notes as $note) {
                     $notes[$note->apprenant_id][$eval->id] = $note->valeur;
@@ -236,6 +213,6 @@ class PedagogieController extends Controller
             }
         }
 
-        return view('admin.pedagogie.resultats', compact('formations', 'formation', 'apprenants', 'evaluations', 'notes', 'page_title', 'formationId', 'groupeId'));
+        return view('admin.pedagogie.resultats', compact('groupesFormation', 'groupeFormation', 'apprenants', 'evaluations', 'notes', 'page_title', 'groupeFormationId'));
     }
 }

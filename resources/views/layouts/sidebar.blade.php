@@ -55,15 +55,15 @@
             <!-- Gestion des Formations -->
             @if($user && $canViewCourses)
                 <div class="nav-item dropdown-menu-like">
-                    <a class="nav-link {{ request()->routeIs('admin.formations.*') || request()->routeIs('admin.categories-formations.*') ? 'active' : '' }}" 
+                    <a class="nav-link {{ request()->routeIs('admin.formations.*') || request()->routeIs('admin.groupes-formations.*') || request()->routeIs('admin.categories-formations.*') ? 'active' : '' }}" 
                        href="#" data-bs-toggle="collapse" data-bs-target="#formations-menu">
                         <i class="fas fa-book"></i> <span class="nav-text">Gestion des formations</span>
                         <i class="fas fa-chevron-down ms-auto" style="font-size: 12px;"></i>
                     </a>
-                    <div class="collapse {{ request()->routeIs('admin.formations.*') || request()->routeIs('admin.categories-formations.*') ? 'show' : '' }}" id="formations-menu">
+                    <div class="collapse {{ request()->routeIs('admin.formations.*') || request()->routeIs('admin.groupes-formations.*') || request()->routeIs('admin.categories-formations.*') ? 'show' : '' }}" id="formations-menu">
                         <a class="nav-link" style="padding-left: 40px; font-size: 13px;" 
-                           href="{{ route('admin.formations.index') }}">
-                            <i class="fas fa-list"></i> <span class="nav-text">Liste formations</span>
+                           href="{{ route('admin.categories-formations.index') }}">
+                            <i class="fas fa-tags"></i> <span class="nav-text">Catégories formations</span>
                         </a>
                         @if($canCreateCourse)
                             <a class="nav-link" style="padding-left: 40px; font-size: 13px;" 
@@ -72,8 +72,12 @@
                             </a>
                         @endif
                         <a class="nav-link" style="padding-left: 40px; font-size: 13px;" 
-                           href="{{ route('admin.categories-formations.index') }}">
-                            <i class="fas fa-tags"></i> <span class="nav-text">Catégories formations</span>
+                           href="{{ route('admin.formations.index') }}">
+                            <i class="fas fa-list"></i> <span class="nav-text">Liste formations</span>
+                        </a>
+                        <a class="nav-link {{ request()->routeIs('admin.groupes-formations.*') ? 'active' : '' }}" style="padding-left: 40px; font-size: 13px;" 
+                           href="{{ route('admin.groupes-formations.index') }}">
+                            <i class="fas fa-users"></i> <span class="nav-text">Groupes de formation</span>
                         </a>
                     </div>
                 </div>

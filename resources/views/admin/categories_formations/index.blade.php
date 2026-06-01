@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Catégories de Formation')
-@php $page_title = 'Catégories de Formation'; @endphp
+@section('title', 'Catégories de formation')
+@php $page_title = 'Catégories de formation'; @endphp
 
 @section('actions')
     @if(Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('gerer_categories_formations'))

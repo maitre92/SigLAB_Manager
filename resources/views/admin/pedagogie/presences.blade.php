@@ -6,29 +6,23 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <form action="{{ route('admin.pedagogie.presences') }}" method="GET" class="row g-3 align-items-end">
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold">Formation</label>
-                        <select name="formation_id" id="formation_select" class="form-select">
-                            <option value="">Sélectionnez une formation</option>
-                            @foreach($formations as $f)
-                                <option value="{{ $f->id }}" {{ $formationId == $f->id ? 'selected' : '' }}>
-                                    {{ $f->nom }} ({{ $f->code }})
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Groupe de formation</label>
+                        <select name="groupe_formation_id" class="form-select" onchange="this.form.submit()">
+                            <option value="">Sélectionnez un groupe</option>
+                            @foreach($groupesFormation as $groupe)
+                                <option value="{{ $groupe->id }}" {{ $groupeFormationId == $groupe->id ? 'selected' : '' }}>
+                                    {{ $groupe->nom }} - {{ $groupe->formation->nom ?? 'Formation' }}
                                 </option>
                             @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-3" id="groupe_container" style="display: none;">
-                        <label class="form-label fw-bold">Groupe</label>
-                        <select name="groupe_id" id="groupe_select" class="form-select" onchange="this.form.submit()">
-                            <option value="">Tous les apprenants (Sans groupe)</option>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label fw-bold">Date</label>
                         <input type="date" name="date" class="form-control" value="{{ $date }}" onchange="this.form.submit()">
                     </div>
-                    <div class="col-md-3 text-md-end">
-                        <button type="submit" class="btn text-white" style="background-color: var(--navbar-bg);">
+                    <div class="col-md-5 text-md-end">
+                        <button type="submit" class="btn btn-primary">
                             <i class="fas fa-sync-alt me-1"></i> Actualiser
                         </button>
                     </div>
@@ -38,15 +32,14 @@
     </div>
 </div>
 
-@if($formationId)
+@if($groupeFormationId)
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-3">
-            <h6 class="mb-0 fw-bold"><i class="fas fa-calendar-check text-primary me-2"></i> Appel du {{ \Carbon\Carbon::parse($date)->format('d/m/Y') }}</h6>
+            <h6 class="mb-0 fw-bold">Appel du {{ \Carbon\Carbon::parse($date)->format('d/m/Y') }}</h6>
         </div>
         <form action="{{ route('admin.pedagogie.presences.store') }}" method="POST">
             @csrf
-            <input type="hidden" name="formation_id" value="{{ $formationId }}">
-            <input type="hidden" name="groupe_id" value="{{ $groupeId }}">
+            <input type="hidden" name="groupe_formation_id" value="{{ $groupeFormationId }}">
             <input type="hidden" name="date" value="{{ $date }}">
             
             <div class="table-responsive">
@@ -61,7 +54,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($apprenants as $apprenant)
+                        @foreach($apprenants as $apprenant)
                             @php
                                 $status = $presences[$apprenant->id]->statut ?? 'present';
                             @endphp
@@ -83,81 +76,23 @@
                                     <input class="form-check-input" type="radio" name="presences[{{ $apprenant->id }}]" value="justifie" {{ $status == 'justifie' ? 'checked' : '' }}>
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="text-center py-5 text-muted small">
-                                    <i class="fas fa-users fa-2x mb-3 text-muted opacity-50 d-block"></i>
-                                    Aucun apprenant trouvé pour cette sélection.
-                                </td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
-            @if(count($apprenants) > 0)
             <div class="card-footer bg-white text-end py-3">
-                <button type="submit" class="btn text-white shadow-sm" style="background-color: var(--navbar-bg);">
+                <button type="submit" class="btn btn-success shadow-sm">
                     <i class="fas fa-save me-1"></i> Enregistrer les présences
                 </button>
             </div>
-            @endif
         </form>
     </div>
 @else
     <div class="card border-0 shadow-sm py-5">
         <div class="card-body text-center text-muted">
             <i class="fas fa-chalkboard-teacher mb-3" style="font-size: 48px; opacity: 0.2;"></i>
-            <p class="mb-0">Veuillez sélectionner une formation pour faire l'appel.</p>
+            <p class="mb-0">Veuillez sélectionner un groupe pour faire l'appel.</p>
         </div>
     </div>
 @endif
 @endsection
-
-@section('js')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const formationsData = @json($formations);
-        const formationSelect = document.getElementById('formation_select');
-        const groupeContainer = document.getElementById('groupe_container');
-        const groupeSelect = document.getElementById('groupe_select');
-        const selectedGroupeId = "{{ $groupeId }}";
-
-        function updateGroupes() {
-            const formationId = formationSelect.value;
-            groupeSelect.innerHTML = '<option value="">Tous les apprenants (Sans groupe)</option>';
-            
-            if (!formationId) {
-                groupeContainer.style.display = 'none';
-                return;
-            }
-
-            const formation = formationsData.find(f => f.id == formationId);
-            if (formation && formation.groupes && formation.groupes.length > 0) {
-                formation.groupes.forEach(g => {
-                    const option = document.createElement('option');
-                    option.value = g.id;
-                    option.textContent = g.nom;
-                    if (g.id == selectedGroupeId) {
-                        option.selected = true;
-                    }
-                    groupeSelect.appendChild(option);
-                });
-                groupeContainer.style.display = 'block';
-            } else {
-                groupeContainer.style.display = 'none';
-            }
-        }
-
-        formationSelect.addEventListener('change', function() {
-            updateGroupes();
-            this.form.submit();
-        });
-
-        // Initial call
-        if (formationSelect.value) {
-            updateGroupes();
-        }
-    });
-</script>
-@endsection
-

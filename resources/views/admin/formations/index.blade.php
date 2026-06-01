@@ -42,16 +42,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select name="statut" class="form-select form-select-sm">
-                        <option value="">Tous les statuts</option>
-                        <option value="planifiee" {{ request('statut') == 'planifiee' ? 'selected' : '' }}>Planifiée</option>
-                        <option value="en_cours" {{ request('statut') == 'en_cours' ? 'selected' : '' }}>En cours</option>
-                        <option value="terminee" {{ request('statut') == 'terminee' ? 'selected' : '' }}>Terminée</option>
-                        <option value="suspendue" {{ request('statut') == 'suspendue' ? 'selected' : '' }}>Suspendue</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <select name="type" class="form-select form-select-sm">
                         <option value="">Tous les types</option>
                         <option value="Présentiel" {{ request('type') == 'Présentiel' ? 'selected' : '' }}>Présentiel</option>
@@ -59,7 +50,7 @@
                         <option value="Hybride" {{ request('type') == 'Hybride' ? 'selected' : '' }}>Hybride</option>
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <button type="submit" class="btn btn-sm btn-primary w-100">Filtrer</button>
                 </div>
             </form>
@@ -80,7 +71,7 @@
                             <th>Catégorie</th>
                             <th>Type</th>
                             <th>Coût</th>
-                            <th class="text-center">Statut</th>
+                            <th class="text-center">Groupes</th>
                             <th class="text-end pe-4">Actions</th>
                         </tr>
                     </thead>
@@ -111,16 +102,7 @@
                             </td>
                             <td class="fw-bold">{{ number_format($formation->cout, 2, ',', ' ') }} FCFA</td>
                             <td class="text-center">
-                                @php
-                                    $statusClasses = [
-                                        'planifiee' => 'bg-secondary',
-                                        'en_cours' => 'bg-primary',
-                                        'terminee' => 'bg-success',
-                                        'suspendue' => 'bg-danger',
-                                    ];
-                                    $class = $statusClasses[$formation->statut] ?? 'bg-dark';
-                                @endphp
-                                <span class="badge {{ $class }}">{{ $formation->statut_label }}</span>
+                                <span class="badge bg-light text-dark border">{{ $formation->groupes_count }} groupe(s)</span>
                             </td>
                             <td class="text-end pe-4">
                                 <div class="btn-group btn-group-sm shadow-sm">
@@ -134,7 +116,7 @@
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     @endif
-                                    <a href="{{ route('admin.apprenants.create', ['formation_id' => $formation->id]) }}" class="btn btn-outline-success" title="Inscrire un apprenant">
+                                    <a href="{{ route('admin.apprenants.create', ['groupe_formation_id' => optional($formation->groupes->first())->id, 'formation_id' => $formation->id]) }}" class="btn btn-outline-success" title="Inscrire un apprenant">
                                         <i class="fas fa-user-plus"></i>
                                     </a>
                                     @if($canDelete)

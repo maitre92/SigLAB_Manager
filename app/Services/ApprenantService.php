@@ -18,8 +18,10 @@ class ApprenantService
      */
     public function create(array $data): Apprenant
     {
-        // Gestion de l'inscription à une formation
+        // Gestion de l'inscription à un groupe de formation
+        $groupeFormationId = $data['groupe_formation_id'] ?? null;
         $formationId = $data['formation_id'] ?? null;
+        unset($data['groupe_formation_id']);
         unset($data['formation_id']);
 
         // Gestion de l'upload de photo
@@ -29,22 +31,30 @@ class ApprenantService
 
         $apprenant = Apprenant::create($data);
 
-        // Inscription si une formation est sélectionnée
-        if ($formationId) {
-            $formation = \App\Models\Formation::find($formationId);
-            $apprenant->formations()->attach($formationId, [
+        // Inscription si un groupe est sélectionné
+        if ($groupeFormationId || $formationId) {
+            $groupe = $groupeFormationId
+                ? \App\Models\GroupeFormation::with('formation')->find($groupeFormationId)
+                : \App\Models\GroupeFormation::with('formation')->where('formation_id', $formationId)->oldest()->first();
+
+            $formation = $groupe?->formation;
+
+            if ($groupe && $formation) {
+                $apprenant->groupesFormation()->attach($groupe->id, [
+                    'formation_id' => $formation->id,
                 'date_inscription' => now(),
                 'montant_total' => ($formation->cout ?? 0) + ($formation->frais_inscription ?? 0),
                 'statut' => 'en_attente',
                 'created_by' => auth()->id()
             ]);
+            }
         }
 
         ActivityLog::log(
             action: 'create_apprenant',
             subject: 'Apprenant',
             subjectId: $apprenant->id,
-            description: "L'apprenant {$apprenant->nom_complet} ({$apprenant->matricule}) a été créé" . ($formationId ? " et inscrit à la formation {$formation->nom}" : "")
+            description: "L'apprenant {$apprenant->nom_complet} ({$apprenant->matricule}) a été créé" . (isset($groupe) && $groupe ? " et inscrit au groupe {$groupe->nom}" : "")
         );
 
         return $apprenant;
@@ -56,7 +66,9 @@ class ApprenantService
     public function update(Apprenant $apprenant, array $data): bool
     {
         // Gestion de la nouvelle inscription
+        $groupeFormationId = $data['groupe_formation_id'] ?? null;
         $formationId = $data['formation_id'] ?? null;
+        unset($data['groupe_formation_id']);
         unset($data['formation_id']);
 
         // Gestion de l'upload de photo
@@ -90,10 +102,16 @@ class ApprenantService
 
         $result = $apprenant->update($data);
 
-        // Inscription si une formation est sélectionnée et que l'apprenant n'y est pas déjà inscrit
-        if ($result && $formationId && !$apprenant->formations->contains($formationId)) {
-            $formation = \App\Models\Formation::find($formationId);
-            $apprenant->formations()->attach($formationId, [
+        // Inscription si un groupe est sélectionné et que l'apprenant n'y est pas déjà inscrit
+        if ($result && ($groupeFormationId || $formationId)) {
+            $groupe = $groupeFormationId
+                ? \App\Models\GroupeFormation::with('formation')->find($groupeFormationId)
+                : \App\Models\GroupeFormation::with('formation')->where('formation_id', $formationId)->oldest()->first();
+
+            if ($groupe && !$apprenant->groupesFormation->contains($groupe->id)) {
+                $formation = $groupe->formation;
+                $apprenant->groupesFormation()->attach($groupe->id, [
+                    'formation_id' => $formation->id,
                 'date_inscription' => now(),
                 'montant_total' => ($formation->cout ?? 0) + ($formation->frais_inscription ?? 0),
                 'statut' => 'en_attente',
@@ -104,8 +122,9 @@ class ApprenantService
                 action: 'enroll_apprenant',
                 subject: 'Apprenant',
                 subjectId: $apprenant->id,
-                description: "L'apprenant {$apprenant->nom_complet} a été inscrit à la formation {$formation->nom} lors de sa modification"
+                    description: "L'apprenant {$apprenant->nom_complet} a été inscrit au groupe {$groupe->nom} lors de sa modification"
             );
+            }
         }
 
         if ($result && !empty($changes)) {
@@ -182,7 +201,7 @@ class ApprenantService
             $query->byNiveauEtude($niveauEtude);
         }
 
-        return $query->with('formations')->orderBy('created_at', 'desc')->paginate($perPage);
+        return $query->with(['formations', 'groupesFormation.formation'])->orderBy('created_at', 'desc')->paginate($perPage);
     }
 
     /**

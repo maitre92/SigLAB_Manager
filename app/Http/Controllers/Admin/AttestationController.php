@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Apprenant;
 use App\Models\Attestation;
 use App\Models\Formation;
+use App\Models\GroupeFormation;
 use App\Models\Inscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,12 +19,12 @@ class AttestationController extends Controller
     public function index()
     {
         $page_title = 'Gestion des Attestations';
-        $attestations = Attestation::with(['apprenant', 'formation'])->latest()->get();
+        $attestations = Attestation::with(['apprenant', 'formation', 'groupeFormation'])->latest()->get();
         
-        // On récupère les formations terminées pour proposer la génération
-        $formations = Formation::where('statut', 'terminee')->get();
+        // On récupère les groupes terminés pour proposer la génération
+        $groupesFormation = GroupeFormation::with(['formation', 'apprenants'])->where('statut', 'terminee')->get();
 
-        return view('admin.attestations.index', compact('attestations', 'formations', 'page_title'));
+        return view('admin.attestations.index', compact('attestations', 'groupesFormation', 'page_title'));
     }
 
     /**
@@ -33,12 +34,13 @@ class AttestationController extends Controller
     {
         $page_title = 'Générer une Attestation';
         $apprenantId = $request->apprenant_id;
-        $formationId = $request->formation_id;
+        $groupeFormationId = $request->groupe_formation_id;
 
         $apprenant = Apprenant::findOrFail($apprenantId);
-        $formation = Formation::findOrFail($formationId);
+        $groupeFormation = GroupeFormation::with('formation')->findOrFail($groupeFormationId);
+        $formation = $groupeFormation->formation;
 
-        return view('admin.attestations.create', compact('apprenant', 'formation', 'page_title'));
+        return view('admin.attestations.create', compact('apprenant', 'formation', 'groupeFormation', 'page_title'));
     }
 
     /**
@@ -48,17 +50,17 @@ class AttestationController extends Controller
     {
         $request->validate([
             'apprenant_id' => 'required|exists:apprenants,id',
-            'formation_id' => 'required|exists:formations,id',
+            'groupe_formation_id' => 'required|exists:groupes_formation,id',
             'date_emission' => 'required|date',
         ]);
 
-        // Vérifier si le paiement des frais de formation est total
+        $groupeFormation = GroupeFormation::findOrFail($request->groupe_formation_id);
         $inscription = Inscription::where('apprenant_id', $request->apprenant_id)
-            ->where('formation_id', $request->formation_id)
+            ->where('groupe_formation_id', $groupeFormation->id)
             ->first();
 
         if (!$inscription) {
-            return redirect()->route('admin.attestations.index')->with('error', 'Cet apprenant n\'est pas inscrit à cette formation.');
+            return redirect()->route('admin.attestations.index')->with('error', 'Cet apprenant n\'est pas inscrit à ce groupe de formation.');
         }
 
         if ($inscription->montant_paye < $inscription->montant_total) {
@@ -68,17 +70,18 @@ class AttestationController extends Controller
 
         // Vérifier si une attestation existe déjà pour ce couple
         $exists = Attestation::where('apprenant_id', $request->apprenant_id)
-            ->where('formation_id', $request->formation_id)
+            ->where('groupe_formation_id', $request->groupe_formation_id)
             ->first();
 
         if ($exists) {
-            return redirect()->route('admin.attestations.index')->with('error', 'Une attestation existe déjà pour cet apprenant sur cette formation.');
+            return redirect()->route('admin.attestations.index')->with('error', 'Une attestation existe déjà pour cet apprenant sur ce groupe.');
         }
 
         Attestation::create([
             'reference' => Attestation::generateReference(),
             'apprenant_id' => $request->apprenant_id,
-            'formation_id' => $request->formation_id,
+            'formation_id' => $groupeFormation->formation_id,
+            'groupe_formation_id' => $groupeFormation->id,
             'date_emission' => $request->date_emission,
             'statut' => 'genere',
             'created_by' => Auth::id(),
@@ -93,7 +96,7 @@ class AttestationController extends Controller
     public function show(Attestation $attestation)
     {
         $page_title = 'Aperçu de l\'Attestation';
-        $attestation->load(['apprenant', 'formation']);
+        $attestation->load(['apprenant', 'formation', 'groupeFormation']);
         
         return view('admin.attestations.show', compact('attestation', 'page_title'));
     }

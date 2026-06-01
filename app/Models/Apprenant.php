@@ -134,6 +134,13 @@ class Apprenant extends Model
             ->withTimestamps();
     }
 
+    public function groupesFormation()
+    {
+        return $this->belongsToMany(GroupeFormation::class, 'inscriptions', 'apprenant_id', 'groupe_formation_id')
+            ->withPivot('id', 'formation_id', 'date_inscription', 'montant_total', 'montant_paye', 'statut')
+            ->withTimestamps();
+    }
+
     public function inscriptions()
     {
         return $this->hasMany(Inscription::class);

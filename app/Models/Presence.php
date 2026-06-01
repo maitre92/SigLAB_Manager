@@ -11,7 +11,7 @@ class Presence extends Model
 
     protected $fillable = [
         'formation_id',
-        'groupe_id',
+        'groupe_formation_id',
         'apprenant_id',
         'date',
         'statut',
@@ -27,9 +27,9 @@ class Presence extends Model
         return $this->belongsTo(Formation::class);
     }
 
-    public function groupe()
+    public function groupeFormation()
     {
-        return $this->belongsTo(Groupe::class);
+        return $this->belongsTo(GroupeFormation::class, 'groupe_formation_id')->withTrashed();
     }
 
     public function apprenant()

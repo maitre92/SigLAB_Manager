@@ -14,6 +14,7 @@ class Attestation extends Model
         'reference',
         'apprenant_id',
         'formation_id',
+        'groupe_formation_id',
         'date_emission',
         'statut',
         'pdf_path',
@@ -32,6 +33,11 @@ class Attestation extends Model
     public function formation()
     {
         return $this->belongsTo(Formation::class);
+    }
+
+    public function groupeFormation()
+    {
+        return $this->belongsTo(GroupeFormation::class, 'groupe_formation_id')->withTrashed();
     }
 
     public function creator()

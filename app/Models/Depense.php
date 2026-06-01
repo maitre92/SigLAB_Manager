@@ -19,6 +19,7 @@ class Depense extends Model
         'description',
         'piece_jointe',
         'formation_id',
+        'groupe_formation_id',
         'user_id',
         'created_by'
     ];
@@ -36,6 +37,11 @@ class Depense extends Model
     public function formation()
     {
         return $this->belongsTo(Formation::class);
+    }
+
+    public function groupeFormation()
+    {
+        return $this->belongsTo(GroupeFormation::class, 'groupe_formation_id')->withTrashed();
     }
 
     public function trainer()

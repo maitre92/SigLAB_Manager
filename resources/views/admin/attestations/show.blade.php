@@ -77,9 +77,9 @@
                 <strong>module {{ $attestation->formation->nom }}</strong>
                 à la date du
                 <strong>
-                    {{ $attestation->formation->date_debut ? $attestation->formation->date_debut->format('d/m/Y') : '...' }}
+                    {{ $attestation->groupeFormation?->date_debut ? $attestation->groupeFormation->date_debut->format('d/m/Y') : '...' }}
                     au
-                    {{ $attestation->formation->date_fin ? $attestation->formation->date_fin->format('d/m/Y') : '...' }}
+                    {{ $attestation->groupeFormation?->date_fin ? $attestation->groupeFormation->date_fin->format('d/m/Y') : '...' }}
                 </strong>
             </p>
 

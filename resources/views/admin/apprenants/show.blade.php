@@ -201,7 +201,7 @@
                             <table class="table table-hover align-middle">
                                 <thead class="bg-light">
                                     <tr>
-                                        <th>Formation</th>
+                                        <th>Groupe / Formation</th>
                                         <th>Date Inscription</th>
                                         <th>Statut</th>
                                         <th>Montant</th>
@@ -210,13 +210,13 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($apprenant->formations as $formation)
+                                    @forelse($apprenant->inscriptions as $inscription)
                                     <tr>
                                         <td>
-                                            <div class="fw-bold">{{ $formation->nom }}</div>
-                                            <small class="text-muted">{{ $formation->code }}</small>
+                                            <div class="fw-bold">{{ $inscription->groupeFormation->nom ?? 'Groupe non défini' }}</div>
+                                            <small class="text-muted">{{ $inscription->formation->nom ?? 'Formation supprimée' }}</small>
                                         </td>
-                                        <td>{{ $formation->pivot->date_inscription ? \Carbon\Carbon::parse($formation->pivot->date_inscription)->format('d/m/Y') : '---' }}</td>
+                                        <td>{{ $inscription->date_inscription ? \Carbon\Carbon::parse($inscription->date_inscription)->format('d/m/Y') : '---' }}</td>
                                         <td>
                                             @php
                                                 $statutColors = [
@@ -225,16 +225,18 @@
                                                     'annulee' => 'danger',
                                                     'terminee' => 'info'
                                                 ];
-                                                $color = $statutColors[$formation->pivot->statut] ?? 'secondary';
+                                                $color = $statutColors[$inscription->statut] ?? 'secondary';
                                             @endphp
-                                            <span class="badge bg-{{ $color }}">{{ ucfirst($formation->pivot->statut) }}</span>
+                                            <span class="badge bg-{{ $color }}">{{ ucfirst($inscription->statut) }}</span>
                                         </td>
-                                        <td>{{ number_format($formation->pivot->montant_total, 0, ',', ' ') }} FCFA</td>
+                                        <td>{{ number_format($inscription->montant_total, 0, ',', ' ') }} FCFA</td>
                                         <td class="text-danger fw-bold">
-                                            {{ number_format($formation->pivot->montant_total - $formation->pivot->montant_paye, 0, ',', ' ') }} FCFA
+                                            {{ number_format($inscription->montant_total - $inscription->montant_paye, 0, ',', ' ') }} FCFA
                                         </td>
                                         <td class="text-end">
-                                            <a href="{{ route('admin.formations.show', $formation) }}" class="btn btn-sm btn-outline-info rounded-circle"><i class="fas fa-eye"></i></a>
+                                            @if($inscription->formation)
+                                                <a href="{{ route('admin.formations.show', $inscription->formation) }}" class="btn btn-sm btn-outline-info rounded-circle"><i class="fas fa-eye"></i></a>
+                                            @endif
                                         </td>
                                     </tr>
                                     @empty
@@ -292,7 +294,7 @@
                                                     <small class="text-muted">{{ $p->date_paiement->format('d/m/Y') }}</small>
                                                 </td>
                                                 <td>
-                                                    <span class="fw-medium">{{ $p->inscription->formation->nom }}</span>
+                                                    <span class="fw-medium">{{ $p->inscription?->formation?->nom ?? 'Formation supprimée' }}</span>
                                                 </td>
                                                 <td>
                                                     <span class="badge rounded-pill bg-light text-dark border">{{ ucfirst($p->mode_paiement) }}</span>

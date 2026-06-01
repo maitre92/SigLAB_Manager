@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Apprenant;
 use App\Models\Formation;
+use App\Models\GroupeFormation;
 use App\Models\Evaluation;
 use App\Models\Attestation;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,7 @@ class DashboardController extends Controller
     {
         $stats = [
             'total_apprenants' => Apprenant::count(),
-            'active_formations' => Formation::where('statut', 'en_cours')->count(),
+            'active_formations' => GroupeFormation::where('statut', 'en_cours')->count(),
             'total_evaluations' => Evaluation::count(),
             'issued_attestations' => Attestation::count(),
             'total_revenue' => (float) DB::table('inscriptions')->sum('montant_paye'),
@@ -91,7 +92,7 @@ class DashboardController extends Controller
             'data' => [
                 'users' => Apprenant::count(),
                 'formations' => Formation::count(),
-                'active_sessions' => Formation::where('statut', 'en_cours')->count(),
+                'active_sessions' => GroupeFormation::where('statut', 'en_cours')->count(),
             ]
         ]);
     }

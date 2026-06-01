@@ -221,12 +221,11 @@
                 <!-- Header -->
                 <div class="row align-items-center mb-3">
                     <div class="col-7">
-                        <div class="d-flex align-items-center gap-3">
-                            <img src="{{ asset('images/siglab_img2.jpeg') }}" alt="sigLAB Logo" style="height: 70px; width: auto; object-fit: contain; border-radius: 6px;">
-                            <div>
-                                <h2 class="logo-text" style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; margin: 0; line-height: 1.1;">sigLAB</h2>
-                                <small class="text-muted" style="font-size: 10px; display: block; margin-top: 2px; font-weight: 500;">Bamako-Boulkansbougou</small>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-primary text-white rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 14px;">
+                                <i class="fas fa-laptop-code"></i>
                             </div>
+                            <h2 class="logo-text">sigLAB <span>Manager</span></h2>
                         </div>
                     </div>
                     <div class="col-5 text-end">
@@ -251,8 +250,8 @@
                     <div class="row align-items-center">
                         <div class="col-8">
                             <span class="section-label">Apprenant</span>
-                            <div class="apprenant-name">{{ $paiement->inscription->apprenant->nom_complet ?? 'Apprenant inconnu' }}</div>
-                            <div class="small text-muted fw-bold">{{ $paiement->inscription->formation->nom ?? 'formation inconnu'}}</div>
+                            <div class="apprenant-name">{{ $paiement->inscription?->apprenant?->nom_complet ?? 'Apprenant supprimé' }}</div>
+                            <div class="small text-muted fw-bold">{{ $paiement->inscription?->formation?->nom ?? 'Formation supprimée' }}</div>
                         </div>
                         <div class="col-4">
                             <div class="amount-card">

@@ -4,10 +4,33 @@
 
 @section('layout_content')
 <!-- Page Title -->
-@if (isset($page_title))
-    <div class="d-flex justify-content-between align-items-center mb-4 page-header">
-        <h1>{{ $page_title }}</h1>
-        @yield('actions')
+@php
+    $currentPageTitle = $page_title ?? trim($__env->yieldContent('title'));
+@endphp
+
+@if ($currentPageTitle !== '')
+    <div class="mb-4 page-header">
+        <nav aria-label="breadcrumb" class="mb-2">
+            <ol class="breadcrumb mb-0">
+                @hasSection('breadcrumbs')
+                    @yield('breadcrumbs')
+                @else
+                    <li class="breadcrumb-item">
+                        <a href="{{ route('admin.dashboard') }}">Tableau de bord</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ $currentPageTitle }}</li>
+                @endif
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+            <h1 class="mb-0">{{ $currentPageTitle }}</h1>
+            @hasSection('actions')
+                <div class="page-actions">
+                    @yield('actions')
+                </div>
+            @endif
+        </div>
     </div>
 @endif
 

@@ -8,6 +8,7 @@ use App\Models\Depense;
 use App\Models\Inscription;
 use App\Models\Apprenant;
 use App\Models\Formation;
+use App\Models\GroupeFormation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +23,7 @@ class FinanceController extends Controller
         $total_expenses = Depense::sum('montant');
         $balance = $total_revenue - $total_expenses;
         
-        $recent_paiements = Paiement::with(['inscription.apprenant', 'inscription.formation'])
+        $recent_paiements = Paiement::with(['inscription.apprenant', 'inscription.formation', 'inscription.groupeFormation'])
             ->latest()
             ->take(10)
             ->get();
@@ -51,8 +52,8 @@ class FinanceController extends Controller
 
     public function payments()
     {
-        $paiements = Paiement::with(['inscription.apprenant', 'inscription.formation'])->latest()->paginate(20);
-        $inscriptions = Inscription::with(['apprenant', 'formation'])
+        $paiements = Paiement::with(['inscription.apprenant', 'inscription.formation', 'inscription.groupeFormation'])->latest()->paginate(20);
+        $inscriptions = Inscription::with(['apprenant', 'formation', 'groupeFormation'])
             ->whereNotIn('statut', ['terminee', 'annulee'])
             ->get()
             ->filter(function ($ins) {
@@ -160,30 +161,30 @@ class FinanceController extends Controller
 
     public function receipt(Paiement $paiement)
     {
-        $paiement->load(['inscription.apprenant', 'inscription.formation', 'creator']);
+        $paiement->load(['inscription.apprenant', 'inscription.formation', 'inscription.groupeFormation', 'creator']);
         return view('admin.finances.receipt', compact('paiement'));
     }
 
     public function trainerPayments()
     {
-        // Charger les formations qui ont des formateurs et charger avec inscriptions.paiements
-        $formations = Formation::with(['formateurs', 'inscriptions.paiements'])
+        // Charger les groupes qui ont des formateurs et charger avec inscriptions.paiements
+        $groupesFormation = GroupeFormation::with(['formation', 'formateurs', 'inscriptions.paiements'])
             ->whereHas('formateurs')
             ->get();
             
         // Charger les paiements de commission formateurs
-        $payments = Depense::with(['formation', 'trainer'])
+        $payments = Depense::with(['formation', 'groupeFormation', 'trainer'])
             ->where('categorie', 'Rémunération Formateur')
             ->latest()
             ->paginate(20);
             
         // Construire les données JSON préchargées pour le JS
-        $formationsData = $formations->map(function($f) {
-            $total_collecte = $f->inscriptions->flatMap->paiements->sum('montant');
-            $total_contrats = $f->inscriptions->sum('montant_total');
+        $formationsData = $groupesFormation->map(function($groupe) {
+            $total_collecte = $groupe->inscriptions->flatMap->paiements->sum('montant');
+            $total_contrats = $groupe->inscriptions->sum('montant_total');
             
-            $formateurs = $f->formateurs->map(function($trainer) use ($f, $total_collecte, $total_contrats) {
-                $percentage = $trainer->pivot->pourcentage_commission ?? 0;
+            $formateurs = $groupe->formateurs->map(function($trainer) use ($groupe, $total_collecte, $total_contrats) {
+                $percentage = $trainer->pivot->taux_commission ?? 0;
                 
                 // Commission sur les contrats inscrits
                 $commission_contrat = ($total_contrats * $percentage) / 100;
@@ -191,9 +192,9 @@ class FinanceController extends Controller
                 // Commission sur l'argent réellement collecté
                 $commission_acquise = ($total_collecte * $percentage) / 100;
                 
-                // Déjà payé à ce formateur pour cette formation
+                // Déjà payé à ce formateur pour ce groupe
                 $deja_paye = Depense::where('user_id', $trainer->id)
-                    ->where('formation_id', $f->id)
+                    ->where('groupe_formation_id', $groupe->id)
                     ->sum('montant');
                     
                 $reste_a_payer = $commission_acquise - $deja_paye;
@@ -212,22 +213,23 @@ class FinanceController extends Controller
             });
             
             return [
-                'id' => $f->id,
-                'nom' => $f->nom,
-                'code' => $f->code,
+                'id' => $groupe->id,
+                'nom' => $groupe->nom,
+                'code' => $groupe->code,
+                'formation_nom' => $groupe->formation->nom ?? '',
                 'total_collecte' => $total_collecte,
                 'total_contrats' => $total_contrats,
                 'formateurs' => $formateurs
             ];
         });
 
-        return view('admin.finances.trainer_payments', compact('payments', 'formationsData', 'formations'));
+        return view('admin.finances.trainer_payments', compact('payments', 'formationsData', 'groupesFormation'));
     }
 
     public function storeTrainerPayment(Request $request)
     {
         $request->validate([
-            'formation_id' => 'required|exists:formations,id',
+            'groupe_formation_id' => 'required|exists:groupes_formation,id',
             'user_id' => 'required|exists:users,id',
             'montant' => 'required|numeric|min:1',
             'date_paiement' => 'required|date|before_or_equal:today',
@@ -236,21 +238,21 @@ class FinanceController extends Controller
             'notes' => 'nullable|string',
         ]);
         
-        $formation = Formation::with(['formateurs' => function($q) use ($request) {
+        $groupeFormation = GroupeFormation::with(['formation', 'formateurs' => function($q) use ($request) {
             $q->where('users.id', $request->user_id);
-        }, 'inscriptions.paiements'])->findOrFail($request->formation_id);
+        }, 'inscriptions.paiements'])->findOrFail($request->groupe_formation_id);
         
-        $trainer = $formation->formateurs->first();
+        $trainer = $groupeFormation->formateurs->first();
         if (!$trainer) {
-            return redirect()->back()->withErrors(['user_id' => 'Le formateur sélectionné n\'est pas associé à cette formation.']);
+            return redirect()->back()->withErrors(['user_id' => 'Le formateur sélectionné n\'est pas associé à ce groupe.']);
         }
         
-        $total_collecte = $formation->inscriptions->flatMap->paiements->sum('montant');
-        $percentage = $trainer->pivot->pourcentage_commission ?? 0;
+        $total_collecte = $groupeFormation->inscriptions->flatMap->paiements->sum('montant');
+        $percentage = $trainer->pivot->taux_commission ?? 0;
         $commission_acquise = ($total_collecte * $percentage) / 100;
         
         $deja_paye = Depense::where('user_id', $request->user_id)
-            ->where('formation_id', $request->formation_id)
+            ->where('groupe_formation_id', $request->groupe_formation_id)
             ->sum('montant');
             
         $reste = $commission_acquise - $deja_paye;
@@ -281,13 +283,14 @@ class FinanceController extends Controller
         }
         
         Depense::create([
-            'titre' => "Commission Formateur : " . $trainer->name . " - " . $formation->nom,
+            'titre' => "Commission Formateur : " . $trainer->name . " - " . $groupeFormation->nom,
             'categorie' => 'Rémunération Formateur',
             'montant' => $request->montant,
             'date_depense' => $request->date_paiement,
             'beneficiaire' => $trainer->name,
-            'description' => "Commission de " . $percentage . "% sur la formation " . $formation->nom . ". Règlement via " . ucfirst($request->mode_paiement) . ($request->reference ? " (Réf: " . $request->reference . ")" : "") . ". Notes: " . $request->notes,
-            'formation_id' => $request->formation_id,
+            'description' => "Commission de " . $percentage . "% sur le groupe " . $groupeFormation->nom . ". Règlement via " . ucfirst($request->mode_paiement) . ($request->reference ? " (Réf: " . $request->reference . ")" : "") . ". Notes: " . $request->notes,
+            'formation_id' => $groupeFormation->formation_id,
+            'groupe_formation_id' => $groupeFormation->id,
             'user_id' => $request->user_id,
             'created_by' => Auth::id()
         ]);
