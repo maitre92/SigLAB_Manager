@@ -1,161 +1,124 @@
-# sigLAB_Manager
+# sigLAB Manager
 
-Plateforme de gestion professionnelle et modulaire basée sur Laravel.
+Application Laravel de gestion administrative, pédagogique et financière pour un centre de formation.
 
-## 📋 Table des matières
-- [Présentation](#présentation)
-- [Architecture](#architecture)
-- [Installation](#installation)
-- [Structure du projet](#structure-du-projet)
-- [Guide de développement](#guide-de-développement)
-- [Configuration](#configuration)
+## Présentation
 
-## 🎯 Présentation
+**sigLAB Manager** permet de gérer le cycle complet d'une formation: utilisateurs, apprenants, formations, groupes de formation, inscriptions, présences, évaluations, paiements, dépenses, commissions formateurs et attestations.
 
-**sigLAB_Manager** est une application web d'administration et de gestion modulable, construite avec Laravel 13.7 et PHP 8.3. Elle fournit une base solide et extensible pour des projets d'entreprise.
+Le projet est construit avec Laravel et utilise une interface d'administration responsive.
 
-### Caractéristiques
-- ✅ Architecture clean et modulaire
-- ✅ Système d'authentification sécurisé
-- ✅ Gestion des rôles et permissions
-- ✅ Interface admin responsive
-- ✅ API RESTful
-- ✅ Système de logging avancé
-- ✅ Tests intégrés
+## Fonctionnalités principales
 
-## 🏗️ Architecture
+- Tableau de bord administrateur avec statistiques.
+- Gestion des utilisateurs, rôles et permissions.
+- Gestion des apprenants et de leurs inscriptions.
+- Gestion des formations et catégories de formation.
+- Gestion des groupes de formation avec formateurs, planning, salle, capacité et statut.
+- Génération PDF de l'emploi du temps d'un groupe de formation.
+- Gestion pédagogique: présences, évaluations, examens, notes et résultats.
+- Gestion financière: paiements apprenants, reçus, dépenses et paiements/commissions formateurs.
+- Gestion des attestations par groupe de formation.
+- Contrôle du paiement complet avant génération d'une attestation.
 
-L'application suit une architecture en couches avec les principes SOLID :
+## Modules importants
 
-```
-app/
-├── Core/                    # Logique métier fondamentale
-│   ├── Domain/             # Entités métier
-│   ├── Infrastructure/     # Services externes
-│   └── Support/            # Utilitaires
-├── Features/               # Domaines métier isolés
-│   ├── Admin/
-│   ├── Users/
-│   ├── Dashboard/
-│   └── Reports/
-├── Shared/                 # Code réutilisable
-│   ├── DTOs/              # Data Transfer Objects
-│   ├── Enums/             # Énumérations
-│   ├── Helpers/           # Fonctions utilitaires
-│   └── Traits/            # Traits réutilisables
-├── Http/                  # Couche HTTP
-│   ├── Controllers/       # Contrôleurs organisés par feature
-│   ├── Middleware/        # Middlewares
-│   ├── Requests/          # Form Requests validées
-│   └── Resources/         # API Resources
-├── Models/                # Modèles Eloquent
-├── Repositories/          # Pattern Repository
-├── Services/              # Logique applicative
-├── Policies/              # Policies d'autorisation
-└── [Events, Jobs, Mail...] # Divers
+### Formations et groupes
+
+Les formations représentent l'offre pédagogique globale. Les opérations concrètes se font ensuite par **groupes de formation**:
+
+- création et modification des groupes;
+- attribution du formateur principal et des formateurs associés;
+- suivi du statut: planifiée, en cours, terminée ou suspendue;
+- liaison des inscriptions, présences, évaluations, notes, dépenses et attestations au groupe.
+
+Routes principales:
+
+```text
+admin/formations
+admin/groupes-formations
+admin/groupes-formations/{groupe}/emploi-du-temps/pdf
 ```
 
-## 🚀 Installation
+### Apprenants
+
+Le module apprenants permet de créer, modifier et consulter les dossiers des apprenants. Les inscriptions relient chaque apprenant à une formation et à un groupe de formation.
+
+Route principale:
+
+```text
+admin/apprenants
+```
+
+### Pédagogie
+
+Le suivi pédagogique est basé sur les groupes de formation:
+
+- feuille de présence;
+- création des évaluations et examens;
+- saisie des notes;
+- consultation des résultats.
+
+Routes principales:
+
+```text
+admin/pedagogie/presences
+admin/pedagogie/evaluations
+admin/pedagogie/examens
+admin/pedagogie/notes
+admin/pedagogie/resultats
+```
+
+### Finances
+
+Le module finances couvre:
+
+- encaissements des paiements apprenants;
+- génération de reçus;
+- suivi des dépenses;
+- paiement des formateurs et commissions.
+
+Routes principales:
+
+```text
+admin/finances
+admin/finances/paiements
+admin/finances/depenses
+admin/finances/formateurs
+```
+
+### Attestations
+
+Les attestations sont générées pour un apprenant inscrit à un groupe de formation terminé. La génération vérifie aussi que les frais de formation sont totalement payés.
+
+Route principale:
+
+```text
+admin/attestations
+```
+
+## Installation
 
 ### Prérequis
-- PHP 8.3+
-- Composer
-- MySQL/MariaDB
-- Node.js & npm (optionnel)
 
-### Étapes d'installation
+- PHP compatible avec la version Laravel du projet.
+- Composer.
+- MySQL ou MariaDB.
+- Node.js et npm si vous souhaitez compiler les assets.
 
-1. **Cloner ou accéder au projet**
+### Mise en place
+
 ```bash
 cd /opt/lampp/htdocs/sigLAB_Manager
-```
-
-2. **Installer les dépendances PHP**
-```bash
 composer install
-```
-
-3. **Configurer l'environnement**
-```bash
 cp .env.example .env
 php artisan key:generate
 ```
 
-4. **Configurer la base de données**
-Éditer le fichier `.env` avec vos identifiants DB, puis :
-```bash
-php artisan migrate
-php artisan db:seed
-```
-
-5. **Installer les assets (optionnel)**
-```bash
-npm install
-npm run dev
-```
-
-6. **Démarrer le serveur**
-```bash
-php artisan serve
-```
-
-L'application est accessible à `http://localhost:8000`
-
-## 📁 Structure du projet
-
-### Répertoires principaux
-
-- **app/** - Logique applicative
-- **config/** - Fichiers de configuration
-- **database/** - Migrations et seeders
-- **resources/** - Vues, CSS, JS
-- **routes/** - Définition des routes
-- **storage/** - Fichiers générés
-- **tests/** - Tests automatisés
-- **public/template-admin/** - Template admin intégré
-
-### Fichiers importants
-
-- `.env` - Variables d'environnement
-- `app.php` - Configuration générale
-- `auth.php` - Configuration d'authentification
-- `modules/` - Configuration des modules métier
-
-## 📖 Guide de développement
-
-### Créer une nouvelle feature
-
-1. Créer un dossier dans `app/Features/{NomFeature}/`
-2. Organiser le code : Controllers, Services, Models
-3. Ajouter les routes dans `routes/web.php` ou `routes/api.php`
-4. Créer les vues correspondantes
-
-### Exemple de structure d'une feature
-```
-Features/Products/
-├── Controllers/ProductController.php
-├── Services/ProductService.php
-├── Models/Product.php
-├── Requests/CreateProductRequest.php
-└── Views/products/
-```
-
-### Bonnes pratiques
-
-1. **Validation** - Utiliser les Form Requests
-2. **Autorisation** - Implémenter les Policies
-3. **Services** - Isoler la logique métier
-4. **Events** - Découpler les composants
-5. **Tests** - Couvrir les cas critiques
-
-## ⚙️ Configuration
-
-### Variables d'environnement essentielles
+Configurer ensuite la base de données dans `.env`:
 
 ```env
-APP_NAME=sigLAB_Manager
-APP_ENV=production
-APP_DEBUG=false
+APP_NAME="sigLAB Manager"
 APP_URL=http://localhost:8000
 
 DB_CONNECTION=mysql
@@ -164,296 +127,109 @@ DB_PORT=3306
 DB_DATABASE=siglab_manager
 DB_USERNAME=root
 DB_PASSWORD=
-
-MAIL_DRIVER=smtp
-MAIL_HOST=smtp.mailtrap.io
-MAIL_PORT=2525
 ```
 
-### Configuration des modules
+Lancer les migrations et les seeders:
 
-Créer des fichiers de configuration dans `config/modules/` pour organiser les paramètres métier.
-
-## 🔐 Sécurité
-
-- Authentification Laravel par défaut
-- Middleware CSRF activé
-- Validation rigoureuse des inputs
-- Protection des APIs avec tokens
-- Logging des accès sensibles
-
-## 📝 Licence
-
-Propriétaire - sigLAB
-
-## 👥 Support
-
-Pour toute question ou problème, consulter la documentation Laravel officielle ou contactez l'équipe de développement.
-
-## 🛠️ Mises à jour récentes et guide d'implémentation (mai 2026)
-
-Cette section décrit les modifications que j'ai appliquées récemment, les fichiers touchés, les vérifications à effectuer et les commandes utiles pour tester ou revenir en arrière.
-
-- Objectif : corriger l'authentification, remplacer SQLite par MySQL (configuration), et adapter l'interface (sidebar, paramètres, navbar responsive & thèmes).
-
-Modifications principales effectuées
-- Auth
-	- Fichier: `app/Services/AuthService.php`
-		- Ajout de logs pour diagnostiquer les échecs de connexion.
-		- Correction de la comparaison du statut utilisateur (utilisation de l'attribut string de l'énum `UserStatus`).
-	- Fichier: `app/Models/User.php`
-		- Ajout des méthodes `recordLogin()` et `recordLogout()` pour suivre les connexions.
-		- Ajout du trait `HasPermissions` et méthode `isSuperAdmin()`.
-
-- Base de données
-	- Fichier: `config/database.php`
-		- Suppression du bloc `sqlite` et changement du `default` vers `mysql`.
-	- Vérifier et compléter `.env` avec vos identifiants MySQL (`DB_CONNECTION=mysql`, `DB_HOST`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`).
-
-- Interface (UI)
-	- Fichiers modifiés:
-		- `resources/views/layouts/sidebar.blade.php` — suppression des modules Document et Rapport ; ajout du menu Paramètres (sous-menus : Liste Utilisateurs, Liste Permissions, Assigner Permissions, Changer mot de passe).
-		- `resources/views/admin/settings.blade.php` — refonte en deux colonnes (col-3 menu, col-9 contenu) avec panneaux utilisateurs/permissions/assignation/changement mot de passe et prise en charge du paramètre `?tab=` pour ouvrir un panneau directement.
-		- `resources/views/layouts/app.blade.php` & `resources/views/layouts/navbar.blade.php` — navbar configurée via variables CSS (`--navbar-bg`, `--navbar-text`), blanche par défaut et qui prend la couleur du thème choisi; icône menu améliorée pour mobile.
-
-Commandes utiles (appliquer / tester)
-1. Assurez-vous que `.env` contient vos identifiants MySQL, puis exécutez :
 ```bash
-php artisan config:clear
-php artisan view:clear
-php artisan cache:clear
 php artisan migrate --seed
 ```
 
-2. Tester l'authentification (Tinker) :
-```bash
-php artisan tinker
-echo (app(\\App\\Services\\AuthService::class)->login('barrymoustapha485@gmail.com','superadmin123')) ? 'OK' : 'FAIL';
-```
-
-3. Tester l'UI :
- - Démarrer le serveur : `php artisan serve`
- - Ouvrir `http://127.0.0.1:8000` ou l'URL retournée
- - Vérifier :
-	 - Le menu burger (en mobile) affiche le sidebar.
-	 - Le sidebar n'affiche plus Document / Rapports.
-	 - Cliquer Paramètres → sous-menu (ou ouvrir `route('admin.settings')?tab=permissions-list`)
-	 - Changer thème via le sélecteur (navbar change de couleur)
-
-Points d'attention et rollback
-- Sessions : la configuration originale utilisait `database` (table `sessions`) ; si vous voyez des erreurs PDO « could not find driver (sqlite) », vérifiez `SESSION_DRIVER` et la configuration DB. Pour développement local, vous pouvez définir dans `.env` : `SESSION_DRIVER=file`.
-- Pour revenir à SQLite : restaurer `config/database.php` depuis votre contrôle de version (git) ou ré-introduire le bloc `sqlite` manuellement.
-
-Fichiers modifiés (rapide)
-- `app/Services/AuthService.php`
-- `app/Models/User.php`
-- `config/database.php`
-- `resources/views/layouts/sidebar.blade.php`
-- `resources/views/admin/settings.blade.php`
-- `resources/views/layouts/app.blade.php`
-- `resources/views/layouts/navbar.blade.php`
-
-Statut actuel
-- Auth: testé en Tinker — connexion `OK` pour l'utilisateur seedé.
-- DB: `config` basculé vers MySQL — mettez à jour `.env` et exécutez les migrations.
-- UI: sidebar & paramètres mis à jour ; navbar blanche par défaut et responsive.
-
-## État fonctionnel actuel pour les développeurs
-
-Cette application est organisée autour d'une interface admin Laravel classique :
-
-- `routes/web.php` contient les routes publiques, auth, profil et admin.
-- `app/Http/Controllers/Auth/AuthController.php` gère connexion, déconnexion, profil personnel, changement et réinitialisation de mot de passe.
-- `app/Http/Controllers/Admin/SettingsController.php` centralise l'écran Paramètres : utilisateurs, permissions et assignation des permissions.
-- `app/Http/Controllers/Admin/UserController.php` gère aussi la ressource admin users.
-- `app/Models/User.php` utilise `HasPermissions` pour vérifier les permissions actives.
-- `app/Models/Permission.php` représente les permissions assignables aux utilisateurs.
-- `app/Shared/Enums/UserRole.php` porte la hiérarchie des rôles et les rôles assignables/visibles.
-
-### Authentification et profil
-
-- La page de login se trouve dans `resources/views/auth/login.blade.php`.
-- Le login affiche maintenant les erreurs de validation et les erreurs d'identifiants via `session('error')`.
-- Le message de succès après déconnexion a été supprimé pour éviter une alerte inutile sur l'écran login.
-- Le lien secondaire du login pointe vers `Mot de passe oublié ?`.
-- Le flux mot de passe oublié utilise les routes :
-  - `GET /forgot-password` (`password.request`)
-  - `POST /forgot-password` (`password.email`)
-  - `GET /reset-password/{token}` (`password.reset`)
-  - `POST /reset-password` (`password.store`)
-- La page profil unique est `resources/views/auth/profile.blade.php`.
-  - Onglet 1 : informations personnelles (`name`, `email`, `phone`)
-  - Onglet 2 : changement de mot de passe
-
-### Paramètres, utilisateurs et rôles
-
-- L'écran principal est `resources/views/admin/settings.blade.php`.
-- Les onglets sont pilotés par le paramètre `?tab=` :
-  - `users-list`
-  - `permissions-list`
-  - `permissions-assign`
-- La hiérarchie des rôles est définie dans `UserRole::level()`.
-- Un rôle non-superadmin ne voit et ne gère que les rôles de niveau inférieur.
-- Les rôles `user` et `guest` ne sont pas proposés dans les formulaires de création/modification utilisateur.
-
-### Permissions
-
-- Les permissions sont créées et modifiées depuis le modal de la liste permissions.
-- Routes utilisées :
-  - `POST /admin/permissions` (`admin.permissions.store`)
-  - `PUT /admin/permissions/{permission}` (`admin.permissions.update`)
-  - `DELETE /admin/permissions/{permission}` (`admin.permissions.destroy`)
-  - `POST /admin/permissions/assign` (`admin.permissions.assign`)
-- Le champ `slug` est optionnel dans le modal : s'il est vide, il est généré depuis le nom.
-- Le champ `action` est déduit du début du slug (`view_users` donne `view`).
-- `is_active` est forcé à `true` à la création/modification depuis Settings.
-- La recherche de la liste permissions est automatique côté navigateur, sans rechargement.
-
-### Vérifications recommandées après changement
+Démarrer le serveur local:
 
 ```bash
-php -l app/Http/Controllers/Auth/AuthController.php
-php -l app/Http/Controllers/Admin/SettingsController.php
-php -l routes/web.php
-php artisan route:list
+php artisan serve
 ```
 
-Si `php artisan` échoue avec une erreur MySQL, vérifier que XAMPP/MySQL est démarré et que `.env` pointe vers la bonne base (`DB_DATABASE=siglab_manager`).
-
-### Points d'attention
-
-- Les permissions dynamiques sont lues au boot via `AppServiceProvider`. Après création d'une nouvelle permission, elle est visible en base immédiatement, mais une nouvelle requête peut être nécessaire pour que la Gate dynamique soit disponible.
-- `AppServiceProvider` vérifie les tables avec `hasTableSafely()` afin que les commandes artisan (`route:list`, `php -l`, etc.) restent utilisables même si MySQL est arrêté.
-- Le reset password nécessite une configuration mail fonctionnelle pour envoyer le lien. En local, utilisez Mailtrap.
-
-### Gestion des formations, groupes et inscriptions (mis à jour - juin 2026)
-
-Le modèle métier de la formation est maintenant séparé en deux niveaux :
+L'application sera disponible sur:
 
 ```text
-Formation
-    -> Groupes de formation
-        -> Apprenants
+http://127.0.0.1:8000
 ```
 
-- **Formation** : programme général ou catalogue.
-  Exemples : Développement Web, Réseau Informatique, Anglais.
-- **GroupeFormation** : organisation réelle d'une formation.
-  Exemples : Développement Web G1, Développement Web G2, Réseau G1.
+## Commandes utiles
 
-Cette séparation permet d'organiser une même formation plusieurs fois avec des dates, salles, formateurs et apprenants différents.
-
-#### Règles métier
-
-- Une formation peut avoir plusieurs groupes.
-- Un groupe appartient à une seule formation.
-- Un apprenant est inscrit dans un groupe, pas directement dans une formation.
-- Un groupe possède un formateur principal obligatoire.
-- Un groupe peut avoir plusieurs formateurs secondaires.
-- Le statut opérationnel est porté par le groupe : `planifiee`, `en_cours`, `terminee`, `suspendue`.
-- Le statut d'une formation n'est plus utilisé dans l'interface métier ; la formation reste un élément de catalogue.
-- Les présences, évaluations, examens, notes, résultats, attestations et commissions formateurs sont rattachés au groupe.
-- `formation_id` reste utilisé pour identifier le programme catalogue.
-- `groupe_formation_id` porte les opérations concrètes.
-
-#### Tables et modèles principaux
-
-- `formations` / `App\Models\Formation`
-- `groupes_formation` / `App\Models\GroupeFormation`
-- `groupe_formation_formateur` : pivot des formateurs associés au groupe
-- `inscriptions.groupe_formation_id`
-- `presences.groupe_formation_id`
-- `evaluations.groupe_formation_id`
-- `notes.groupe_formation_id`
-- `attestations.groupe_formation_id`
-- `depenses.groupe_formation_id`
-
-#### Migration des données existantes
-
-Les migrations de juin 2026 créent automatiquement un groupe `G1` pour chaque formation existante, puis recopient les anciennes données liées à `formation_id` vers le nouveau `groupe_formation_id`.
-
-Après mise à jour du code, exécuter :
+Nettoyer les caches Laravel:
 
 ```bash
-php artisan migrate
+php artisan config:clear
+php artisan cache:clear
+php artisan route:clear
+php artisan view:clear
 ```
 
-Si la commande échoue, vérifier que MySQL/XAMPP est démarré et que `.env` pointe bien vers la base `siglab_manager`.
+Relancer les migrations en développement:
 
-#### Navigation admin
+```bash
+php artisan migrate:fresh --seed
+```
 
-Dans la sidebar, le menu **Gestion des formations** suit maintenant cet ordre :
+Lancer les tests:
 
-1. Catégories formations
-2. Ajouter formation
-3. Liste formations
-4. Groupes de formation
+```bash
+php artisan test
+```
 
-Le module **Groupes de formation** possède une page dédiée avec filtres et actions rapides :
+Si les tests utilisent SQLite en mémoire, vérifier que l'extension PHP SQLite est installée et activée.
 
-- créer un groupe ;
-- modifier un groupe ;
-- changer rapidement le statut d'un groupe depuis la liste ;
-- inscrire un apprenant dans un groupe ;
-- imprimer l'emploi du temps ;
-- archiver un groupe.
-
-Le statut d'un groupe se change depuis :
+## Structure du projet
 
 ```text
-Gestion des formations -> Groupes de formation -> colonne Statut
+app/
+├── Http/Controllers/Admin/      Contrôleurs des modules admin
+├── Http/Requests/               Validation des formulaires
+├── Models/                      Modèles Eloquent
+└── Services/                    Services applicatifs
+
+database/
+├── migrations/                  Structure de la base de données
+└── seeders/                     Données initiales
+
+resources/views/
+├── admin/                       Interfaces d'administration
+├── auth/                        Authentification et profil
+└── layouts/                     Layouts, sidebar et navigation
+
+routes/
+└── web.php                      Routes web de l'application
 ```
 
-La liste des formations ne propose plus de filtre ou de changement de statut. Les compteurs du tableau de bord qui représentaient les sessions actives se basent désormais sur les groupes en cours.
+## Mises à jour récentes
 
-#### Emploi du temps
+### Formation par groupe
 
-L'emploi du temps est géré au niveau du groupe. Le formulaire de groupe utilise le même constructeur que les formations :
+Ajout du module **groupes de formation**:
 
-- bouton `Add row` ;
-- jour ;
-- heure de début ;
-- heure de fin ;
-- activité/module ;
-- suppression de ligne.
+- nouveau contrôleur `GroupeFormationController`;
+- nouveau modèle `GroupeFormation`;
+- nouvelles vues dans `resources/views/admin/groupes-formations`;
+- nouvelles migrations pour créer les groupes et rattacher les opérations au champ `groupe_formation_id`;
+- adaptation des inscriptions, présences, évaluations, notes, paiements, dépenses et attestations aux groupes de formation.
 
-Les données sont enregistrées en JSON dans `emploi_du_temps`.
+### Attestations
 
-Une page imprimable A4 est disponible depuis l'action PDF du groupe :
+La génération d'attestation est maintenant liée au groupe de formation et vérifie que l'apprenant a entièrement payé sa formation avant création.
 
-```text
-admin/groupes-formations/{groupe}/emploi-du-temps/pdf
+### Pédagogie
+
+Les présences, évaluations, examens, notes et résultats s'appuient maintenant sur les groupes de formation afin de mieux suivre chaque cohorte.
+
+## Git
+
+Après un `git pull` avec rebase, résoudre les conflits puis continuer:
+
+```bash
+git status
+git add <fichiers_resolus>
+git rebase --continue
 ```
 
-Le navigateur permet ensuite d'imprimer ou d'enregistrer le document en PDF.
+Pour envoyer les travaux:
 
-### 📚 Gestion des Formations (Mis à jour - Mai/Juin 2026)
-- **Fonctionnalités Clés** :
-    - **Création Assistée** : Génération automatique de codes de formation uniques.
-    - **Gestion des Formateurs** : Filtrage par rôle avec option de switch dynamique.
-    - **Groupes de Formation** : Organisation concrète par groupe, formateur principal, dates, salle, apprenants et emploi du temps.
-    - **Emploi du Temps** : Saisie dynamique intégrée au groupe, avec impression/enregistrement PDF.
-    - **Quick Switcher** : Changement de statut rapide depuis la liste des groupes.
-- **Interface** : Actions explicites et boutons standardisés.
+```bash
+git push origin main
+```
 
-### 🎓 Gestion des Apprenants & Inscriptions (Mis à jour - Juin 2026)
-- **Fonctionnalités** :
-    - **Inscriptions** : Liaison des apprenants aux groupes de formation.
-    - **Visibilité** : Affichage des codes groupes dans la liste des apprenants.
-    - **Workflow** : Inscription possible à la création ou modification d'un dossier.
+## Licence
 
----
-
-### 🔐 Sécurité & UI
-- **Permissions** : Accès aux boutons (Ajouter, Modifier, Supprimer) strictement contrôlé par les droits utilisateur. Seul le `Super Administrateur` a un accès total par défaut.
-- **Identifiants** : Remplacement du terme "Slug" par **"Identifiant"** dans toute l'interface pour une meilleure clarté.
-- **Sidebar** : Le module Groupes de formation est accessible directement dans Gestion des formations.
-
----
-
-### 🚀 Roadmap & Prochaines Étapes
-1. **Paiements** : Suivi financier complet par inscription et groupe.
-2. **Pédagogie** : Gestion des présences, évaluations, examens, notes et résultats par groupe.
-3. **Documents** : Attestations et emplois du temps imprimables/enregistrables en PDF.
-
-*Fin de la mise à jour README - Juin 2026*
+Projet propriétaire - sigLAB.
