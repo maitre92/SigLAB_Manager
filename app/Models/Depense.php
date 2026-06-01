@@ -43,6 +43,39 @@ class Depense extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * Accessor pour récupérer dynamiquement le mode de paiement depuis la description
+     */
+    public function getModePaiementAttribute()
+    {
+        if (preg_match('/Règlement via\s+([^\s\.]+)/i', $this->description, $matches)) {
+            return strtolower($matches[1]);
+        }
+        return 'espèces';
+    }
+
+    /**
+     * Accessor pour récupérer dynamiquement la référence de transaction depuis la description
+     */
+    public function getReferenceAttribute()
+    {
+        if (preg_match('/\(Réf:\s*([^)]+)\)/i', $this->description, $matches)) {
+            return $matches[1];
+        }
+        return null;
+    }
+
+    /**
+     * Accessor pour récupérer dynamiquement les notes depuis la description
+     */
+    public function getNotesAttribute()
+    {
+        if (preg_match('/Notes:\s*(.*)$/i', $this->description, $matches)) {
+            return trim($matches[1]);
+        }
+        return null;
+    }
+
     public static function getCategories()
     {
         return [

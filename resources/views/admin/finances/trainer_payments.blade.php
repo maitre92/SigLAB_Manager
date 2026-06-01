@@ -117,7 +117,8 @@
                             <th class="px-4">Date</th>
                             <th>Formateur / Formation</th>
                             <th>Mode / Réf</th>
-                            <th class="text-end px-4">Montant Versé</th>
+                            <th class="text-end">Montant Versé</th>
+                            <th class="text-center px-4">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -136,11 +137,41 @@
                                         <div class="text-muted small" style="font-size: 0.7rem;">Ref: {{ $p->reference }}</div>
                                     @endif
                                 </td>
-                                <td class="text-end px-4 fw-bold text-danger">{{ number_format($p->montant, 0, ',', ' ') }} FCFA</td>
+                                <td class="text-end fw-bold text-danger">{{ number_format($p->montant, 0, ',', ' ') }} FCFA</td>
+                                <td class="text-center px-4">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a href="{{ route('admin.finances.trainer_payments.receipt', $p) }}" target="_blank" class="btn btn-sm btn-light border" title="Imprimer le reçu">
+                                            <i class="fas fa-print text-primary"></i>
+                                        </a>
+                                        @if(Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('edit_trainer_payment'))
+                                            <button type="button" class="btn btn-sm btn-outline-primary btn-edit-payment" 
+                                                    data-id="{{ $p->id }}"
+                                                    data-trainer-name="{{ $p->trainer->name ?? $p->beneficiaire }}"
+                                                    data-formation-name="{{ $p->formation->nom ?? 'N/A' }}"
+                                                    data-montant="{{ $p->montant }}"
+                                                    data-date_paiement="{{ $p->date_depense->format('Y-m-d') }}"
+                                                    data-mode_paiement="{{ $p->mode_paiement }}"
+                                                    data-reference="{{ $p->reference }}"
+                                                    data-notes="{{ $p->notes }}"
+                                                    title="Modifier">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        @endif
+                                        @if(Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('delete_trainer_payment'))
+                                            <form action="{{ route('admin.finances.trainer_payments.destroy', $p) }}" method="POST" class="delete-payment-form d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-payment" data-trainer="{{ $p->trainer->name ?? $p->beneficiaire }}" title="Supprimer">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="text-center py-5 text-muted">Aucun versement enregistré</td>
+                                <td colspan="5" class="text-center py-5 text-muted">Aucun versement enregistré</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -311,6 +342,110 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.disabled = false;
         }
     });
+
+    // Modal de modification de versement formateur (triggers)
+    const editModal = new bootstrap.Modal(document.getElementById('editPaymentModal'));
+    const editForm = document.getElementById('editPaymentForm');
+    
+    document.querySelectorAll('.btn-edit-payment').forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.dataset.id;
+            document.getElementById('edit_trainer_display').value = `${this.dataset.trainerName} - ${this.dataset.formationName}`;
+            document.getElementById('edit_montant').value = this.dataset.montant;
+            document.getElementById('edit_date_paiement').value = this.dataset.date_paiement;
+            document.getElementById('edit_mode_paiement').value = this.dataset.mode_paiement;
+            document.getElementById('edit_reference').value = this.dataset.reference || '';
+            document.getElementById('edit_notes').value = this.dataset.notes || '';
+            
+            editForm.action = `/admin/finances/formateurs/${id}`;
+            editModal.show();
+        });
+    });
+
+    document.querySelectorAll('.btn-delete-payment').forEach(button => {
+        button.addEventListener('click', function() {
+            const trainer = this.dataset.trainer;
+            const form = this.closest('form');
+            
+            Swal.fire({
+                title: 'Supprimer le versement',
+                text: `Voulez-vous vraiment supprimer le versement de commission pour le formateur "${trainer}" ?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Oui, supprimer',
+                cancelButtonText: 'Annuler',
+                customClass: {
+                    confirmButton: 'btn btn-danger me-2',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false
+            }).then(result => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
 });
 </script>
+
+<!-- Modal de modification de versement formateur -->
+<div class="modal fade" id="editPaymentModal" tabindex="-1" aria-labelledby="editPaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="editPaymentModalLabel"><i class="fas fa-edit text-warning"></i> Modifier le Versement Formateur</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <form id="editPaymentForm" action="" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Formation & Formateur</label>
+                        <input type="text" id="edit_trainer_display" class="form-control bg-light" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Montant (FCFA)</label>
+                        <input type="number" id="edit_montant" name="montant" class="form-control bg-light" readonly required min="1">
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Date de versement</label>
+                            <input type="date" id="edit_date_paiement" name="date_paiement" class="form-control" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Mode</label>
+                            <select id="edit_mode_paiement" name="mode_paiement" class="form-select" required>
+                                <option value="espèces">Espèces</option>
+                                <option value="wave">Wave</option>
+                                <option value="orange_money">Orange Money</option>
+                                <option value="virement">Virement</option>
+                                <option value="cheque">Chèque</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Référence (Optionnel)</label>
+                        <input type="text" id="edit_reference" name="reference" class="form-control">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Notes</label>
+                        <textarea id="edit_notes" name="notes" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Sauvegarder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @endsection

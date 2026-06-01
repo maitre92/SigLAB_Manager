@@ -130,6 +130,94 @@
                     </div>
                 </div>
             </div>
+            <!-- Groupes de Formation Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-layer-group text-primary me-2"></i> Groupes de formation</h6>
+                    <button type="button" class="btn btn-sm text-white px-3 fw-bold animate-hover" style="background-color: var(--navbar-bg);" data-bs-toggle="modal" data-bs-target="#createGroupeModal">
+                        <i class="fas fa-plus me-1"></i> Nouveau Groupe
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light" style="font-size: 0.75rem;">
+                                <tr>
+                                    <th class="ps-4">Groupe</th>
+                                    <th>Salle</th>
+                                    <th>Dates</th>
+                                    <th>Statut</th>
+                                    <th class="text-end pe-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($formation->groupes as $g)
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold text-dark fs-6">{{ $g->nom }}</div>
+                                        <small class="text-muted"><i class="far fa-calendar-alt me-1"></i> {{ $g->emploi_du_temps ?: 'Emploi du temps non défini' }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">
+                                            <i class="fas fa-map-marker-alt text-muted me-1"></i> {{ $g->salle ?: 'Non définie' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="small">
+                                            <span class="text-muted">Début:</span> {{ $g->date_debut ? $g->date_debut->format('d/m/Y') : '?' }}
+                                        </div>
+                                        <div class="small">
+                                            <span class="text-muted">Fin:</span> {{ $g->date_fin ? $g->date_fin->format('d/m/Y') : '?' }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @php
+                                            $statutBadges = [
+                                                'planifie' => 'bg-secondary text-white',
+                                                'en_cours' => 'bg-primary text-white',
+                                                'termine' => 'bg-success text-white',
+                                                'suspendu' => 'bg-danger text-white',
+                                            ];
+                                            $badgeClass = $statutBadges[$g->statut] ?? 'bg-dark text-white';
+                                        @endphp
+                                        <span class="badge {{ $badgeClass }}">{{ $g->statut_label }}</span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group shadow-sm border rounded">
+                                            <button type="button" class="btn btn-sm btn-white text-primary btn-edit-groupe border-0" 
+                                                data-id="{{ $g->id }}"
+                                                data-nom="{{ $g->nom }}"
+                                                data-salle="{{ $g->salle }}"
+                                                data-date_debut="{{ $g->date_debut ? $g->date_debut->format('Y-m-d') : '' }}"
+                                                data-date_fin="{{ $g->date_fin ? $g->date_fin->format('Y-m-d') : '' }}"
+                                                data-emploi_du_temps="{{ $g->emploi_du_temps }}"
+                                                data-statut="{{ $g->statut }}"
+                                                title="Modifier le groupe">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <form action="{{ route('admin.groupes.destroy', $g) }}" method="POST" class="d-inline form-delete-groupe">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="button" class="btn btn-sm btn-white text-danger btn-delete-groupe-confirm border-0" title="Supprimer le groupe">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="5" class="text-center py-5 text-muted small">
+                                        <i class="fas fa-layer-group fa-2x mb-3 text-muted opacity-50 d-block"></i>
+                                        Aucun groupe n'a été créé pour cette formation.
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
             <!-- Emploi du temps (Formatted Table) -->
             <div class="card border-0 shadow-sm mb-4">
@@ -230,4 +318,170 @@
         </div>
     </div>
 </div>
+    </div>
+</div>
+
+<!-- Create Groupe Modal -->
+<div class="modal fade" id="createGroupeModal" tabindex="-1" aria-labelledby="createGroupeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header text-white" style="background-color: var(--navbar-bg);">
+                <h5 class="modal-title" id="createGroupeModalLabel"><i class="fas fa-plus me-2"></i> Ajouter un nouveau groupe</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('admin.formations.groupes.store', $formation) }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="nom" class="form-label">Nom du groupe <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nom" name="nom" required placeholder="Ex: Groupe A, Soir, Weekend">
+                    </div>
+                    <div class="mb-3">
+                        <label for="salle" class="form-label">Salle</label>
+                        <input type="text" class="form-control" id="salle" name="salle" placeholder="Ex: Salle 101, Labo A">
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="date_debut" class="form-label">Date de début</label>
+                            <input type="date" class="form-control" id="date_debut" name="date_debut">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="date_fin" class="form-label">Date de fin</label>
+                            <input type="date" class="form-control" id="date_fin" name="date_fin">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="emploi_du_temps" class="form-label">Emploi du temps / Horaires</label>
+                        <input type="text" class="form-control" id="emploi_du_temps" name="emploi_du_temps" placeholder="Ex: Lun - Mer - Ven (18:00 - 20:00)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="statut" class="form-label">Statut <span class="text-danger">*</span></label>
+                        <select class="form-select" id="statut" name="statut" required>
+                            <option value="planifie">Planifié</option>
+                            <option value="en_cours">En cours</option>
+                            <option value="termine">Terminé</option>
+                            <option value="suspendu">Suspendu</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn text-white" style="background-color: var(--navbar-bg);">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Groupe Modal -->
+<div class="modal fade" id="editGroupeModal" tabindex="-1" aria-labelledby="editGroupeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header text-white" style="background-color: var(--navbar-bg);">
+                <h5 class="modal-title text-white" id="editGroupeModalLabel"><i class="fas fa-edit me-2"></i> Modifier le groupe</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editGroupeForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_nom" class="form-label">Nom du groupe <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="edit_nom" name="nom" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_salle" class="form-label">Salle</label>
+                        <input type="text" class="form-control" id="edit_salle" name="salle">
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="edit_date_debut" class="form-label">Date de début</label>
+                            <input type="date" class="form-control" id="edit_date_debut" name="date_debut">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_date_fin" class="form-label">Date de fin</label>
+                            <input type="date" class="form-control" id="edit_date_fin" name="date_fin">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_emploi_du_temps" class="form-label">Emploi du temps / Horaires</label>
+                        <input type="text" class="form-control" id="edit_emploi_du_temps" name="emploi_du_temps">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_statut" class="form-label">Statut <span class="text-danger">*</span></label>
+                        <select class="form-select" id="edit_statut" name="statut" required>
+                            <option value="planifie">Planifié</option>
+                            <option value="en_cours">En cours</option>
+                            <option value="termine">Terminé</option>
+                            <option value="suspendu">Suspendu</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn text-white" style="background-color: var(--navbar-bg);">Modifier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Edit button handler
+        const editButtons = document.querySelectorAll('.btn-edit-groupe');
+        editButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const id = this.getAttribute('data-id');
+                const nom = this.getAttribute('data-nom');
+                const salle = this.getAttribute('data-salle');
+                const dateDebut = this.getAttribute('data-date_debut');
+                const dateFin = this.getAttribute('data-date_fin');
+                const emploiDuTemps = this.getAttribute('data-emploi_du_temps');
+                const statut = this.getAttribute('data-statut');
+
+                // Set form action
+                document.getElementById('editGroupeForm').setAttribute('action', `/admin/groupes/${id}`);
+
+                // Populate fields
+                document.getElementById('edit_nom').value = nom;
+                document.getElementById('edit_salle').value = salle;
+                document.getElementById('edit_date_debut').value = dateDebut;
+                document.getElementById('edit_date_fin').value = dateFin;
+                document.getElementById('edit_emploi_du_temps').value = emploiDuTemps;
+                document.getElementById('edit_statut').value = statut;
+
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('editGroupeModal'));
+                modal.show();
+            });
+        });
+
+        // Delete button handler using SweetAlert2
+        const deleteConfirmButtons = document.querySelectorAll('.btn-delete-groupe-confirm');
+        deleteConfirmButtons.forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                const form = this.closest('form');
+
+                Swal.fire({
+                    title: 'Êtes-vous sûr ?',
+                    text: "Cette action supprimera définitivement le groupe ainsi que les associations avec les apprenants.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Oui, supprimer !',
+                    cancelButtonText: 'Annuler'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    });
+</script>
 @endsection

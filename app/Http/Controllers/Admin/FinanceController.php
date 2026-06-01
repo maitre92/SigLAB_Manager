@@ -294,4 +294,123 @@ class FinanceController extends Controller
         
         return redirect()->back()->with('success', 'Rémunération du formateur enregistrée avec succès.');
     }
+
+    public function trainerReceipt(Depense $depense)
+    {
+        $depense->load(['formation', 'trainer', 'creator']);
+        return view('admin.finances.trainer_receipt', compact('depense'));
+    }
+
+    public function updateExpense(Request $request, Depense $depense)
+    {
+        if (!Auth::user()->isSuperAdmin() && !Auth::user()->hasPermission('edit_expense')) {
+            abort(403);
+        }
+
+        $request->validate([
+            'titre' => 'required|string|max:255',
+            'categorie' => ['required', 'string', Rule::in(Depense::getCategories())],
+            'montant' => 'required|numeric|min:1',
+            'date_depense' => 'required|date|before_or_equal:today',
+            'beneficiaire' => 'nullable|string',
+            'description' => 'nullable|string',
+        ]);
+
+        if ($request->categorie === 'espèces' || $request->categorie === 'Salaire' || $request->categorie === 'Rémunération Formateur') {
+            $total_revenue = Paiement::sum('montant');
+            $total_expenses = Depense::where('id', '!=', $depense->id)->sum('montant');
+            $balance = $total_revenue - $total_expenses;
+
+            if ($request->montant > $balance) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['montant' => "Le montant de la dépense (" . number_format($request->montant, 0, ',', ' ') . " FCFA) dépasse le solde de caisse général disponible (" . number_format($balance, 0, ',', ' ') . " FCFA)."]);
+            }
+        }
+
+        $depense->update($request->all());
+
+        return redirect()->back()->with('success', 'Dépense modifiée avec succès.');
+    }
+
+    public function destroyExpense(Depense $depense)
+    {
+        if (!Auth::user()->isSuperAdmin() && !Auth::user()->hasPermission('delete_expense')) {
+            abort(403);
+        }
+
+        $depense->delete();
+
+        return redirect()->back()->with('success', 'Dépense supprimée avec succès.');
+    }
+
+    public function updateTrainerPayment(Request $request, Depense $depense)
+    {
+        if (!Auth::user()->isSuperAdmin() && !Auth::user()->hasPermission('edit_trainer_payment')) {
+            abort(403);
+        }
+
+        $request->validate([
+            'montant' => 'required|numeric|min:1',
+            'date_paiement' => 'required|date|before_or_equal:today',
+            'mode_paiement' => 'required|string',
+            'reference' => 'nullable|string',
+            'notes' => 'nullable|string',
+        ]);
+
+        if (floatval($request->montant) !== floatval($depense->montant)) {
+            return redirect()->back()
+                ->withErrors(['montant' => "Le montant d'un règlement formateur est automatiquement généré et ne peut pas être modifié."]);
+        }
+
+        $trainer = User::findOrFail($depense->user_id);
+        $formation = Formation::findOrFail($depense->formation_id);
+
+        $pivot = $formation->formateurs()->where('user_id', $trainer->id)->first()?->pivot;
+        $percentage = $pivot->pourcentage_commission ?? 0;
+
+        $total_collecte = $formation->inscriptions->flatMap->paiements->sum('montant');
+        $commission_acquise = ($total_collecte * $percentage) / 100;
+
+        $deja_paye = Depense::where('user_id', $trainer->id)
+            ->where('formation_id', $formation->id)
+            ->where('id', '!=', $depense->id)
+            ->sum('montant');
+
+        $reste = $commission_acquise - $deja_paye;
+
+        if ($request->montant > $reste) {
+            return redirect()->back()
+                ->withErrors(['montant' => "Le montant saisi (" . number_format($request->montant, 0, ',', ' ') . " FCFA) dépasse le solde restant dû pour ce formateur (" . number_format($reste, 0, ',', ' ') . " FCFA)."]);
+        }
+
+        $total_revenue = Paiement::sum('montant');
+        $total_expenses = Depense::where('id', '!=', $depense->id)->sum('montant');
+        $balance = $total_revenue - $total_expenses;
+
+        if ($request->montant > $balance) {
+            return redirect()->back()
+                ->withErrors(['montant' => "Le montant du versement (" . number_format($request->montant, 0, ',', ' ') . " FCFA) dépasse le solde de caisse général disponible (" . number_format($balance, 0, ',', ' ') . " FCFA)."]);
+        }
+
+        $depense->update([
+            'titre' => "Commission Formateur : " . $trainer->name . " - " . $formation->nom,
+            'montant' => $request->montant,
+            'date_depense' => $request->date_paiement,
+            'description' => "Commission de " . $percentage . "% sur la formation " . $formation->nom . ". Règlement via " . ucfirst($request->mode_paiement) . ($request->reference ? " (Réf: " . $request->reference . ")" : "") . ". Notes: " . $request->notes,
+        ]);
+
+        return redirect()->back()->with('success', 'Versement formateur modifié avec succès.');
+    }
+
+    public function destroyTrainerPayment(Depense $depense)
+    {
+        if (!Auth::user()->isSuperAdmin() && !Auth::user()->hasPermission('delete_trainer_payment')) {
+            abort(403);
+        }
+
+        $depense->delete();
+
+        return redirect()->back()->with('success', 'Versement formateur supprimé avec succès.');
+    }
 }

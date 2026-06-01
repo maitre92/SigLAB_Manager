@@ -105,9 +105,10 @@
                     <thead class="bg-light text-uppercase" style="font-size: 0.7rem;">
                         <tr>
                             <th class="px-4">Reçu / Date</th>
-                            <th>Apprenant</th>
+                            <th>Apprenant / Formation</th>
                             <th>Mode</th>
-                            <th class="text-end">Montant</th>
+                            <th class="text-end">Montant Payé</th>
+                            <th class="text-end text-danger">Reste à payer</th>
                             <th class="text-center px-4">Action</th>
                         </tr>
                     </thead>
@@ -119,8 +120,8 @@
                                     <small class="text-muted">{{ $p->date_paiement->format('d/m/Y') }}</small>
                                 </td>
                                 <td>
-                                    <div class="fw-bold">{{ $p->inscription->apprenant->nom_complet }}</div>
-                                    <small class="text-muted">{{ $p->inscription->formation->nom }}</small>
+                                    <div class="fw-bold">{{ $p->inscription->apprenant->nom_complet ?? 'Apprenant inconnu'}}</div>
+                                    <small class="text-muted">{{ $p->inscription->formation->nom ?? 'Formation inconnue' }}</small>
                                 </td>
                                 <td>
                                     <span class="badge rounded-pill bg-light text-dark border">{{ ucfirst($p->mode_paiement) }}</span>
@@ -131,6 +132,16 @@
                                 <td class="text-end fw-bold text-success">
                                     {{ number_format($p->montant, 0, ',', ' ') }} FCFA
                                 </td>
+                                <td class="text-end fw-bold text-danger">
+                                    @php
+                                        $reste = $p->inscription->montant_total - $p->inscription->montant_paye;
+                                    @endphp
+                                    @if($reste <= 0)
+                                        <span class="badge bg-success small">Soldé</span>
+                                    @else
+                                        {{ number_format($reste, 0, ',', ' ') }} FCFA
+                                    @endif
+                                </td>
                                 <td class="text-center px-4">
                                     <a href="{{ route('admin.finances.payments.receipt', $p) }}" target="_blank" class="btn btn-sm btn-light border" title="Imprimer le reçu">
                                         <i class="fas fa-print text-primary"></i>
@@ -138,7 +149,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="text-center py-5 text-muted">Aucun paiement enregistré</td></tr>
+                            <tr><td colspan="6" class="text-center py-5 text-muted">Aucun paiement enregistré</td></tr>
                         @endforelse
                     </tbody>
                 </table>

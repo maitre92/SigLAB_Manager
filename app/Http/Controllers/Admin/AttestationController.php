@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Apprenant;
 use App\Models\Attestation;
 use App\Models\Formation;
+use App\Models\Inscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -50,6 +51,20 @@ class AttestationController extends Controller
             'formation_id' => 'required|exists:formations,id',
             'date_emission' => 'required|date',
         ]);
+
+        // Vérifier si le paiement des frais de formation est total
+        $inscription = Inscription::where('apprenant_id', $request->apprenant_id)
+            ->where('formation_id', $request->formation_id)
+            ->first();
+
+        if (!$inscription) {
+            return redirect()->route('admin.attestations.index')->with('error', 'Cet apprenant n\'est pas inscrit à cette formation.');
+        }
+
+        if ($inscription->montant_paye < $inscription->montant_total) {
+            $reste = $inscription->montant_total - $inscription->montant_paye;
+            return redirect()->route('admin.attestations.index')->with('error', 'La génération de l\'attestation a échoué. Le paiement des frais de formation n\'est pas total (Reste à payer : ' . number_format($reste, 0, ',', ' ') . ' FCFA).');
+        }
 
         // Vérifier si une attestation existe déjà pour ce couple
         $exists = Attestation::where('apprenant_id', $request->apprenant_id)

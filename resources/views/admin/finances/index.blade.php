@@ -112,8 +112,8 @@
                             <tr>
                                 <td class="small fw-bold">{{ $p->recu_numero }}</td>
                                 <td>
-                                    <div class="small fw-bold">{{ $p->inscription->apprenant->nom_complet }}</div>
-                                    <div class="text-muted" style="font-size: 0.7rem;">{{ $p->inscription->formation->nom }}</div>
+                                      <div class="small fw-bold">{{ $p->inscription->apprenant->nom_complet ?? 'Apprenant inconnu' }}</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">{{ $p->inscription->formation->nom ?? 'Formation inconnue'}}</div>
                                 </td>
                                 <td class="text-end">
                                     <div class="fw-bold text-success small">{{ number_format($p->montant, 0, ',', ' ') }}</div>

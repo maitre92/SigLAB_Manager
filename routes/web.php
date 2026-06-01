@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\FormationController;
 use App\Http\Controllers\Admin\CategorieFormationController;
 use App\Http\Controllers\Admin\PedagogieController;
 use App\Http\Controllers\Admin\AttestationController;
+use App\Http\Controllers\Admin\GroupeController;
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -79,6 +80,11 @@ Route::middleware('auth')->group(function () {
             ->parameters(['categories-formations' => 'categorieFormation'])
             ->only(['index', 'store', 'update', 'destroy']);
 
+        // Gestion des Groupes
+        Route::post('formations/{formation}/groupes', [GroupeController::class, 'store'])->name('formations.groupes.store');
+        Route::put('groupes/{groupe}', [GroupeController::class, 'update'])->name('groupes.update');
+        Route::delete('groupes/{groupe}', [GroupeController::class, 'destroy'])->name('groupes.destroy');
+
         // Paramètres
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
@@ -114,11 +120,16 @@ Route::middleware('auth')->group(function () {
             Route::post('/paiements', [App\Http\Controllers\Admin\FinanceController::class, 'storePayment'])->name('payments.store');
             Route::get('/depenses', [App\Http\Controllers\Admin\FinanceController::class, 'expenses'])->name('expenses');
             Route::post('/depenses', [App\Http\Controllers\Admin\FinanceController::class, 'storeExpense'])->name('expenses.store');
+            Route::put('/depenses/{depense}', [App\Http\Controllers\Admin\FinanceController::class, 'updateExpense'])->name('expenses.update');
+            Route::delete('/depenses/{depense}', [App\Http\Controllers\Admin\FinanceController::class, 'destroyExpense'])->name('expenses.destroy');
             Route::get('/paiements/{paiement}/recu', [App\Http\Controllers\Admin\FinanceController::class, 'receipt'])->name('payments.receipt');
             
             // Paiements des Formateurs (Commissions)
             Route::get('/formateurs', [App\Http\Controllers\Admin\FinanceController::class, 'trainerPayments'])->name('trainer_payments');
             Route::post('/formateurs', [App\Http\Controllers\Admin\FinanceController::class, 'storeTrainerPayment'])->name('trainer_payments.store');
+            Route::get('/formateurs/{depense}/recu', [App\Http\Controllers\Admin\FinanceController::class, 'trainerReceipt'])->name('trainer_payments.receipt');
+            Route::put('/formateurs/{depense}', [App\Http\Controllers\Admin\FinanceController::class, 'updateTrainerPayment'])->name('trainer_payments.update');
+            Route::delete('/formateurs/{depense}', [App\Http\Controllers\Admin\FinanceController::class, 'destroyTrainerPayment'])->name('trainer_payments.destroy');
         });
 
         // Gestion des Attestations

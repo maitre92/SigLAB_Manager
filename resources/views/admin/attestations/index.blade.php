@@ -23,10 +23,10 @@
                             <tr>
                                 <td><span class="badge bg-light text-dark border">{{ $att->reference }}</span></td>
                                 <td>
-                                    <div class="fw-bold">{{ $att->apprenant->nom_complet }}</div>
-                                    <small class="text-muted">{{ $att->apprenant->matricule }}</small>
+                                    <div class="fw-bold">{{ $att->apprenant->nom_complet ?? 'Apprenant inconnu'}}</div>
+                                    <small class="text-muted">{{ $att->apprenant->matricule ?? 'Matricule inconnue'}}</small>
                                 </td>
-                                <td>{{ $att->formation->nom }}</td>
+                                <td>{{ $att->formation->nom ?? 'Formation inconnue'}}</td>
                                 <td>{{ $att->date_emission->format('d/m/Y') }}</td>
                                 <td class="text-end">
                                     <a href="{{ route('admin.attestations.show', $att) }}" class="btn btn-sm btn-outline-primary" title="Voir / Imprimer">
@@ -75,19 +75,41 @@
                             <div class="collapse mt-2" id="f-{{ $f->id }}">
                                 <ul class="list-unstyled small mb-0">
                                     @foreach($f->apprenants as $app)
-                                        <li class="d-flex justify-content-between align-items-center py-1 border-bottom border-light">
-                                            <span>{{ $app->nom_complet }}</span>
-                                            <a href="{{ route('admin.attestations.store') }}?apprenant_id={{ $app->id }}&formation_id={{ $f->id }}&date_emission={{ date('Y-m-d') }}" 
-                                               onclick="event.preventDefault(); document.getElementById('gen-form-{{ $app->id }}-{{ $f->id }}').submit();"
-                                               class="text-primary" title="Générer maintenant">
-                                                <i class="fas fa-plus-circle"></i>
-                                            </a>
-                                            <form id="gen-form-{{ $app->id }}-{{ $f->id }}" action="{{ route('admin.attestations.store') }}" method="POST" style="display: none;">
-                                                @csrf
-                                                <input type="hidden" name="apprenant_id" value="{{ $app->id }}">
-                                                <input type="hidden" name="formation_id" value="{{ $f->id }}">
-                                                <input type="hidden" name="date_emission" value="{{ date('Y-m-d') }}">
-                                            </form>
+                                        @php
+                                            $reste = $app->pivot->montant_total - $app->pivot->montant_paye;
+                                            $isFullyPaid = $reste <= 0;
+                                        @endphp
+                                        <li class="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-semibold text-dark">{{ $app->nom_complet }}</span>
+                                                @if($isFullyPaid)
+                                                    <span class="badge bg-success mt-1 align-self-start" style="font-size: 0.65rem; padding: 2px 6px;">
+                                                        <i class="fas fa-check-circle me-1"></i> Soldé
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-danger mt-1 align-self-start" style="font-size: 0.65rem; padding: 2px 6px;" title="Reste à payer : {{ number_format($reste, 0, ',', ' ') }} FCFA">
+                                                        <i class="fas fa-exclamation-circle me-1"></i> Non soldé ({{ number_format($reste, 0, ',', ' ') }} F)
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            
+                                            @if($isFullyPaid)
+                                                <a href="{{ route('admin.attestations.store') }}?apprenant_id={{ $app->id }}&formation_id={{ $f->id }}&date_emission={{ date('Y-m-d') }}" 
+                                                   onclick="event.preventDefault(); document.getElementById('gen-form-{{ $app->id }}-{{ $f->id }}').submit();"
+                                                   class="text-primary" title="Générer l'attestation">
+                                                    <i class="fas fa-plus-circle fa-lg"></i>
+                                                </a>
+                                                <form id="gen-form-{{ $app->id }}-{{ $f->id }}" action="{{ route('admin.attestations.store') }}" method="POST" style="display: none;">
+                                                    @csrf
+                                                    <input type="hidden" name="apprenant_id" value="{{ $app->id }}">
+                                                    <input type="hidden" name="formation_id" value="{{ $f->id }}">
+                                                    <input type="hidden" name="date_emission" value="{{ date('Y-m-d') }}">
+                                                </form>
+                                            @else
+                                                <span class="text-muted" title="Génération bloquée : frais non soldés" data-bs-toggle="tooltip">
+                                                    <i class="fas fa-lock text-secondary opacity-50"></i>
+                                                </span>
+                                            @endif
                                         </li>
                                     @endforeach
                                 </ul>

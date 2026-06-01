@@ -51,6 +51,10 @@ class PermissionSeeder extends Seeder
             ['name' => 'Voir les paiements', 'module' => 'Paiements', 'slug' => 'view_payments'],
             ['name' => 'Voir les dépenses', 'module' => 'Dépenses', 'slug' => 'view_expenses'],
             ['name' => 'Voir les recettes', 'module' => 'Recettes', 'slug' => 'view_revenue'],
+            ['name' => 'Modifier une dépense', 'module' => 'Dépenses', 'slug' => 'edit_expense'],
+            ['name' => 'Supprimer une dépense', 'module' => 'Dépenses', 'slug' => 'delete_expense'],
+            ['name' => 'Modifier un versement formateur', 'module' => 'Finances', 'slug' => 'edit_trainer_payment'],
+            ['name' => 'Supprimer un versement formateur', 'module' => 'Finances', 'slug' => 'delete_trainer_payment'],
 
             // Attestations
             ['name' => 'Voir les attestations', 'module' => 'Attestations', 'slug' => 'view_certificates'],

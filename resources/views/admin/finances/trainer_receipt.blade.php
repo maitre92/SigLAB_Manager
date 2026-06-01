@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reçu de Paiement - {{ $paiement->recu_numero }}</title>
+    <title>Reçu de Rémunération - {{ $depense->trainer->name ?? $depense->beneficiaire }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --accent: #f43f5e;
+            --primary: #fd7e14; /* Orange/amber theme for trainers/expenses */
+            --primary-dark: #e8590c;
+            --accent: #228be6;
             --slate-50: #f8fafc;
             --slate-100: #f1f5f9;
             --slate-200: #e2e8f0;
@@ -45,7 +45,6 @@
             position: relative;
             overflow: hidden;
             border: 1px solid var(--slate-200);
-            /* Height for 1/2 A4 approximately */
             min-height: 13.8cm; 
         }
 
@@ -99,7 +98,7 @@
         }
 
         .receipt-number {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 800;
         }
 
@@ -115,7 +114,7 @@
 
         .info-value { font-weight: 600; font-size: 13px; }
 
-        .apprenant-box {
+        .trainer-box {
             background: var(--slate-50);
             border-radius: 12px;
             padding: 12px;
@@ -123,7 +122,7 @@
             margin: 10px 0;
         }
 
-        .apprenant-name {
+        .trainer-name {
             font-size: 15px;
             font-weight: 800;
             margin-bottom: 2px;
@@ -189,10 +188,10 @@
                 border: none !important;
                 border-bottom: 1px dashed #ccc !important;
                 margin-bottom: 0 !important;
-                height: 148mm; /* Slightly less than 148.5mm to be safe */
+                height: 148mm; 
                 width: 210mm;
                 box-sizing: border-box;
-                padding: 20mm !important; /* Proper padding for print */
+                padding: 20mm !important; 
                 overflow: hidden;
             }
             .receipt-half:last-child {
@@ -205,16 +204,16 @@
 </head>
 <body>
     <div class="no-print-controls">
-        <button onclick="window.print()" class="btn btn-primary shadow-sm rounded-pill px-4 fw-bold">
+        <button onclick="window.print()" class="btn btn-warning text-white shadow-sm rounded-pill px-4 fw-bold">
             <i class="fas fa-print me-2"></i> Imprimer
         </button>
-        <a href="{{ route('admin.finances.payments') }}" class="btn btn-light shadow-sm rounded-pill px-4 border ms-2">
+        <a href="{{ route('admin.finances.trainer_payments') }}" class="btn btn-light shadow-sm rounded-pill px-4 border ms-2">
             Retour
         </a>
     </div>
 
     <div class="page-container">
-        @php $copies = ['COPIE ÉLÈVE', 'COPIE ADMINISTRATION']; @endphp
+        @php $copies = ['COPIE FORMATEUR', 'COPIE ADMINISTRATION']; @endphp
         
         @foreach($copies as $index => $copy)
             <div class="receipt-half">
@@ -231,73 +230,66 @@
                     </div>
                     <div class="col-5 text-end">
                         <div class="receipt-type">{{ $copy }}</div>
-                        <div class="receipt-number text-primary small">{{ $paiement->recu_numero }}</div>
+                        <div class="receipt-number text-warning small">REC-TRAIN-{{ str_pad($depense->id, 5, '0', STR_PAD_LEFT) }}</div>
                     </div>
                 </div>
 
                 <div class="row mb-3">
                     <div class="col-6">
-                        <span class="section-label">Date de paiement</span>
-                        <div class="info-value">{{ $paiement->date_paiement->format('d/m/Y') }}</div>
+                        <span class="section-label">Date de versement</span>
+                        <div class="info-value">{{ $depense->date_depense->format('d/m/Y') }}</div>
                     </div>
                     <div class="col-6 text-end">
                         <span class="section-label">Mode de règlement</span>
-                        <div class="info-value">{{ ucfirst($paiement->mode_paiement) }}</div>
+                        <div class="info-value">{{ ucfirst($depense->mode_paiement) }}</div>
                     </div>
                 </div>
 
-                <!-- Apprenant -->
-                <div class="apprenant-box">
+                <!-- Trainer & Formation Info -->
+                <div class="trainer-box">
                     <div class="row align-items-center">
                         <div class="col-8">
-                            <span class="section-label">Apprenant</span>
-                            <div class="apprenant-name">{{ $paiement->inscription->apprenant->nom_complet ?? 'Apprenant inconnu' }}</div>
-                            <div class="small text-muted fw-bold">{{ $paiement->inscription->formation->nom ?? 'formation inconnu'}}</div>
+                            <span class="section-label">Bénéficiaire (Formateur)</span>
+                            <div class="trainer-name">{{ $depense->trainer->name ?? $depense->beneficiaire }}</div>
+                            <div class="small text-muted fw-bold">{{ $depense->formation->nom ?? 'N/A' }}</div>
+                            @if($depense->trainer && $depense->trainer->phone)
+                                <div class="small text-muted" style="font-size: 0.75rem;"><i class="fas fa-phone me-1"></i> {{ $depense->trainer->phone }}</div>
+                            @endif
                         </div>
                         <div class="col-4">
                             <div class="amount-card">
-                                <div class="amount-val">{{ number_format($paiement->montant, 0, ',', ' ') }}</div>
+                                <div class="amount-val">{{ number_format($depense->montant, 0, ',', ' ') }}</div>
                                 <div style="font-size: 8px; font-weight: 700; opacity: 0.8; letter-spacing: 1px;">FCFA</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Summary -->
-                <div class="row g-4">
-                    <div class="col-7">
+                <!-- Summary Details -->
+                <div class="row">
+                    <div class="col-12">
                         <table class="summary-table">
                             <tr>
-                                <td class="text-muted">Total Formation</td>
-                                <td class="text-end fw-bold">{{ number_format($paiement->inscription->montant_total, 0, ',', ' ') }}</td>
+                                <td class="text-muted">Type de Dépense</td>
+                                <td class="text-end fw-bold">{{ $depense->categorie }}</td>
                             </tr>
                             <tr>
-                                <td class="text-muted">Déjà payé</td>
-                                <td class="text-end fw-bold">{{ number_format($paiement->inscription->montant_paye - $paiement->montant, 0, ',', ' ') }}</td>
+                                <td class="text-muted">Libellé</td>
+                                <td class="text-end fw-bold">{{ $depense->titre }}</td>
                             </tr>
+                            @if($depense->reference)
                             <tr>
-                                <td class="text-success fw-bold">Versement du jour</td>
-                                <td class="text-end text-success fw-bold">+ {{ number_format($paiement->montant, 0, ',', ' ') }}</td>
+                                <td class="text-muted">Référence transaction</td>
+                                <td class="text-end fw-bold">{{ $depense->reference }}</td>
                             </tr>
+                            @endif
                             <tr>
-                                <td class="summary-total">Reste à payer</td>
-                                <td class="text-end summary-total text-danger">
-                                    {{ number_format($paiement->inscription->montant_total - $paiement->inscription->montant_paye, 0, ',', ' ') }}
+                                <td class="summary-total">Montant total réglé</td>
+                                <td class="text-end summary-total text-success">
+                                    {{ number_format($depense->montant, 0, ',', ' ') }} FCFA
                                 </td>
                             </tr>
                         </table>
-                    </div>
-                    <div class="col-5">
-                        @if($paiement->notes)
-                            <div class="p-2 border rounded-3 bg-light" style="font-size: 10px; height: 100%;">
-                                <span class="section-label">Notes</span>
-                                <div class="italic text-muted">"{{ Str::limit($paiement->notes, 80) }}"</div>
-                            </div>
-                        @else
-                            <div class="d-flex align-items-center justify-content-center h-100 border rounded-3 border-dashed text-muted small">
-                                <i class="fas fa-certificate me-1"></i> Reçu officiel
-                            </div>
-                        @endif
                     </div>
                 </div>
 
@@ -305,21 +297,21 @@
                 <div class="signature-area row mt-4">
                     <div class="col-6">
                         <div class="signature-box">
-                            <span class="section-label">Signature Élève</span>
+                            <span class="section-label">Signature Formateur</span>
                             <div class="signature-line"></div>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="signature-box">
-                            <span class="section-label">Administration</span>
-                            <div class="fw-bold small text-primary">{{ $paiement->creator->name ?? 'Responsable' }}</div>
+                            <span class="section-label">Émis par (Administration)</span>
+                            <div class="fw-bold small text-warning">{{ $depense->creator->name ?? 'Responsable' }}</div>
                             <div class="signature-line"></div>
                         </div>
                     </div>
                 </div>
 
                 <div class="footer">
-                    <strong>sigLAB Manager</strong> - Solution de gestion pour centres de formation informatique
+                    <strong>sigLAB</strong> - Solution de gestion pour centres de formation informatique
                 </div>
             </div>
 
