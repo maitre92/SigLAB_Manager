@@ -32,8 +32,8 @@
                                 </td>
                                 <td>{{ $att->date_emission->format('d/m/Y') }}</td>
                                 <td class="text-end">
-                                    <a href="{{ route('admin.attestations.show', $att) }}" class="btn btn-sm btn-outline-primary" title="Voir / Imprimer">
-                                        <i class="fas fa-print"></i>
+                                    <a href="{{ route('admin.attestations.pdf', $att) }}" class="btn btn-sm btn-outline-danger" title="Télécharger PDF">
+                                        <i class="fas fa-file-pdf"></i>
                                     </a>
                                     <form action="{{ route('admin.attestations.destroy', $att) }}" method="POST" class="d-inline">
                                         @csrf
@@ -78,6 +78,11 @@
                             <button class="btn btn-sm btn-primary w-100" type="button" data-bs-toggle="collapse" data-bs-target="#g-{{ $groupe->id }}">
                                 <i class="fas fa-users me-1"></i> Voir les apprenants
                             </button>
+                            @if($groupe->attestations_count > 0)
+                                <a href="{{ route('admin.attestations.group.pdf', $groupe) }}" class="btn btn-sm btn-outline-danger w-100 mt-2">
+                                    <i class="fas fa-file-pdf me-1"></i> PDF du groupe ({{ $groupe->attestations_count }})
+                                </a>
+                            @endif
                             <div class="collapse mt-2" id="g-{{ $groupe->id }}">
                                 <ul class="list-unstyled small mb-0">
                                     @foreach($groupe->apprenants as $app)

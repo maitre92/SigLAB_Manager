@@ -23,6 +23,9 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+Route::get('/attestations/verifier/{reference}', [AttestationController::class, 'verify'])
+    ->name('attestations.verify');
+
 /**
  * Routes d'authentification (sans protection)
  */
@@ -145,6 +148,10 @@ Route::middleware('auth')->group(function () {
         });
 
         // Gestion des Attestations
+        Route::get('attestations/groupe/{groupeFormation}/pdf', [AttestationController::class, 'downloadGroupPdf'])
+            ->name('attestations.group.pdf');
+        Route::get('attestations/{attestation}/pdf', [AttestationController::class, 'downloadPdf'])
+            ->name('attestations.pdf');
         Route::resource('attestations', AttestationController::class);
     });
 

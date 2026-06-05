@@ -1,635 +1,609 @@
-@extends('layouts.admin')
+@extends(($isPdf ?? false) ? 'layouts.pdf' : 'layouts.admin')
 
 @section('content')
+@php
+    $apprenant = $attestation->apprenant;
+    $formation = $attestation->formation;
+    $groupe = $attestation->groupeFormation;
+    $months = [
+        1 => 'Janvier', 2 => 'Février', 3 => 'Mars', 4 => 'Avril',
+        5 => 'Mai', 6 => 'Juin', 7 => 'Juillet', 8 => 'Août',
+        9 => 'Septembre', 10 => 'Octobre', 11 => 'Novembre', 12 => 'Décembre',
+    ];
+    $formatLongDate = function ($date) use ($months) {
+        if (!$date) {
+            return '......';
+        }
 
-{{-- Boutons d'action (cachés à l'impression) --}}
-<div class="mb-4 d-print-none text-center text-md-start">
+        return $date->format('d') . ' ' . $months[(int) $date->format('m')] . ' ' . $date->format('Y');
+    };
+    $dateDebut = $formatLongDate($groupe?->date_debut);
+    $dateFin = $formatLongDate($groupe?->date_fin);
+    $verificationUrl = $verificationUrl ?? route('attestations.verify', $attestation->reference);
+    $qrCodeDataUri = $qrCodeDataUri ?? null;
+    $isPdf = $isPdf ?? false;
+@endphp
+
+<div class="attestation-actions d-print-none {{ $isPdf ? 'pdf-hidden' : '' }}">
     <a href="{{ route('admin.attestations.index') }}" class="btn btn-dark rounded-pill px-4 shadow-sm">
         <i class="fas fa-arrow-left me-2"></i> Retour
     </a>
-    <button onclick="window.print()" class="btn btn-primary rounded-pill px-4 ms-2 shadow-sm">
-        <i class="fas fa-print me-2"></i> Imprimer l'attestation
-    </button>
-</div>{{-- Zone du Certificat --}}
-<div class="cert-wrap">
-    <div class="cert" id="certificate">
+    <a href="{{ route('admin.attestations.pdf', $attestation) }}" class="btn btn-danger rounded-pill px-4 shadow-sm">
+        <i class="fas fa-file-pdf me-2"></i> Télécharger PDF
+    </a>
+</div>
 
-        {{-- Dynamic CSS variables as requested --}}
-        <style>
-            :root {
-                --participant-name: "{{ $attestation->apprenant->nom_complet ?? 'attestation non défini'  }}";
-                --module-name: "{{ $attestation->formation->nom ?? 'Formation non définie' }}";
-                --date-debut: "{{ $attestation->groupeFormation?->date_debut ? $attestation->groupeFormation->date_debut->format('d/m/Y') : '...' }}";
-                --date-fin: "{{ $attestation->groupeFormation?->date_fin ? $attestation->groupeFormation->date_fin->format('d/m/Y') : '...' }}";
-                --ville: "BAMAKO";
-                --directeur: "ABDOULAYE MAHAMANE";
-            }
-        </style>
+<div class="attestation-preview">
+    <section class="siglab-certificate" id="certificate">
+        <div class="outer-frame"></div>
+        <div class="inner-frame"></div>
+        <div class="blue-right-frame"></div>
 
-        {{-- DECORATION HAUT GAUCHE --}}
-        <div class="deco-top-left-red"></div>
-        <div class="deco-top-left-blue"></div>
+        <div class="corner corner-top-left">
+            <div class="corner-blue"></div>
+        </div>
+        <div class="left-red-bar"></div>
+        <div class="top-blue-band"></div>
+        <div class="top-right-red">
+            <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="premium-line premium-line-left"></div>
+        <div class="premium-line premium-line-right"></div>
+        <div class="bottom-blue-band"></div>
+        <div class="bottom-left-blue"></div>
+        <div class="bottom-left-red"></div>
 
-        {{-- BANDEAU BLEU SUPERIEUR --}}
-        <div class="band-blue-top"></div>
+        <img src="{{ asset('images/siglab_img2.jpeg') }}" alt="SigLAB Technologie" class="certificate-logo">
 
-        {{-- DECORATION HAUT DROIT --}}
-        <div class="deco-top-right-red">
-            <div class="white-circles">
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
+        <div class="seal">
+            <div class="seal-tail tail-left"></div>
+            <div class="seal-tail tail-right"></div>
+            <div class="seal-gold">
+                <div class="seal-blue">✓</div>
             </div>
         </div>
-        <div class="blue-dots">
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
 
-        {{-- DECORATION BAS GAUCHE --}}
-        <div class="deco-bottom-left-red"></div>
+        <main class="certificate-content">
+            <h1>ATTESTATION</h1>
+            <h2>DE FORMATION</h2>
+            <div class="certificate-reference">N° d'identification : {{ $attestation->reference }}</div>
 
-        {{-- BORDURE EXTERIEURE FINE --}}
-        <div class="cert-border-outer"></div>
-
-        {{-- CONTENU PRINCIPAL --}}
-        <div class="cert-body">
-
-            {{-- LOGO CENTRE HAUT --}}
-            <div class="cert-logo-container">
-                <div class="cert-logo-title">
-                    <span class="logo-sig">Sig</span><span class="logo-lab">LAB</span>
-                </div>
-                <div class="cert-logo-sub">Technologie</div>
-            </div>
-
-            {{-- TITRE PRINCIPAL + MEDAILLE --}}
-            <div class="cert-title-container">
-                <h1 class="main-title">ATTESTATION</h1>
-                <h2 class="sub-title">DE FORMATION</h2>
-
-                {{-- MEDAILLE DE CERTIFICATION --}}
-                <div class="cert-medal">
-                    <div class="medal-ribbons">
-                        <div class="ribbon-left"></div>
-                        <div class="ribbon-right"></div>
-                    </div>
-                    <div class="medal-outer">
-                        <div class="medal-inner">
-                            <span class="checkmark">&#10003;</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- TEXTE D'INTRODUCTION --}}
-            <p class="cert-intro">
-                Je soussigné, monsieur <strong>Abdoulaye Mahamane</strong>, directeur général du<br>
-                centre de formation <strong>SigLAB Technologie</strong> atteste que :
+            <p class="intro">
+                Je soussigné, monsieur Abdoulaye Mahamane, directeur général du<br>
+                centre de formation sigLAB technologie atteste que :
             </p>
 
-            {{-- NOM DU BENEFICIAIRE --}}
-            <div class="cert-beneficiary">
-                {{ $attestation->apprenant->nom_complet }}
-            </div>
+            <div class="student-name">{{ $apprenant->nom_complet ?? 'Apprenant non défini' }}</div>
 
-            {{-- TEXTE DE VALIDATION --}}
-            <p class="cert-validation">
-                A suivi (e) avec <strong>succès et assiduité</strong> une formation pratique sur le module<br>
-                <strong>{{ $attestation->formation->nom ?? 'Formation non définie' }}</strong><br>
-                à la date du
-                <strong>
-                    {{ $attestation->groupeFormation?->date_debut ? $attestation->groupeFormation->date_debut->format('d/m/Y') : '...' }}
-                    au
-                    {{ $attestation->groupeFormation?->date_fin ? $attestation->groupeFormation->date_fin->format('d/m/Y') : '...' }}
-                </strong>
+            <p class="training-text">
+                A suivi (e) avec succès et assiduité une formation pratique sur le module
+                <strong>{{ $formation->nom ?? 'Formation non définie' }}</strong>
+                à la date du <strong>{{ $dateDebut }}</strong> au <strong>{{ $dateFin }}</strong>
             </p>
 
-            {{-- TEXTE JURIDIQUE --}}
-            <p class="cert-legal">
+            <p class="legal-text">
                 En foi de quoi la présente attestation lui est délivrée pour servir ce que de droit
             </p>
 
-            {{-- ZONE BAS GAUCHE --}}
-            <div class="cert-date-location">
-                <div class="location">BAMAKO,</div>
-                <div class="date">LE {{ $attestation->date_emission ? $attestation->date_emission->format('d/m/Y') : '......../........../20....' }}</div>
+            <div class="verification-card">
+                @if($qrCodeDataUri)
+                    <img src="{{ $qrCodeDataUri }}" alt="QR code de vérification">
+                @endif
+                <div>
+                    <span>Vérification</span>
+                    <strong>{{ $attestation->reference }}</strong>
+                </div>
             </div>
 
-            {{-- ORNEMENT CENTRAL --}}
-            <div class="cert-ornament-bottom">
-                <svg viewBox="0 0 300 40" fill="none" stroke="var(--color-gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Left Wing -->
-                    <path d="M 150 20 C 130 10, 110 5, 90 20 C 80 27, 70 27, 60 20 C 50 13, 30 13, 10 25" />
-                    <path d="M 140 22 C 125 15, 115 15, 100 22 C 90 27, 85 27, 75 22" />
-                    <path d="M 110 12 C 105 5, 95 5, 90 12" />
-                    
-                    <!-- Center Piece -->
-                    <circle cx="150" cy="20" r="4" fill="var(--color-gold)" />
-                    <circle cx="150" cy="20" r="8" stroke-width="0.8" />
-                    <path d="M 145 10 C 148 5, 152 5, 155 10 L 150 20 Z" fill="var(--color-gold)" />
-                    <path d="M 145 30 C 148 35, 152 35, 155 30 L 150 20 Z" fill="var(--color-gold)" />
+            <div class="certificate-bottom">
+                <div class="place-date">
+                    <div>BAMAKO,</div>
+                    <div>LE&nbsp;&nbsp;{{ $attestation->date_emission ? $attestation->date_emission->format('d/m/Y') : '......../......../20....' }}</div>
+                </div>
 
-                    <!-- Right Wing -->
-                    <path d="M 150 20 C 170 10, 190 5, 210 20 C 220 27, 230 27, 240 20 C 250 13, 270 13, 290 25" />
-                    <path d="M 160 22 C 175 15, 185 15, 200 22 C 210 27, 215 27, 225 22" />
-                    <path d="M 190 12 C 195 5, 205 5, 210 12" />
-                </svg>
+                <div class="gold-ornament" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                </div>
+
+                <div class="director">
+                    <div class="director-title">DIRECTEUR GÉNÉRAL</div>
+                    <div class="director-line"></div>
+                    <div class="director-name">ABDOULAYE MAHAMANE</div>
+                </div>
             </div>
+        </main>
 
-            {{-- SIGNATURE BAS DROIT --}}
-            <div class="cert-signature">
-                <div class="signature-title">DIRECTEUR GÉNÉRAL</div>
-                <div class="signature-line"></div>
-                <div class="signature-name">ABDOULAYE MAHAMANE</div>
-            </div>
-
-        </div>{{-- fin .cert-body --}}
-
-        {{-- PIED DE PAGE --}}
-        <div class="cert-footer-band">
-            <span class="footer-text">La présente attestation n'est délivrée qu'une fois</span>
-        </div>
-
-    </div>{{-- fin .cert --}}
-</div>{{-- fin .cert-wrap --}}
+        <div class="footer-text">La présente attestation n'est délivrée qu'une fois</div>
+    </section>
+</div>
 
 <style>
-/* ========================================
-   POLICES
-   ======================================== */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Montserrat:wght@400;500;700;800;900&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
-
-/* ========================================
-   VARIABLES DE DESIGN SYSTEM
-   ======================================== */
-:root {
-    --color-red: #e30613;
-    --color-blue-dark: #1b1464;
-    --color-white: #ffffff;
-    --color-gold: #c9a227;
-    --color-grey-text: #6f6f6f;
-    --color-bg: #f8f8f8;
-}
-
-/* ========================================
-   CONTENEUR
-   ======================================== */
-.cert-wrap {
-    padding: 30px 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow-x: auto;
-    background-color: #eaeaea; /* contrast background for page dashboard */
-}
-
-/* ========================================
-   CERTIFICAT
-   ======================================== */
-.cert {
-    width: 1123px;
-    height: 794px;
-    background-color: var(--color-bg);
-    position: relative;
-    box-sizing: border-box;
-    overflow: hidden;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-}
-
-/* Bordure fine grise extérieure */
-.cert-border-outer {
-    position: absolute;
-    inset: 15px;
-    border: 1px solid #d3d3d3;
-    pointer-events: none;
-    z-index: 5;
-}
-
-/* ========================================
-   DECORATIONS GEOMETRIQUES (CSS UNIQUEMENT)
-   ======================================== */
-
-/* Decoration haut gauche */
-.deco-top-left-red {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 260px;
-    height: 260px;
-    background-color: var(--color-red);
-    clip-path: polygon(0 0, 100% 0, 0 100%);
-    z-index: 10;
-}
-.deco-top-left-blue {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 130px;
-    height: 130px;
-    background-color: var(--color-blue-dark);
-    clip-path: polygon(0 0, 100% 0, 0 100%);
-    z-index: 11;
-}
-
-/* Bande horizontale bleu foncé supérieur */
-.band-blue-top {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 15px;
-    background-color: var(--color-blue-dark);
-    z-index: 8;
-}
-
-/* Decoration haut droit */
-.deco-top-right-red {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 320px;
-    height: 240px;
-    background-color: var(--color-red);
-    clip-path: polygon(30% 0, 100% 0, 100% 100%, 55% 0);
-    z-index: 10;
-}
-.white-circles {
-    position: absolute;
-    top: 25px;
-    right: 40px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    z-index: 12;
-}
-.white-circles span {
-    width: 8px;
-    height: 8px;
-    background-color: var(--color-white);
-    border-radius: 50%;
-    display: block;
-}
-.blue-dots {
-    position: absolute;
-    top: 40px;
-    right: 230px;
-    display: grid;
-    grid-template-columns: repeat(2, 6px);
-    gap: 12px;
-    z-index: 9;
-}
-.blue-dots span {
-    width: 6px;
-    height: 6px;
-    background-color: var(--color-blue-dark);
-    border-radius: 50%;
-    opacity: 0.6;
-    display: block;
-}
-
-/* Coin inférieur gauche rouge */
-.deco-bottom-left-red {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 180px;
-    height: 85px;
-    background-color: var(--color-red);
-    clip-path: polygon(0 100%, 0 0, 85% 100%);
-    z-index: 11;
-}
-
-/* ========================================
-   CONTENU PRINCIPAL
-   ======================================= */
-.cert-body {
-    position: relative;
-    z-index: 15;
-    padding: 0 80px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-}
-
-/* Logo */
-.cert-logo-container {
-    margin-top: 45px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-.cert-logo-title {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 32px;
-    font-weight: 900;
-    letter-spacing: -0.5px;
-    line-height: 1;
-}
-.logo-sig {
-    color: var(--color-blue-dark);
-}
-.logo-lab {
-    color: var(--color-red);
-}
-.cert-logo-sub {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--color-blue-dark);
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    margin-top: 3px;
-}
-
-/* Titre */
-.cert-title-container {
-    text-align: center;
-    margin-top: 30px;
-    position: relative;
-}
-.main-title {
-    font-family: 'Montserrat', sans-serif;
-    color: var(--color-blue-dark);
-    font-size: 50px;
-    font-weight: 900;
-    letter-spacing: 14px;
-    margin: 0;
-    line-height: 1.1;
-    text-transform: uppercase;
-}
-.sub-title {
-    font-family: 'Montserrat', sans-serif;
-    color: var(--color-red);
-    font-size: 24px;
-    font-weight: 700;
-    letter-spacing: 7px;
-    margin: 6px 0 0 0;
-    text-transform: uppercase;
-}
-
-/* Médaille de certification */
-.cert-medal {
-    position: absolute;
-    right: 30px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 80px;
-    height: 100px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    z-index: 15;
-}
-.medal-outer {
-    width: 66px;
-    height: 66px;
-    background-color: var(--color-gold);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    position: relative;
-    z-index: 3;
-}
-.medal-inner {
-    width: 52px;
-    height: 52px;
-    background-color: var(--color-blue-dark);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid var(--color-gold);
-}
-.medal-inner .checkmark {
-    color: var(--color-white);
-    font-size: 26px;
-    font-weight: bold;
-    line-height: 1;
-}
-.medal-ribbons {
-    position: absolute;
-    top: 45px;
-    width: 50px;
-    height: 55px;
-    z-index: 1;
-    display: flex;
-    justify-content: space-between;
-    pointer-events: none;
-}
-.ribbon-left, .ribbon-right {
-    width: 15px;
-    height: 50px;
-    background-color: var(--color-blue-dark);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%);
-}
-.ribbon-left {
-    transform: rotate(12deg);
-    position: relative;
-    left: 5px;
-}
-.ribbon-right {
-    transform: rotate(-12deg);
-    position: relative;
-    right: 5px;
-}
-
-/* Texte d'introduction */
-.cert-intro {
-    font-family: 'Playfair Display', 'Crimson Text', serif;
-    color: var(--color-grey-text);
-    font-size: 16px;
-    line-height: 1.6;
-    text-align: center;
-    margin: 30px auto 10px auto;
-    max-width: 800px;
-}
-.cert-intro strong {
-    color: var(--color-blue-dark);
-    font-weight: 600;
-}
-
-/* Nom du bénéficiaire */
-.cert-beneficiary {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 42px;
-    font-weight: 700;
-    color: var(--color-blue-dark);
-    text-align: center;
-    margin: 15px 0;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-}
-
-/* Texte de validation */
-.cert-validation {
-    font-family: 'Playfair Display', 'Crimson Text', serif;
-    color: var(--color-grey-text);
-    font-size: 15px;
-    line-height: 1.8;
-    text-align: center;
-    margin: 10px auto;
-    max-width: 850px;
-}
-.cert-validation strong {
-    color: var(--color-blue-dark);
-    font-weight: 700;
-}
-
-/* Texte juridique */
-.cert-legal {
-    font-family: 'Montserrat', sans-serif;
-    color: var(--color-red);
-    font-size: 16px;
-    font-weight: 700;
-    text-align: center;
-    margin: 20px auto 5px auto;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* Zone bas gauche */
-.cert-date-location {
-    position: absolute;
-    bottom: 95px;
-    left: 80px;
-    font-family: 'Montserrat', sans-serif;
-    color: var(--color-blue-dark);
-    font-weight: 700;
-    font-size: 14px;
-    line-height: 1.6;
-}
-.location {
-    font-size: 16px;
-    letter-spacing: 1px;
-}
-.date {
-    letter-spacing: 0.5px;
-}
-
-/* Ornement central */
-.cert-ornament-bottom {
-    position: absolute;
-    bottom: 75px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 300px;
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-.cert-ornament-bottom svg {
-    width: 100%;
-    height: auto;
-}
-
-/* Signature bas droit */
-.cert-signature {
-    position: absolute;
-    bottom: 95px;
-    right: 80px;
-    font-family: 'Montserrat', sans-serif;
-    color: var(--color-blue-dark);
-    text-align: right;
-    width: 240px;
-}
-.signature-title {
-    font-size: 13px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    margin-bottom: 30px;
-}
-.signature-line {
-    border-top: 1.5px solid var(--color-blue-dark);
-    margin-bottom: 5px;
-    width: 100%;
-}
-.signature-name {
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
-/* Pied de page */
-.cert-footer-band {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 35px;
-    background-color: var(--color-blue-dark);
-    display: flex;
-    align-items: center;
-    padding-left: 40px;
-    box-sizing: border-box;
-    z-index: 10;
-}
-.footer-text {
-    font-family: 'Montserrat', sans-serif;
-    color: var(--color-white);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-}
-
-/* ========================================
-   OPTIMISATION POUR L'IMPRESSION (PDF)
-   ======================================== */
-@media print {
-    @page {
-        size: A4 landscape;
-        margin: 0;
+    :root {
+        --siglab-red: #ed0612;
+        --siglab-blue: #191062;
+        --siglab-gold: #d9b851;
+        --siglab-grey: #747474;
     }
-    
-    body * {
-        visibility: hidden;
+
+    .attestation-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
     }
-    
-    .cert-wrap,
-    #certificate,
-    #certificate * {
-        visibility: visible;
+
+    .pdf-hidden {
+        display: none !important;
     }
-    
-    .cert-wrap {
-        padding: 0;
-        margin: 0;
-        width: 297mm;
-        height: 210mm;
-        display: block;
-        background: transparent;
-        page-break-after: avoid;
-        page-break-before: avoid;
+
+    .attestation-preview {
+        display: flex;
+        justify-content: center;
+        overflow-x: auto;
+        padding: 18px 0 30px;
+        background: #ececec;
     }
-    
-    #certificate {
+
+    .siglab-certificate {
+        position: relative;
+        width: 1123px;
+        height: 794px;
+        overflow: hidden;
+        background: #fff;
+        color: var(--siglab-blue);
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
+        font-family: Georgia, "Times New Roman", serif;
+    }
+
+    .outer-frame {
+        position: absolute;
+        inset: 5px;
+        border: 1px solid #aeb0b7;
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    .inner-frame {
+        position: absolute;
+        inset: 51px 52px 51px 52px;
+        border-bottom: 42px solid var(--siglab-blue);
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    .blue-right-frame {
+        position: absolute;
+        top: 212px;
+        right: 52px;
+        bottom: 51px;
+        width: 7px;
+        background: var(--siglab-blue);
+        z-index: 3;
+        pointer-events: none;
+    }
+
+    .corner-top-left {
         position: absolute;
         top: 0;
         left: 0;
-        width: 297mm !important;
-        height: 210mm !important;
-        border: none !important;
-        box-shadow: none !important;
-        background-color: var(--color-bg) !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        width: 420px;
+        height: 254px;
+        background: var(--siglab-red);
+        clip-path: polygon(0 0, 100% 0, 61% 64px, 55px 64px, 55px 392px, 0 438px);
+        z-index: 4;
     }
-    
-    .d-print-none {
-        display: none !important;
-    }
-}
-</style>
 
+    .corner-blue {
+        position: absolute;
+        top: 54px;
+        left: 49px;
+        width: 154px;
+        height: 165px;
+        background: var(--siglab-blue);
+        clip-path: polygon(0 0, 100% 0, 0 100%);
+    }
+
+    .left-red-bar {
+        position: absolute;
+        top: 225px;
+        left: 0;
+        width: 60px;
+        height: 175px;
+        background: var(--siglab-red);
+        clip-path: polygon(0 0, 100% 0, 100% 73%, 0 100%);
+        z-index: 4;
+    }
+
+    .top-blue-band {
+        position: absolute;
+        top: 0;
+        right: 108px;
+        width: 492px;
+        height: 20px;
+        background: var(--siglab-blue);
+        clip-path: polygon(0 0, 100% 0, 92% 100%, 0 100%);
+        z-index: 3;
+    }
+
+    .top-right-red {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 184px;
+        height: 260px;
+        background: var(--siglab-red);
+        clip-path: polygon(18% 0, 100% 0, 100% 98%, 78% 100%);
+        transform: rotate(-16deg);
+        transform-origin: top right;
+        z-index: 4;
+    }
+
+    .top-right-red span {
+        position: absolute;
+        left: 82px;
+        width: 8px;
+        height: 8px;
+        background: #fff;
+        border-radius: 50%;
+    }
+
+    .top-right-red span:nth-child(1) { top: 42px; }
+    .top-right-red span:nth-child(2) { top: 72px; }
+    .top-right-red span:nth-child(3) { top: 102px; }
+    .top-right-red span:nth-child(4) { top: 132px; }
+    .top-right-red span:nth-child(5) { top: 162px; }
+
+    .premium-line {
+        position: absolute;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--siglab-gold), transparent);
+        z-index: 4;
+        opacity: .85;
+    }
+
+    .premium-line-left {
+        top: 107px;
+        left: 252px;
+        width: 145px;
+    }
+
+    .premium-line-right {
+        top: 107px;
+        right: 285px;
+        width: 145px;
+    }
+
+    .bottom-blue-band {
+        position: absolute;
+        left: 24px;
+        right: 52px;
+        bottom: 5px;
+        height: 44px;
+        background: var(--siglab-blue);
+        z-index: 3;
+    }
+
+    .bottom-left-blue {
+        position: absolute;
+        left: 5px;
+        bottom: 49px;
+        width: 56px;
+        height: 56px;
+        background: var(--siglab-blue);
+        clip-path: polygon(0 100%, 100% 100%, 100% 0);
+        z-index: 4;
+    }
+
+    .bottom-left-red {
+        position: absolute;
+        left: 5px;
+        bottom: 5px;
+        width: 512px;
+        height: 17px;
+        background: var(--siglab-red);
+        z-index: 4;
+    }
+
+    .certificate-logo {
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        width: 300px;
+        height: 95px;
+        object-fit: cover;
+        object-position: center 54%;
+        transform: translateX(-50%);
+        z-index: 6;
+    }
+
+    .certificate-content {
+        position: relative;
+        z-index: 5;
+        height: 100%;
+        padding: 128px 78px 75px;
+        text-align: center;
+    }
+
+    .certificate-content h1 {
+        margin: 20px 0 0;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 65px;
+        line-height: 1;
+        font-weight: 900;
+        letter-spacing: 13px;
+        color: var(--siglab-blue);
+    }
+
+    .certificate-content h2 {
+        margin: 22px 0 0;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 33px;
+        line-height: 1;
+        font-weight: 900;
+        letter-spacing: 4px;
+        color: var(--siglab-red);
+    }
+
+    .certificate-reference {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 12px;
+        padding: 7px 18px;
+        border: 1px solid rgba(217, 184, 81, .95);
+        border-radius: 999px;
+        color: #102c66;
+        background: rgba(255, 255, 255, .92);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 16px;
+        line-height: 1;
+        font-weight: 900;
+        letter-spacing: .5px;
+        box-shadow: 0 4px 12px rgba(217, 184, 81, .18);
+    }
+
+    .seal {
+        position: absolute;
+        top: 123px;
+        right: 133px;
+        width: 118px;
+        height: 145px;
+        z-index: 7;
+    }
+
+    .seal-gold {
+        width: 86px;
+        height: 86px;
+        margin: 0 auto;
+        border-radius: 50%;
+        background: var(--siglab-gold);
+        display: grid;
+        place-items: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,.18);
+    }
+
+    .seal-gold::before {
+        content: "";
+        position: absolute;
+        top: 7px;
+        left: 21px;
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        border: 8px dashed #e8d386;
+    }
+
+    .seal-blue {
+        width: 62px;
+        height: 62px;
+        border-radius: 50%;
+        background: var(--siglab-blue);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 45px;
+        font-weight: 900;
+        z-index: 2;
+    }
+
+    .seal-tail {
+        position: absolute;
+        top: 75px;
+        width: 26px;
+        height: 62px;
+        background: var(--siglab-blue);
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 77%, 0 100%);
+        z-index: -1;
+    }
+
+    .tail-left {
+        left: 31px;
+        transform: rotate(10deg);
+    }
+
+    .tail-right {
+        right: 31px;
+        transform: rotate(-10deg);
+    }
+
+    .intro {
+        margin: 24px auto 0;
+        max-width: 760px;
+        color: #6f6f75;
+        font-size: 23px;
+        line-height: 1.45;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    .student-name {
+        margin: 20px auto 0;
+        color: #102c66;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 72px;
+        line-height: 1.05;
+        font-weight: 900;
+        letter-spacing: 1px;
+        text-shadow: -2px 0 #1a1468, 2px 0 rgba(0,0,0,.08);
+        max-width: 900px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .training-text {
+        margin: 24px auto 0;
+        max-width: 1010px;
+        color: #787878;
+        font-size: 22px;
+        line-height: 1.45;
+        font-family: Arial, Helvetica, sans-serif;
+        font-weight: 500;
+    }
+
+    .training-text strong {
+        color: #6b6b6b;
+        font-weight: 800;
+    }
+
+    .legal-text {
+        margin: 20px auto 0;
+        color: #c5161d;
+        font-size: 22px;
+        line-height: 1.25;
+        font-family: Arial, Helvetica, sans-serif;
+        font-weight: 900;
+    }
+
+    .verification-card {
+        position: absolute;
+        top: 286px;
+        right: 76px;
+        width: 164px;
+        padding: 9px 8px 8px;
+        border: 2px solid rgba(25, 16, 98, .13);
+        border-radius: 7px;
+        background: rgba(255, 255, 255, .96);
+        box-shadow: 0 8px 22px rgba(25, 16, 98, .08);
+        font-family: Arial, Helvetica, sans-serif;
+        color: #102c66;
+    }
+
+    .verification-card img {
+        display: block;
+        width: 104px;
+        height: 104px;
+        margin: 0 auto 6px;
+    }
+
+    .verification-card span {
+        display: block;
+        color: #7a7a80;
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .8px;
+    }
+
+    .verification-card strong {
+        display: block;
+        margin-top: 3px;
+        color: #191062;
+        font-size: 12px;
+        line-height: 1.1;
+        font-weight: 900;
+    }
+
+    .certificate-bottom {
+        position: absolute;
+        left: 90px;
+        right: 115px;
+        bottom: 110px;
+        display: grid;
+        grid-template-columns: 230px 1fr 290px;
+        align-items: end;
+        column-gap: 28px;
+    }
+
+    .place-date {
+        text-align: left;
+        color: #102c66;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 20px;
+        line-height: 2.15;
+        font-weight: 900;
+        letter-spacing: .5px;
+    }
+
+    .gold-ornament {
+        height: 62px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .gold-ornament::before,
+    .gold-ornament::after {
+        content: "";
+        width: 130px;
+        height: 30px;
+        border-top: 8px solid var(--siglab-gold);
+        border-radius: 100% 0 0 0;
+        transform: skewX(-25deg);
+        opacity: .95;
+    }
+
+    .gold-ornament::after {
+        border-radius: 0 100% 0 0;
+        transform: scaleX(-1) skewX(-25deg);
+    }
+
+    .gold-ornament span:nth-child(1) {
+        width: 44px;
+        height: 44px;
+        background: radial-gradient(circle, #f0dc7a 0 22%, var(--siglab-gold) 23% 100%);
+        clip-path: polygon(50% 0, 66% 35%, 100% 50%, 66% 65%, 50% 100%, 34% 65%, 0 50%, 34% 35%);
+        margin: 0 -7px;
+    }
+
+    .director {
+        text-align: center;
+        color: #102c66;
+        font-family: Arial, Helvetica, sans-serif;
+        font-weight: 900;
+    }
+
+    .director-title {
+        font-size: 24px;
+        line-height: 1.1;
+    }
+
+    .director-line {
+        width: 230px;
+        border-top: 2px solid #102c66;
+        margin: 10px auto 8px;
+    }
+
+    .director-name {
+        font-size: 20px;
+        line-height: 1.1;
+    }
+
+    .footer-text {
+        position: absolute;
+        left: 28px;
+        bottom: 18px;
+        z-index: 5;
+        color: #fff;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 17px;
+        font-weight: 900;
+        letter-spacing: .5px;
+    }
+
+</style>
 @endsection
