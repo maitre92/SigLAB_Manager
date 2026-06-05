@@ -50,9 +50,38 @@ class FinanceController extends Controller
         ));
     }
 
-    public function payments()
+    public function payments(Request $request)
     {
-        $paiements = Paiement::with(['inscription.apprenant', 'inscription.formation', 'inscription.groupeFormation'])->latest()->paginate(20);
+        $query = Paiement::with(['inscription.apprenant', 'inscription.formation', 'inscription.groupeFormation']);
+
+        if ($request->filled('groupe_id')) {
+            $query->whereHas('inscription', function ($q) use ($request) {
+                $q->where('groupe_formation_id', $request->groupe_id);
+            });
+        }
+
+        if ($request->filled('formation_id')) {
+            $query->whereHas('inscription', function ($q) use ($request) {
+                $q->where('formation_id', $request->formation_id);
+            });
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('recu_numero', 'like', "%{$search}%")
+                  ->orWhere('mode_paiement', 'like', "%{$search}%")
+                  ->orWhere('reference', 'like', "%{$search}%")
+                  ->orWhereHas('inscription.apprenant', function ($q2) use ($search) {
+                      $q2->where('prenom', 'like', "%{$search}%")
+                         ->orWhere('nom', 'like', "%{$search}%")
+                         ->orWhere('matricule', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $paiements = $query->latest()->paginate(20)->withQueryString();
+
         $inscriptions = Inscription::with(['apprenant', 'formation', 'groupeFormation'])
             ->whereNotIn('statut', ['terminee', 'annulee'])
             ->get()
@@ -60,8 +89,11 @@ class FinanceController extends Controller
                 return $ins->montant_total > $ins->montant_paye;
             })
             ->values();
+
+        $groupes = GroupeFormation::with('formation')->orderBy('nom')->get();
+        $formations = Formation::orderBy('nom')->get();
             
-        return view('admin.finances.payments', compact('paiements', 'inscriptions'));
+        return view('admin.finances.payments', compact('paiements', 'inscriptions', 'groupes', 'formations'));
     }
 
     public function storePayment(Request $request)

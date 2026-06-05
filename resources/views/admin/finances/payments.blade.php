@@ -3,8 +3,35 @@
 @section('title', 'Paiements')
 
 @section('content')
+<style>
+    @media print {
+        .sidebar, .navbar, footer, .d-print-none, .card-footer, #sidebarOverlay, .page-header {
+            display: none !important;
+        }
+        .main-content {
+            margin-left: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+        .col-lg-8 {
+            width: 100% !important;
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+        }
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .container-fluid {
+            padding: 0 !important;
+        }
+        table th:last-child, table td:last-child {
+            display: none !important;
+        }
+    }
+</style>
 <div class="row g-4">
-    <div class="col-lg-4">
+    <div class="col-lg-4 d-print-none">
         <div class="card border-0 shadow-sm sticky-top" style="top: 20px; z-index: 10;">
             <div class="card-header bg-white py-3 border-0">
                 <h6 class="mb-0 fw-bold"><i class="fas fa-plus-circle text-primary me-2"></i> Enregistrer un Paiement</h6>
@@ -100,7 +127,53 @@
     <div class="col-lg-8">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3 border-0">
-                <h6 class="mb-0 fw-bold"><i class="fas fa-list text-primary me-2"></i> Historique des Paiements</h6>
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold"><i class="fas fa-list text-primary me-2"></i> Historique des Paiements</h6>
+                        <button onclick="window.print()" class="btn btn-sm btn-outline-secondary d-print-none shadow-sm">
+                            <i class="fas fa-print me-1"></i> Imprimer la liste
+                        </button>
+                    </div>
+                    <form method="GET" action="{{ route('admin.finances.payments') }}" class="row g-2 align-items-center">
+                        <div class="col-md-4">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                                <input type="text" name="search" class="form-control border-start-0" placeholder="Rechercher..." value="{{ request('search') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="groupe_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="">Tous les groupes</option>
+                                @foreach($groupes as $g)
+                                    <option value="{{ $g->id }}" {{ request('groupe_id') == $g->id ? 'selected' : '' }}>
+                                        {{ $g->nom }} {{ $g->code ? '[' . $g->code . ']' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="formation_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="">Toutes les formations</option>
+                                @foreach($formations as $f)
+                                    <option value="{{ $f->id }}" {{ request('formation_id') == $f->id ? 'selected' : '' }}>
+                                        {{ $f->nom }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            @if(request()->anyFilled(['search', 'groupe_id', 'formation_id']))
+                                <a href="{{ route('admin.finances.payments') }}" class="btn btn-sm btn-outline-secondary w-100">
+                                    <i class="fas fa-times me-1"></i> Vider
+                                </a>
+                            @else
+                                <button type="submit" class="btn btn-sm text-white w-100" style="background-color: var(--navbar-bg);">
+                                    <i class="fas fa-filter me-1"></i> Filtrer
+                                </button>
+                            @endif
+                        </div>
+                    </form>
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -110,6 +183,7 @@
                             <th>Apprenant</th>
                             <th>Mode</th>
                             <th class="text-end">Montant</th>
+                            <th class="text-end">Reste à payer</th>
                             <th class="text-center px-4">Action</th>
                         </tr>
                     </thead>
@@ -121,8 +195,19 @@
                                     <small class="text-muted">{{ $p->date_paiement->format('d/m/Y') }}</small>
                                 </td>
                                 <td>
-                                    <div class="fw-bold">{{ $p->inscription?->apprenant?->nom_complet ?? 'Apprenant supprimé' }}</div>
-                                    <small class="text-muted">{{ $p->inscription?->groupeFormation?->nom ?? $p->inscription?->formation?->nom ?? 'Groupe supprimé' }}</small>
+                                    <div class="fw-bold text-dark">{{ $p->inscription?->apprenant?->nom_complet ?? 'Apprenant supprimé' }}</div>
+                                    <div class="d-flex flex-wrap gap-1 mt-1">
+                                        @if($p->inscription?->formation)
+                                            <span class="badge bg-light text-secondary border fw-normal" style="font-size: 0.7rem;">
+                                                <i class="fas fa-graduation-cap me-1"></i>{{ $p->inscription->formation->nom }}
+                                            </span>
+                                        @endif
+                                        @if($p->inscription?->groupeFormation)
+                                            <span class="badge text-white fw-normal" style="font-size: 0.7rem; background-color: var(--navbar-bg); opacity: 0.85;">
+                                                <i class="fas fa-users me-1"></i>{{ $p->inscription->groupeFormation->nom }}
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td>
                                     <span class="badge rounded-pill bg-light text-dark border">{{ ucfirst($p->mode_paiement) }}</span>
@@ -132,6 +217,17 @@
                                 </td>
                                 <td class="text-end fw-bold text-success">
                                     {{ number_format($p->montant, 0, ',', ' ') }} FCFA
+                                </td>
+                                <td class="text-end fw-bold text-dark">
+                                    @if($p->inscription)
+                                        @if($p->inscription->reste_a_payer <= 0)
+                                            <span class="badge bg-success" style="font-size: 0.75rem;">Solder</span>
+                                        @else
+                                            <span class="text-danger fw-bold" style="font-size: 0.85rem;">{{ number_format($p->inscription->reste_a_payer, 0, ',', ' ') }} FCFA</span>
+                                        @endif
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
                                 </td>
                                 <td class="text-center px-4">
                                     <div class="d-flex justify-content-center gap-2">
@@ -169,7 +265,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="text-center py-5 text-muted">Aucun paiement enregistré</td></tr>
+                            <tr><td colspan="6" class="text-center py-5 text-muted">Aucun paiement enregistré</td></tr>
                         @endforelse
                     </tbody>
                 </table>
