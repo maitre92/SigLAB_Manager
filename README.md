@@ -205,10 +205,17 @@ routes/
 
 ## Mises à jour récentes
 
+### Gestion financière et reçus (Juin 2026)
+- **Références de l'entreprise :** Mise à jour des reçus élèves (`receipt.blade.php`) et reçus formateurs (`trainer_receipt.blade.php`) pour afficher les informations de *SigLAB Technologie SARL* (Adresse Bamako Boulkansoumbougou près du marché, Imm. Thioma Guidado en face de PMU-Mali, Tél: +223 93 38 73 25).
+- **CRUD des paiements apprenants :** Implémentation complète de la modification et de la suppression des paiements depuis l'historique financier (`payments.blade.php` et `FinanceController.php`).
+  - Validation dynamique pour s'assurer que les paiements modifiés n'excèdent pas le reste à payer d'une inscription.
+  - Recalcul et réajustement automatiques du champ `montant_paye` de la table `inscriptions` lors de la modification ou suppression, protégés par des transactions de base de données.
+  - Interface dynamique avec SweetAlert2 pour les confirmations de suppression et un modal Bootstrap pour la modification.
+- **Sécurité :** Ajout des permissions `edit_payment` et `delete_payment` dans le `PermissionSeeder`.
+- **Stabilisation des routes :** Nettoyage des routes orphelines et import du contrôleur inexistant `GroupeController` pour corriger les dysfonctionnements des commandes Artisan (`route:list`, cache, etc.).
+
 ### Formation par groupe
-
 Ajout du module **groupes de formation** pour la gestion des formations et des inscriptions:
-
 - nouveau contrôleur `GroupeFormationController`;
 - nouveau modèle `GroupeFormation`;
 - nouvelles vues dans `resources/views/admin/groupes-formations`;
@@ -216,26 +223,10 @@ Ajout du module **groupes de formation** pour la gestion des formations et des i
 - adaptation principale des formations, groupes de formation, apprenants et inscriptions.
 
 ### Travail restant pour le binôme
-
 Les modules suivants doivent encore être alignés et testés avec les groupes de formation:
-
 - **Pédagogie**: présences, évaluations, examens, notes et résultats.
-- **Finances**: paiements apprenants, reçus, dépenses, paiements formateurs et commissions.
+- **Finances**: vérifier et s'assurer que les paiements / commissions formateurs sont alignés sur `groupe_formation_id`.
 - **Attestations**: génération par groupe, vérification de l'inscription au groupe et contrôle du paiement complet.
-
-Points techniques à vérifier:
-
-- utiliser `groupe_formation_id` dans les formulaires, validations et requêtes;
-- charger les relations `groupeFormation`, `formation` et `apprenants` sans casser les anciennes données;
-- afficher le nom/code du groupe dans les listes, reçus, résultats et attestations;
-- éviter de mélanger une formation catalogue avec un groupe réel;
-- tester les migrations sur une base contenant déjà des formations, apprenants, inscriptions, paiements et attestations.
-
-Tant que ces vérifications ne sont pas terminées, considérer que les groupes de formation sont opérationnels seulement pour:
-
-- le module Gestion des formations;
-- le module Groupes de formation;
-- les inscriptions des apprenants.
 
 ## Git
 
@@ -256,3 +247,4 @@ git push origin main
 ## Licence
 
 Projet propriétaire - sigLAB.
+

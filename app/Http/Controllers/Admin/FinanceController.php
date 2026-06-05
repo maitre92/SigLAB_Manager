@@ -165,6 +165,73 @@ class FinanceController extends Controller
         return view('admin.finances.receipt', compact('paiement'));
     }
 
+    public function updatePayment(Request $request, Paiement $paiement)
+    {
+        if (!Auth::user()->isSuperAdmin() && !Auth::user()->hasPermission('edit_payment')) {
+            abort(403);
+        }
+
+        $request->validate([
+            'montant' => 'required|numeric|min:1',
+            'date_paiement' => 'required|date|before_or_equal:today',
+            'mode_paiement' => 'required|string',
+            'reference' => 'nullable|string',
+            'notes' => 'nullable|string',
+        ]);
+
+        $inscription = $paiement->inscription;
+
+        if ($inscription->statut === 'annulee') {
+            return redirect()->back()
+                ->withErrors(['montant' => "Impossible de modifier un paiement pour une inscription annulée."]);
+        }
+
+        $other_payments_sum = $inscription->paiements()->where('id', '!=', $paiement->id)->sum('montant');
+        $reste = $inscription->montant_total - $other_payments_sum;
+
+        if ($request->montant > $reste) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['montant' => "Le montant saisi (" . number_format($request->montant, 0, ',', ' ') . " FCFA) dépasse le reste à payer (" . number_format($reste, 0, ',', ' ') . " FCFA)."]);
+        }
+
+        DB::transaction(function () use ($request, $paiement, $inscription) {
+            // Ajuster le montant payé de l'inscription
+            $diff = $request->montant - $paiement->montant;
+            $inscription->increment('montant_paye', $diff);
+
+            // Mettre à jour le paiement
+            $paiement->update([
+                'montant' => $request->montant,
+                'date_paiement' => $request->date_paiement,
+                'mode_paiement' => $request->mode_paiement,
+                'reference' => $request->reference,
+                'notes' => $request->notes,
+            ]);
+        });
+
+        return redirect()->back()->with('success', 'Paiement modifié avec succès.');
+    }
+
+    public function destroyPayment(Paiement $paiement)
+    {
+        if (!Auth::user()->isSuperAdmin() && !Auth::user()->hasPermission('delete_payment')) {
+            abort(403);
+        }
+
+        DB::transaction(function () use ($paiement) {
+            $inscription = $paiement->inscription;
+            
+            // Déduire le montant du paiement de l'inscription
+            $inscription->decrement('montant_paye', $paiement->montant);
+
+            // Supprimer le paiement
+            $paiement->delete();
+        });
+
+        return redirect()->back()->with('success', 'Paiement supprimé avec succès.');
+    }
+
     public function trainerPayments()
     {
         // Charger les groupes qui ont des formateurs et charger avec inscriptions.paiements

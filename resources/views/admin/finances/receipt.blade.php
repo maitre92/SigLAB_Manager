@@ -225,7 +225,12 @@
                             <div class="bg-primary text-white rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 14px;">
                                 <i class="fas fa-laptop-code"></i>
                             </div>
-                            <h2 class="logo-text">sigLAB <span>Manager</span></h2>
+                            <div>
+                                <h2 class="logo-text" style="line-height: 1.1;">sigLAB <span>Technologie SARL</span></h2>
+                                <small class="text-muted d-block" style="font-size: 9px; font-weight: 500; margin-top: 2px;">
+                                    SigLAB Technologie SARL &nbsp;|&nbsp; Tél: +223 93 38 73 25
+                                </small>
+                            </div>
                         </div>
                     </div>
                     <div class="col-5 text-end">
@@ -318,7 +323,7 @@
                 </div>
 
                 <div class="footer">
-                    <strong>sigLAB Manager</strong> - Solution de gestion pour centres de formation informatique
+                    <strong>SigLAB Technologie SARL</strong> - Bamako Boulkansoumbougou près du marché, Imm. Thioma Guidado en face de PMU-Mali - Tél : +223 93 38 73 25
                 </div>
             </div>
 

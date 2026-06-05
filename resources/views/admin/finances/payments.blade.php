@@ -134,9 +134,38 @@
                                     {{ number_format($p->montant, 0, ',', ' ') }} FCFA
                                 </td>
                                 <td class="text-center px-4">
-                                    <a href="{{ route('admin.finances.payments.receipt', $p) }}" target="_blank" class="btn btn-sm btn-light border" title="Imprimer le reçu">
-                                        <i class="fas fa-print text-primary"></i>
-                                    </a>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a href="{{ route('admin.finances.payments.receipt', $p) }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Imprimer le reçu">
+                                            <i class="fas fa-print"></i>
+                                        </a>
+                                        @if(Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('edit_payment'))
+                                            <button type="button" class="btn btn-sm btn-outline-primary btn-edit-payment"
+                                                    data-id="{{ $p->id }}"
+                                                    data-montant="{{ (int)$p->montant }}"
+                                                    data-date_paiement="{{ $p->date_paiement->format('Y-m-d') }}"
+                                                    data-mode_paiement="{{ $p->mode_paiement }}"
+                                                    data-reference="{{ $p->reference }}"
+                                                    data-notes="{{ $p->notes }}"
+                                                    data-apprenant="{{ $p->inscription?->apprenant?->nom_complet ?? 'Apprenant' }}"
+                                                    data-formation="{{ $p->inscription?->formation?->nom ?? 'Formation' }}"
+                                                    data-max_montant="{{ (int)($p->inscription->montant_total - ($p->inscription->montant_paye - $p->montant)) }}"
+                                                    title="Modifier">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        @endif
+                                        @if(Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('delete_payment'))
+                                            <form action="{{ route('admin.finances.payments.destroy', $p) }}" method="POST" class="delete-payment-form d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-payment" 
+                                                        data-recu="{{ $p->recu_numero }}" 
+                                                        data-apprenant="{{ $p->inscription?->apprenant?->nom_complet ?? 'Apprenant' }}"
+                                                        title="Supprimer">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -153,9 +182,69 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de modification de paiement -->
+<div class="modal fade" id="editPaymentModal" tabindex="-1" aria-labelledby="editPaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white" style="background-color: var(--navbar-bg) !important;">
+                <h5 class="modal-title" id="editPaymentModalLabel"><i class="fas fa-edit text-warning me-2"></i> Modifier le Paiement</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <form id="editPaymentForm" action="" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <!-- Infos Apprenant / Formation -->
+                    <div class="alert alert-info py-2 px-3 mb-3 small" style="border: 1px dashed var(--card-border) !important; background-color: rgba(64, 96, 160, 0.05) !important; color: inherit;">
+                        <div class="fw-bold"><i class="fas fa-user text-primary me-1"></i> <span id="edit_info_apprenant" class="text-dark"></span></div>
+                        <div class="text-muted mt-1"><i class="fas fa-graduation-cap text-secondary me-1"></i> <span id="edit_info_formation"></span></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Montant (FCFA)</label>
+                        <input type="number" name="montant" id="edit_montant" class="form-control" required min="1">
+                        <div id="edit_montant_warning" class="text-danger small mt-2 d-none">
+                            <i class="fas fa-exclamation-triangle me-1"></i> Le montant dépasse le reste à payer.
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Date</label>
+                            <input type="date" name="date_paiement" id="edit_date_paiement" class="form-control" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Mode</label>
+                            <select name="mode_paiement" id="edit_mode_paiement" class="form-select" required>
+                                <option value="espèces">Espèces</option>
+                                <option value="wave">Wave</option>
+                                <option value="orange_money">Orange Money</option>
+                                <option value="virement">Virement</option>
+                                <option value="cheque">Chèque</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Référence (Optionnel)</label>
+                        <input type="text" name="reference" id="edit_reference" class="form-control" placeholder="N° transaction, chèque...">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Notes</label>
+                        <textarea name="notes" id="edit_notes" class="form-control" rows="3" placeholder="Commentaire..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" id="edit_submit_btn" class="btn btn-primary" style="background-color: var(--navbar-bg);">Enregistrer les modifications</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Les données des inscriptions passées depuis le serveur
@@ -325,6 +414,86 @@ document.addEventListener('DOMContentLoaded', function() {
             montantWarning.classList.add('d-none');
             submitBtn.disabled = false;
         }
+    });
+
+    // Modal de modification
+    const editModal = new bootstrap.Modal(document.getElementById('editPaymentModal'));
+    const editForm = document.getElementById('editPaymentForm');
+    const editMontant = document.getElementById('edit_montant');
+    const editMontantWarning = document.getElementById('edit_montant_warning');
+    const editSubmitBtn = document.getElementById('edit_submit_btn');
+    let currentMaxMontant = 0;
+
+    document.querySelectorAll('.btn-edit-payment').forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const montant = this.dataset.montant;
+            const date = this.dataset.date_paiement;
+            const mode = this.dataset.mode_paiement;
+            const reference = this.dataset.reference || '';
+            const notes = this.dataset.notes || '';
+            const apprenant = this.dataset.apprenant;
+            const formation = this.dataset.formation;
+            currentMaxMontant = parseFloat(this.dataset.max_montant);
+
+            document.getElementById('edit_info_apprenant').textContent = apprenant;
+            document.getElementById('edit_info_formation').textContent = formation;
+            editMontant.value = montant;
+            editMontant.max = currentMaxMontant;
+            document.getElementById('edit_date_paiement').value = date;
+            document.getElementById('edit_mode_paiement').value = mode;
+            document.getElementById('edit_reference').value = reference;
+            document.getElementById('edit_notes').value = notes;
+
+            editMontantWarning.classList.add('d-none');
+            editSubmitBtn.disabled = false;
+
+            editForm.action = `/admin/finances/paiements/${id}`;
+            editModal.show();
+        });
+    });
+
+    editMontant.addEventListener('input', function() {
+        const val = parseFloat(this.value) || 0;
+        if (val > currentMaxMontant) {
+            editMontantWarning.classList.remove('d-none');
+            editMontantWarning.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> Le montant saisi (${formatFCFA(val)}) dépasse le reste à payer maximum autorisé (${formatFCFA(currentMaxMontant)}).`;
+            editSubmitBtn.disabled = true;
+        } else if (val <= 0) {
+            editMontantWarning.classList.remove('d-none');
+            editMontantWarning.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> Le montant doit être supérieur à 0.`;
+            editSubmitBtn.disabled = true;
+        } else {
+            editMontantWarning.classList.add('d-none');
+            editSubmitBtn.disabled = false;
+        }
+    });
+
+    // Confirmation de suppression
+    document.querySelectorAll('.btn-delete-payment').forEach(button => {
+        button.addEventListener('click', function() {
+            const recu = this.dataset.recu;
+            const apprenant = this.dataset.apprenant;
+            const form = this.closest('form');
+            
+            Swal.fire({
+                title: 'Supprimer le paiement',
+                text: `Voulez-vous vraiment supprimer le paiement de reçu N° "${recu}" pour l'apprenant "${apprenant}" ? Cette action réajustera le reste à payer de l'apprenant.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Oui, supprimer',
+                cancelButtonText: 'Annuler',
+                customClass: {
+                    confirmButton: 'btn btn-danger me-2',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false
+            }).then(result => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
     });
 });
 </script>

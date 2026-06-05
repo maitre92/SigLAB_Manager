@@ -55,6 +55,8 @@ class PermissionSeeder extends Seeder
             ['name' => 'Supprimer une dépense', 'module' => 'Dépenses', 'slug' => 'delete_expense'],
             ['name' => 'Modifier un versement formateur', 'module' => 'Finances', 'slug' => 'edit_trainer_payment'],
             ['name' => 'Supprimer un versement formateur', 'module' => 'Finances', 'slug' => 'delete_trainer_payment'],
+            ['name' => 'Modifier un paiement apprenant', 'module' => 'Finances', 'slug' => 'edit_payment'],
+            ['name' => 'Supprimer un paiement apprenant', 'module' => 'Finances', 'slug' => 'delete_payment'],
 
             // Attestations
             ['name' => 'Voir les attestations', 'module' => 'Attestations', 'slug' => 'view_certificates'],

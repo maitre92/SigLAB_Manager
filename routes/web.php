@@ -9,7 +9,7 @@ use App\Http\Controllers\Admin\GroupeFormationController;
 use App\Http\Controllers\Admin\CategorieFormationController;
 use App\Http\Controllers\Admin\PedagogieController;
 use App\Http\Controllers\Admin\AttestationController;
-use App\Http\Controllers\Admin\GroupeController;
+// use App\Http\Controllers\Admin\GroupeController;
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -88,9 +88,9 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
 
         // Gestion des Groupes
-        Route::post('formations/{formation}/groupes', [GroupeController::class, 'store'])->name('formations.groupes.store');
-        Route::put('groupes/{groupe}', [GroupeController::class, 'update'])->name('groupes.update');
-        Route::delete('groupes/{groupe}', [GroupeController::class, 'destroy'])->name('groupes.destroy');
+        // Route::post('formations/{formation}/groupes', [GroupeController::class, 'store'])->name('formations.groupes.store');
+        // Route::put('groupes/{groupe}', [GroupeController::class, 'update'])->name('groupes.update');
+        // Route::delete('groupes/{groupe}', [GroupeController::class, 'destroy'])->name('groupes.destroy');
 
         // Paramètres
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
@@ -125,6 +125,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/', [App\Http\Controllers\Admin\FinanceController::class, 'index'])->name('index');
             Route::get('/paiements', [App\Http\Controllers\Admin\FinanceController::class, 'payments'])->name('payments');
             Route::post('/paiements', [App\Http\Controllers\Admin\FinanceController::class, 'storePayment'])->name('payments.store');
+            Route::put('/paiements/{paiement}', [App\Http\Controllers\Admin\FinanceController::class, 'updatePayment'])->name('payments.update');
+            Route::delete('/paiements/{paiement}', [App\Http\Controllers\Admin\FinanceController::class, 'destroyPayment'])->name('payments.destroy');
             Route::get('/depenses', [App\Http\Controllers\Admin\FinanceController::class, 'expenses'])->name('expenses');
             Route::post('/depenses', [App\Http\Controllers\Admin\FinanceController::class, 'storeExpense'])->name('expenses.store');
             Route::put('/depenses/{depense}', [App\Http\Controllers\Admin\FinanceController::class, 'updateExpense'])->name('expenses.update');
