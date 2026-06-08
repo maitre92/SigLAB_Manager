@@ -56,6 +56,8 @@ class PermissionSeeder extends Seeder
             // Finances
             ['name' => 'Voir les finances', 'module' => 'Finances', 'slug' => 'view_finances'],
             ['name' => 'Voir les paiements', 'module' => 'Paiements', 'slug' => 'view_payments'],
+            ['name' => 'Modifier un paiement', 'module' => 'Paiements', 'slug' => 'edit_payment'],
+            ['name' => 'Supprimer un paiement', 'module' => 'Paiements', 'slug' => 'delete_payment'],
             ['name' => 'Voir les dépenses', 'module' => 'Dépenses', 'slug' => 'view_expenses'],
             ['name' => 'Voir les recettes', 'module' => 'Recettes', 'slug' => 'view_revenue'],
             ['name' => 'Modifier une dépense', 'module' => 'Dépenses', 'slug' => 'edit_expense'],

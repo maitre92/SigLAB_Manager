@@ -13,7 +13,7 @@ use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\RoundBlockSizeMode;
-use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\Writer\SvgWriter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -188,7 +188,7 @@ class AttestationController extends Controller
     private function generateQrCodeDataUri(string $data): string
     {
         $builder = new Builder(
-            writer: new PngWriter(),
+            writer: new SvgWriter(),
             validateResult: false,
             data: $data,
             encoding: new Encoding('UTF-8'),
@@ -198,7 +198,11 @@ class AttestationController extends Controller
             roundBlockSizeMode: RoundBlockSizeMode::Margin
         );
 
-        return $builder->build()->getDataUri();
+        $result   = $builder->build();
+        $svgString = $result->getString();
+
+        // Encode as a data URI usable in <img> and in DomPDF
+        return 'data:image/svg+xml;base64,' . base64_encode($svgString);
     }
 
     private function verificationUrl(string $reference): string

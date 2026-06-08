@@ -510,7 +510,7 @@
 
         <div class="place">
             <div>BAMAKO,</div>
-            <div>LE&nbsp;&nbsp;{{ $attestation->date_emission ? $attestation->date_emission->format('d/m/Y') : '......../......../20....' }}</div>
+            <div>LE&nbsp;&nbsp;{{ $groupe?->date_fin ? $groupe->date_fin->format('d/m/Y') : '......../......../20....' }}</div>
         </div>
 
         <div class="ornament">❧ ✦ ❧</div>
