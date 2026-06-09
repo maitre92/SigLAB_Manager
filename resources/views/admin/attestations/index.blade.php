@@ -35,10 +35,17 @@
                                     <a href="{{ route('admin.attestations.pdf', $att) }}" class="btn btn-sm btn-outline-danger" title="Télécharger PDF">
                                         <i class="fas fa-file-pdf"></i>
                                     </a>
-                                    <form action="{{ route('admin.attestations.destroy', $att) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('admin.attestations.destroy', $att) }}"
+                                          method="POST"
+                                          class="d-inline"
+                                          data-confirm-form
+                                          data-confirm-title="Supprimer cette attestation ?"
+                                          data-confirm-text="Cette attestation sera supprimée de la liste."
+                                          data-confirm-icon="warning"
+                                          data-confirm-button="Oui, supprimer">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer cette attestation ?')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>

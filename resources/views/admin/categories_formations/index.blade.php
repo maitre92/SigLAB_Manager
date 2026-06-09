@@ -65,14 +65,27 @@
                                 </button>
                                 @endif
                                 @if($canDeleteCategory)
-                                <form action="{{ route('admin.categories-formations.destroy', $category) }}" method="POST" class="d-inline">
+                                <form action="{{ route('admin.categories-formations.destroy', $category) }}"
+                                      method="POST"
+                                      class="d-inline"
+                                      data-confirm-form
+                                      data-confirm-title="{{ $category->formations_count > 0 ? 'Archiver cette catégorie ?' : 'Supprimer définitivement ?' }}"
+                                      data-confirm-text="{{ $category->formations_count > 0 ? 'Cette catégorie contient ' . $category->formations_count . ' formation(s). Elle sera archivée et les formations resteront conservées.' : 'Cette catégorie ne contient aucune formation. Elle sera supprimée définitivement.' }}"
+                                      data-confirm-icon="{{ $category->formations_count > 0 ? 'warning' : 'error' }}"
+                                      data-confirm-button="{{ $category->formations_count > 0 ? 'Oui, archiver' : 'Oui, supprimer' }}">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
-                                            onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')"
-                                            title="Supprimer">
+                                    @if($category->formations_count > 0)
+                                    <button type="submit" class="btn btn-sm btn-outline-warning"
+                                            title="Archiver">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                                    @else
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            title="Supprimer définitivement">
                                         <i class="fas fa-trash"></i>
                                     </button>
+                                    @endif
                                 </form>
                                 @endif
                             </td>
@@ -119,6 +132,67 @@
             </div>
         </div>
     </div>
+
+    @if($archivedCategories->isNotEmpty())
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="card-title mb-0"><i class="fas fa-archive me-2"></i> Catégories archivées</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Nom</th>
+                            <th>Identifiant</th>
+                            <th>Description</th>
+                            <th class="text-center">Formations</th>
+                            <th class="text-center">Statut</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($archivedCategories as $category)
+                        <tr>
+                            <td class="ps-4 fw-bold">{{ $category->nom }}</td>
+                            <td><code class="small">{{ $category->slug }}</code></td>
+                            <td>{{ Str::limit($category->description, 50) ?: '---' }}</td>
+                            <td class="text-center">
+                                <span class="badge rounded-pill bg-info text-dark">
+                                    {{ $category->formations_count }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary">Archivée</span>
+                            </td>
+                            <td class="text-end pe-4">
+                                @if($canDeleteCategory)
+                                <form action="{{ route('admin.categories-formations.restore', $category->id) }}"
+                                      method="POST"
+                                      class="d-inline"
+                                      data-confirm-form
+                                      data-confirm-title="Restaurer cette catégorie ?"
+                                      data-confirm-text="Cette catégorie redeviendra disponible pour les formations."
+                                      data-confirm-icon="question"
+                                      data-confirm-color="#198754"
+                                      data-confirm-button="Oui, restaurer">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="btn btn-sm btn-outline-success"
+                                            title="Restaurer">
+                                        <i class="fas fa-undo"></i>
+                                    </button>
+                                </form>
+                                @endif
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 
 <!-- Modal Add -->

@@ -92,6 +92,8 @@ Route::middleware('auth')->group(function () {
             ->parameters(['groupes-formations' => 'groupesFormation'])
             ->except(['show']);
         Route::resource('formations', FormationController::class);
+        Route::patch('categories-formations/{categorieFormation}/restore', [CategorieFormationController::class, 'restore'])
+            ->name('categories-formations.restore');
         Route::resource('categories-formations', CategorieFormationController::class)
             ->parameters(['categories-formations' => 'categorieFormation'])
             ->only(['index', 'store', 'update', 'destroy']);

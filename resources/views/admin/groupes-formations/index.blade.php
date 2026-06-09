@@ -131,10 +131,17 @@
                                         <a href="{{ route('admin.groupes-formations.edit', $groupe) }}" class="btn btn-outline-primary" title="Modifier le groupe">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form action="{{ route('admin.groupes-formations.destroy', $groupe) }}" method="POST" class="d-inline">
+                                        <form action="{{ route('admin.groupes-formations.destroy', $groupe) }}"
+                                              method="POST"
+                                              class="d-inline"
+                                              data-confirm-form
+                                              data-confirm-title="Archiver ce groupe ?"
+                                              data-confirm-text="Le groupe sera archivé et retiré de la liste active."
+                                              data-confirm-icon="warning"
+                                              data-confirm-button="Oui, archiver">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Archiver ce groupe ?')" title="Archiver">
+                                            <button type="submit" class="btn btn-outline-danger" title="Archiver">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>

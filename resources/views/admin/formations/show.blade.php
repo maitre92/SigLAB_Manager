@@ -18,10 +18,17 @@
         </a>
         @endif
         @if($isSuperAdmin || ($currentUser && $currentUser->hasPermission('supprimer_formation')))
-        <form action="{{ route('admin.formations.destroy', $formation) }}" method="POST" class="d-inline">
+        <form action="{{ route('admin.formations.destroy', $formation) }}"
+              method="POST"
+              class="d-inline"
+              data-confirm-form
+              data-confirm-title="Supprimer cette formation ?"
+              data-confirm-text="Voulez-vous vraiment supprimer cette formation ?"
+              data-confirm-icon="warning"
+              data-confirm-button="Oui, supprimer">
             @csrf
             @method('DELETE')
-            <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Voulez-vous vraiment supprimer cette formation ?')">
+            <button type="submit" class="btn btn-outline-danger">
                 <i class="fas fa-trash-alt me-1"></i> Supprimer la formation
             </button>
         </form>

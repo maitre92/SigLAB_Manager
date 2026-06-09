@@ -94,7 +94,11 @@
                                 @if($canToggleAccount)
                                     <form method="POST"
                                           action="{{ $isAccountActive ? route('admin.users.deactivate', $user) : route('admin.users.activate', $user) }}"
-                                          onsubmit="return confirm('{{ $isAccountActive ? 'Désactiver ce compte utilisateur ?' : 'Activer ce compte utilisateur ?' }}')">
+                                          data-confirm-form
+                                          data-confirm-title="{{ $isAccountActive ? 'Désactiver ce compte ?' : 'Activer ce compte ?' }}"
+                                          data-confirm-text="{{ $isAccountActive ? 'Cet utilisateur ne pourra plus accéder à son compte.' : 'Cet utilisateur pourra à nouveau accéder à son compte.' }}"
+                                          data-confirm-icon="warning"
+                                          data-confirm-button="{{ $isAccountActive ? 'Oui, désactiver' : 'Oui, activer' }}">
                                         @csrf
                                         @method('PATCH')
                                         <button type="submit"

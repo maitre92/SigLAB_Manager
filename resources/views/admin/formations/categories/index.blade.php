@@ -76,10 +76,17 @@
                                             data-active="{{ $categorie->is_active ? 1 : 0 }}">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <form action="{{ route('admin.categories-formations.destroy', $categorie) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('admin.categories-formations.destroy', $categorie) }}"
+                                          method="POST"
+                                          class="d-inline"
+                                          data-confirm-form
+                                          data-confirm-title="Supprimer cette catégorie ?"
+                                          data-confirm-text="Cette catégorie sera supprimée si aucune formation n'y est liée."
+                                          data-confirm-icon="warning"
+                                          data-confirm-button="Oui, supprimer">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer cette catégorie ?')" {{ $categorie->formations_count > 0 ? 'disabled' : '' }}>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" {{ $categorie->formations_count > 0 ? 'disabled' : '' }}>
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>

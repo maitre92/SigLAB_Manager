@@ -44,16 +44,15 @@
         </div>
         <div class="left-red-bar"></div>
         <div class="top-blue-band"></div>
-        <div class="top-right-red">
-            <span></span><span></span><span></span><span></span><span></span>
-        </div>
+        <div class="right-blue-corner"></div>
+        <img src="{{ asset('images/attestation_right_ribbon.png') }}" alt="" class="top-right-ribbon">
         <div class="premium-line premium-line-left"></div>
         <div class="premium-line premium-line-right"></div>
         <div class="bottom-blue-band"></div>
         <div class="bottom-left-blue"></div>
         <div class="bottom-left-red"></div>
 
-        <img src="{{ asset('images/siglab_img2.jpeg') }}" alt="SigLAB Technologie" class="certificate-logo">
+        <img src="{{ asset('images/logo_siglab.jpeg') }}" alt="SigLAB Technologie" class="certificate-logo">
 
         <div class="seal">
             <div class="seal-tail tail-left"></div>
@@ -66,7 +65,6 @@
         <main class="certificate-content">
             <h1>ATTESTATION</h1>
             <h2>DE FORMATION</h2>
-            <div class="certificate-reference">N° d'identification : {{ $attestation->reference }}</div>
 
             <p class="intro">
                 Je soussigné, monsieur Abdoulaye Mahamane, directeur général du<br>
@@ -84,16 +82,6 @@
             <p class="legal-text">
                 En foi de quoi la présente attestation lui est délivrée pour servir ce que de droit
             </p>
-
-            <div class="verification-card">
-                @if($qrCodeDataUri)
-                    <img src="{{ $qrCodeDataUri }}" alt="QR code de vérification">
-                @endif
-                <div>
-                    <span>Vérification</span>
-                    <strong>{{ $attestation->reference }}</strong>
-                </div>
-            </div>
 
             <div class="certificate-bottom">
                 <div class="place-date">
@@ -114,6 +102,7 @@
         </main>
 
         <div class="footer-text">La présente attestation n'est délivrée qu'une fois</div>
+        <div class="page-count">1/1</div>
     </section>
 </div>
 
@@ -165,22 +154,11 @@
     }
 
     .inner-frame {
-        position: absolute;
-        inset: 51px 52px 51px 52px;
-        border-bottom: 42px solid var(--siglab-blue);
-        z-index: 2;
-        pointer-events: none;
+        display: none;
     }
 
     .blue-right-frame {
-        position: absolute;
-        top: 212px;
-        right: 52px;
-        bottom: 51px;
-        width: 7px;
-        background: var(--siglab-blue);
-        z-index: 3;
-        pointer-events: none;
+        display: none;
     }
 
     .corner-top-left {
@@ -218,41 +196,34 @@
     .top-blue-band {
         position: absolute;
         top: 0;
-        right: 108px;
-        width: 492px;
+        left: 420px;
+        right: 0;
         height: 20px;
         background: var(--siglab-blue);
         clip-path: polygon(0 0, 100% 0, 92% 100%, 0 100%);
         z-index: 3;
     }
 
-    .top-right-red {
+    .right-blue-corner {
         position: absolute;
         top: 0;
         right: 0;
-        width: 184px;
-        height: 260px;
-        background: var(--siglab-red);
-        clip-path: polygon(18% 0, 100% 0, 100% 98%, 78% 100%);
-        transform: rotate(-16deg);
-        transform-origin: top right;
+        width: 24px;
+        height: 794px;
+        background: var(--siglab-blue);
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        z-index: 3;
+    }
+
+    .top-right-ribbon {
+        position: absolute;
+        top: -8px;
+        right: -2px;
+        width: 198px;
+        height: 291px;
+        object-fit: fill;
         z-index: 4;
     }
-
-    .top-right-red span {
-        position: absolute;
-        left: 82px;
-        width: 8px;
-        height: 8px;
-        background: #fff;
-        border-radius: 50%;
-    }
-
-    .top-right-red span:nth-child(1) { top: 42px; }
-    .top-right-red span:nth-child(2) { top: 72px; }
-    .top-right-red span:nth-child(3) { top: 102px; }
-    .top-right-red span:nth-child(4) { top: 132px; }
-    .top-right-red span:nth-child(5) { top: 162px; }
 
     .premium-line {
         position: absolute;
@@ -276,20 +247,20 @@
 
     .bottom-blue-band {
         position: absolute;
-        left: 24px;
-        right: 52px;
-        bottom: 5px;
-        height: 44px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 48px;
         background: var(--siglab-blue);
         z-index: 3;
     }
 
     .bottom-left-blue {
         position: absolute;
-        left: 5px;
-        bottom: 49px;
-        width: 56px;
-        height: 56px;
+        left: 0;
+        bottom: 53px;
+        width: 66px;
+        height: 66px;
         background: var(--siglab-blue);
         clip-path: polygon(0 100%, 100% 100%, 100% 0);
         z-index: 4;
@@ -297,9 +268,9 @@
 
     .bottom-left-red {
         position: absolute;
-        left: 5px;
+        left: 0;
         bottom: 5px;
-        width: 512px;
+        width: 496px;
         height: 17px;
         background: var(--siglab-red);
         z-index: 4;
@@ -307,26 +278,28 @@
 
     .certificate-logo {
         position: absolute;
-        top: 8px;
+        top: 9px;
         left: 50%;
         width: 300px;
-        height: 95px;
-        object-fit: cover;
-        object-position: center 54%;
+        height: 112px;
+        object-fit: contain;
         transform: translateX(-50%);
         z-index: 6;
     }
 
     .certificate-content {
-        position: relative;
+        position: absolute;
+        inset: 0;
         z-index: 5;
-        height: 100%;
-        padding: 128px 78px 75px;
         text-align: center;
     }
 
     .certificate-content h1 {
-        margin: 20px 0 0;
+        position: absolute;
+        top: 174px;
+        left: 170px;
+        right: 170px;
+        margin: 0;
         font-family: Arial, Helvetica, sans-serif;
         font-size: 65px;
         line-height: 1;
@@ -336,7 +309,11 @@
     }
 
     .certificate-content h2 {
-        margin: 22px 0 0;
+        position: absolute;
+        top: 268px;
+        left: 170px;
+        right: 170px;
+        margin: 0;
         font-family: Arial, Helvetica, sans-serif;
         font-size: 33px;
         line-height: 1;
@@ -429,33 +406,43 @@
     }
 
     .intro {
-        margin: 24px auto 0;
-        max-width: 760px;
+        position: absolute;
+        top: 324px;
+        left: 170px;
+        right: 170px;
+        margin: 0;
         color: #6f6f75;
-        font-size: 23px;
+        font-size: 22px;
         line-height: 1.45;
         font-weight: 700;
         letter-spacing: 1px;
     }
 
     .student-name {
-        margin: 20px auto 0;
+        position: absolute;
+        top: 430px;
+        left: 80px;
+        right: 80px;
+        margin: 0;
         color: #102c66;
         font-family: Georgia, "Times New Roman", serif;
         font-size: 72px;
         line-height: 1.05;
         font-weight: 900;
-        letter-spacing: 1px;
+        letter-spacing: 0;
+        text-align: center;
         text-shadow: -2px 0 #1a1468, 2px 0 rgba(0,0,0,.08);
-        max-width: 900px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
     .training-text {
-        margin: 24px auto 0;
-        max-width: 1010px;
+        position: absolute;
+        top: 510px;
+        left: 60px;
+        right: 60px;
+        margin: 0;
         color: #787878;
         font-size: 22px;
         line-height: 1.45;
@@ -469,7 +456,11 @@
     }
 
     .legal-text {
-        margin: 20px auto 0;
+        position: absolute;
+        top: 572px;
+        left: 70px;
+        right: 70px;
+        margin: 0;
         color: #c5161d;
         font-size: 22px;
         line-height: 1.25;
@@ -477,50 +468,11 @@
         font-weight: 900;
     }
 
-    .verification-card {
-        position: absolute;
-        top: 257px;
-        left: -18px;
-        width: 164px;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        box-shadow: none;
-        font-family: Arial, Helvetica, sans-serif;
-        color: #102c66;
-    }
-
-    .verification-card img {
-        display: block;
-        width: 104px;
-        height: 104px;
-        margin: 0 auto 6px;
-    }
-
-    .verification-card span {
-        display: block;
-        color: #7a7a80;
-        font-size: 10px;
-        line-height: 1;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: .8px;
-    }
-
-    .verification-card strong {
-        display: block;
-        margin-top: 3px;
-        color: #191062;
-        font-size: 12px;
-        line-height: 1.1;
-        font-weight: 900;
-    }
-
     .certificate-bottom {
         position: absolute;
         left: 90px;
         right: 115px;
-        bottom: 110px;
+        bottom: 92px;
         display: grid;
         grid-template-columns: 230px 1fr 290px;
         align-items: end;
@@ -528,7 +480,7 @@
     }
 
     .place-date {
-        text-align: left;
+        text-align: center;
         color: #102c66;
         font-family: Arial, Helvetica, sans-serif;
         font-size: 20px;
@@ -602,6 +554,17 @@
         font-size: 17px;
         font-weight: 900;
         letter-spacing: .5px;
+    }
+
+    .page-count {
+        position: absolute;
+        right: 76px;
+        bottom: 20px;
+        z-index: 5;
+        color: #bfc0c8;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 27px;
+        line-height: 1;
     }
 
 </style>

@@ -63,7 +63,13 @@
                 <button type="button" class="btn btn-warning w-100 mb-2" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
                     <i class="fas fa-key"></i> Changer le mot de passe
                 </button>
-                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr?')">
+                <form action="{{ route('admin.users.destroy', $user) }}"
+                      method="POST"
+                      data-confirm-form
+                      data-confirm-title="Supprimer cet utilisateur ?"
+                      data-confirm-text="Cette action supprimera le compte utilisateur sélectionné."
+                      data-confirm-icon="warning"
+                      data-confirm-button="Oui, supprimer">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn btn-danger w-100">

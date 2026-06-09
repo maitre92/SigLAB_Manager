@@ -44,21 +44,11 @@
         }
 
         .inner-frame {
-            position: absolute;
-            left: 14mm;
-            top: 14mm;
-            right: 14mm;
-            bottom: 14mm;
-            border-bottom: 12mm solid #191062;
+            display: none;
         }
 
         .blue-right {
-            position: absolute;
-            top: 56mm;
-            right: 14mm;
-            bottom: 14mm;
-            width: 2mm;
-            background: #191062;
+            display: none;
         }
 
         .red-top-left {
@@ -101,63 +91,55 @@
 
         .blue-top {
             position: absolute;
-            right: 34mm;
-            top: 1mm;
-            width: 120mm;
+            left: 118mm;
+            right: 0;
+            top: 0;
             height: 5mm;
             background: #191062;
         }
 
-        .red-top-right {
+        .right-blue-corner {
             position: absolute;
-            right: -8mm;
+            right: 0;
             top: 0;
-            width: 38mm;
-            height: 70mm;
-            background: #ed0612;
-            transform: rotate(-15deg);
+            width: 6mm;
+            height: 210mm;
+            background: #191062;
         }
 
-        .dot {
+        .top-right-ribbon {
             position: absolute;
-            right: 19mm;
-            width: 2.2mm;
-            height: 2.2mm;
-            border-radius: 2.2mm;
-            background: #fff;
-            z-index: 3;
+            top: -2mm;
+            right: -0.5mm;
+            width: 52mm;
+            height: 74mm;
+            z-index: 4;
         }
-
-        .dot-1 { top: 24mm; }
-        .dot-2 { top: 33mm; }
-        .dot-3 { top: 42mm; }
-        .dot-4 { top: 51mm; }
-        .dot-5 { top: 60mm; }
 
         .blue-bottom {
             position: absolute;
-            left: 8mm;
-            right: 14mm;
-            bottom: 3mm;
+            left: 0;
+            right: 0;
+            bottom: 0;
             height: 12mm;
             background: #191062;
         }
 
         .blue-bottom-corner {
             position: absolute;
-            left: 3mm;
+            left: 0;
             bottom: 15mm;
             width: 0;
             height: 0;
-            border-bottom: 18mm solid #191062;
-            border-right: 18mm solid transparent;
+            border-bottom: 20mm solid #191062;
+            border-right: 20mm solid transparent;
         }
 
         .red-bottom {
             position: absolute;
-            left: 3mm;
+            left: 0;
             bottom: 1mm;
-            width: 130mm;
+            width: 132mm;
             height: 4mm;
             background: #ed0612;
         }
@@ -165,31 +147,10 @@
         .logo {
             position: absolute;
             top: 8mm;
-            left: 101mm;
-            width: 95mm;
-            text-align: center;
-            font-family: DejaVu Sans, Arial, sans-serif;
-            font-weight: 900;
-            line-height: .85;
-        }
-
-        .logo .sig {
-            color: #191062;
-            font-size: 15mm;
-        }
-
-        .logo .lab {
-            color: #ed0612;
-            font-size: 14mm;
-            font-weight: 500;
-        }
-
-        .logo .tech {
-            display: block;
-            margin-left: 28mm;
-            color: #191062;
-            font-size: 4.8mm;
-            font-weight: 900;
+            left: 100mm;
+            width: 96mm;
+            height: 31mm;
+            object-fit: contain;
         }
 
         .seal {
@@ -246,7 +207,7 @@
 
         .title {
             position: absolute;
-            top: 39mm;
+            top: 43mm;
             left: 45mm;
             right: 45mm;
             text-align: center;
@@ -271,20 +232,12 @@
         }
 
         .reference {
-            display: inline-block;
-            margin-top: 4mm;
-            padding: 2.2mm 6mm;
-            border: .45mm solid #d9b851;
-            border-radius: 12mm;
-            color: #102c66;
-            background: #fff;
-            font-size: 4.3mm;
-            font-weight: 900;
+            display: none;
         }
 
         .intro {
             position: absolute;
-            top: 81mm;
+            top: 83mm;
             left: 42mm;
             right: 42mm;
             color: #70727a;
@@ -297,20 +250,20 @@
 
         .student {
             position: absolute;
-            top: 101mm;
-            left: 23mm;
-            right: 23mm;
+            top: 109mm;
+            left: 16mm;
+            right: 16mm;
             color: #102c66;
             text-align: center;
             font-family: DejaVu Serif, Georgia, serif;
-            font-size: 13.5mm;
+            font-size: 14mm;
             line-height: 1;
             font-weight: 900;
         }
 
         .training {
             position: absolute;
-            top: 121mm;
+            top: 127mm;
             left: 26mm;
             right: 26mm;
             color: #737373;
@@ -327,8 +280,8 @@
         .legal {
             position: absolute;
             top: 143mm;
-            left: 24mm;
-            right: 84mm;
+            left: 20mm;
+            right: 20mm;
             color: #c5161d;
             text-align: center;
             font-size: 4.35mm;
@@ -337,14 +290,7 @@
         }
 
         .qr {
-            position: absolute;
-            top: 68mm;
-            left: 16mm;
-            width: 35mm;
-            padding: 0;
-            border: 0;
-            background: transparent;
-            text-align: center;
+            display: none;
         }
 
         .qr img {
@@ -371,7 +317,9 @@
             position: absolute;
             left: 28mm;
             bottom: 35mm;
+            width: 60mm;
             color: #102c66;
+            text-align: center;
             font-size: 5.2mm;
             line-height: 2;
             font-weight: 900;
@@ -419,6 +367,15 @@
             font-size: 4.3mm;
             font-weight: 900;
         }
+
+        .page-count {
+            position: absolute;
+            right: 21mm;
+            bottom: 5mm;
+            color: #bfc0c8;
+            font-family: DejaVu Serif, Georgia, serif;
+            font-size: 7mm;
+        }
     </style>
 </head>
 <body>
@@ -455,20 +412,13 @@
         <div class="top-left-cut"></div>
         <div class="blue-corner"></div>
         <div class="blue-top"></div>
-        <div class="red-top-right"></div>
-        <div class="dot dot-1"></div>
-        <div class="dot dot-2"></div>
-        <div class="dot dot-3"></div>
-        <div class="dot dot-4"></div>
-        <div class="dot dot-5"></div>
+        <div class="right-blue-corner"></div>
+        <img src="{{ public_path('images/attestation_right_ribbon.png') }}" alt="" class="top-right-ribbon">
         <div class="blue-bottom"></div>
         <div class="blue-bottom-corner"></div>
         <div class="red-bottom"></div>
 
-        <div class="logo">
-            <span class="sig">Sig</span><span class="lab">LAB</span>
-            <span class="tech">Technologie</span>
-        </div>
+        <img class="logo" src="{{ public_path('images/logo_siglab.jpeg') }}" alt="SigLAB Technologie">
 
         <div class="seal">
             <div class="ribbon-left"></div>
@@ -522,6 +472,7 @@
         </div>
 
         <div class="footer">La présente attestation n'est délivrée qu'une fois</div>
+        <div class="page-count">1/1</div>
     </section>
 @endforeach
 </body>

@@ -14,25 +14,51 @@ class CategorieFormationController extends Controller
         $this->middleware('permission:voir_categories_formations,ajouter_categorie_formation,modifier_categorie_formation,supprimer_categorie_formation,gerer_categories_formations,voir_formations')->only('index');
         $this->middleware('permission:ajouter_categorie_formation,gerer_categories_formations')->only('store');
         $this->middleware('permission:modifier_categorie_formation,gerer_categories_formations')->only('update');
-        $this->middleware('permission:supprimer_categorie_formation,gerer_categories_formations')->only('destroy');
+        $this->middleware('permission:supprimer_categorie_formation,gerer_categories_formations')->only(['destroy', 'restore']);
     }
 
     public function index()
     {
         $categories = CategorieFormation::withCount('formations')->orderBy('nom')->get();
-        return view('admin.categories_formations.index', compact('categories'));
+        $archivedCategories = CategorieFormation::onlyTrashed()->withCount('formations')->orderBy('nom')->get();
+
+        return view('admin.categories_formations.index', compact('categories', 'archivedCategories'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'nom' => 'required|unique:categorie_formations,nom',
+            'nom' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
+        $slug = Str::slug($request->nom);
+        $existingCategory = CategorieFormation::withTrashed()
+            ->where('nom', $request->nom)
+            ->orWhere('slug', $slug)
+            ->first();
+
+        if ($existingCategory && ! $existingCategory->trashed()) {
+            return redirect()->back()
+                ->withErrors(['nom' => 'Une catégorie active porte déjà ce nom.'])
+                ->withInput();
+        }
+
+        if ($existingCategory && $existingCategory->trashed()) {
+            $existingCategory->restore();
+            $existingCategory->update([
+                'nom' => $request->nom,
+                'slug' => $slug,
+                'description' => $request->description,
+                'is_active' => true,
+            ]);
+
+            return redirect()->back()->with('success', 'Catégorie restaurée avec succès.');
+        }
+
         CategorieFormation::create([
             'nom' => $request->nom,
-            'slug' => Str::slug($request->nom),
+            'slug' => $slug,
             'description' => $request->description,
         ]);
 
@@ -57,11 +83,24 @@ class CategorieFormationController extends Controller
 
     public function destroy(CategorieFormation $categorieFormation)
     {
-        if ($categorieFormation->formations()->count() > 0) {
-            return redirect()->back()->with('error', 'Impossible de supprimer cette catégorie car elle contient des formations.');
+        $formationsCount = $categorieFormation->formations()->count();
+
+        if ($formationsCount === 0) {
+            $categorieFormation->forceDelete();
+
+            return redirect()->back()->with('success', 'Catégorie supprimée définitivement avec succès.');
         }
 
         $categorieFormation->delete();
-        return redirect()->back()->with('success', 'Catégorie supprimée avec succès.');
+
+        return redirect()->back()->with('success', "Catégorie archivée avec succès. {$formationsCount} formation(s) restent conservée(s).");
+    }
+
+    public function restore($categorieFormation)
+    {
+        $category = CategorieFormation::onlyTrashed()->findOrFail($categorieFormation);
+        $category->restore();
+
+        return redirect()->back()->with('success', 'Catégorie restaurée avec succès.');
     }
 }

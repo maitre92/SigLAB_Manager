@@ -73,7 +73,34 @@
 @endsection
 
 @section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+document.addEventListener('submit', function(e) {
+    const form = e.target;
+    if (!form || !form.matches('[data-confirm-form]') || form.dataset.confirmed === 'true') {
+        return;
+    }
+
+    e.preventDefault();
+
+    Swal.fire({
+        title: form.dataset.confirmTitle || 'Confirmer cette action',
+        text: form.dataset.confirmText || 'Voulez-vous continuer ?',
+        icon: form.dataset.confirmIcon || 'warning',
+        showCancelButton: true,
+        confirmButtonColor: form.dataset.confirmColor || '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: form.dataset.confirmButton || 'Oui, continuer',
+        cancelButtonText: form.dataset.cancelButton || 'Annuler',
+        reverseButtons: true,
+    }).then((result) => {
+        if (result.isConfirmed) {
+            form.dataset.confirmed = 'true';
+            form.submit();
+        }
+    });
+}, true);
+
 // Global AJAX handler for user create/update forms
 document.addEventListener('submit', function(e) {
     const form = e.target;
