@@ -84,13 +84,21 @@ class FinanceController extends Controller
 
         $inscriptions = Inscription::with(['apprenant', 'formation', 'groupeFormation'])
             ->whereNotIn('statut', ['terminee', 'annulee'])
+            ->whereHas('formation', function ($q) {
+                $q->whereNull('deleted_at');
+            })
             ->get()
             ->filter(function ($ins) {
                 return $ins->montant_total > $ins->montant_paye;
             })
             ->values();
 
-        $groupes = GroupeFormation::with('formation')->orderBy('nom')->get();
+        $groupes = GroupeFormation::with('formation')
+            ->whereHas('formation', function ($q) {
+                $q->whereNull('deleted_at');
+            })
+            ->orderBy('nom')
+            ->get();
         $formations = Formation::orderBy('nom')->get();
             
         return view('admin.finances.payments', compact('paiements', 'inscriptions', 'groupes', 'formations'));

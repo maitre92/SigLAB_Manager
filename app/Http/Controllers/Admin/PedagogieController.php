@@ -23,7 +23,12 @@ class PedagogieController extends Controller
         $groupeFormationId = $request->get('groupe_formation_id', $request->get('formation_id'));
         $page_title = 'Feuille de Présence';
         
-        $groupesFormation = GroupeFormation::with('formation')->where('statut', 'en_cours')->get();
+        $groupesFormation = GroupeFormation::with('formation')
+            ->where('statut', 'en_cours')
+            ->whereHas('formation', function ($q) {
+                $q->whereNull('deleted_at');
+            })
+            ->get();
         $apprenants = [];
         $presences = [];
 
@@ -83,7 +88,12 @@ class PedagogieController extends Controller
             ->orderBy('date_evaluation', 'desc')
             ->get();
         
-        $groupesFormation = GroupeFormation::with('formation')->where('statut', 'en_cours')->get();
+        $groupesFormation = GroupeFormation::with('formation')
+            ->where('statut', 'en_cours')
+            ->whereHas('formation', function ($q) {
+                $q->whereNull('deleted_at');
+            })
+            ->get();
 
         return view('admin.pedagogie.evaluations', compact('evaluations', 'groupesFormation', 'page_title'));
     }
@@ -99,7 +109,12 @@ class PedagogieController extends Controller
             ->orderBy('date_evaluation', 'desc')
             ->get();
         
-        $groupesFormation = GroupeFormation::with('formation')->where('statut', 'en_cours')->get();
+        $groupesFormation = GroupeFormation::with('formation')
+            ->where('statut', 'en_cours')
+            ->whereHas('formation', function ($q) {
+                $q->whereNull('deleted_at');
+            })
+            ->get();
 
         return view('admin.pedagogie.examens', compact('examens', 'groupesFormation', 'page_title'));
     }
@@ -148,7 +163,7 @@ class PedagogieController extends Controller
     {
         $page_title = 'Saisie des Notes';
         $evaluation->load('groupeFormation.apprenants', 'formation.apprenants', 'notes');
-        $apprenants = $evaluation->groupeFormation?->apprenants ?? $evaluation->formation->apprenants;
+        $apprenants = $evaluation->groupeFormation?->apprenants ?? ($evaluation->formation?->apprenants ?? collect());
         $notes = $evaluation->notes->keyBy('apprenant_id');
 
         return view('admin.pedagogie.edit_notes', compact('evaluation', 'apprenants', 'notes', 'page_title'));
@@ -193,7 +208,11 @@ class PedagogieController extends Controller
     {
         $page_title = 'Résultats des Examens & Évaluations';
         $groupeFormationId = $request->get('groupe_formation_id', $request->get('formation_id'));
-        $groupesFormation = GroupeFormation::with('formation')->get();
+        $groupesFormation = GroupeFormation::with('formation')
+            ->whereHas('formation', function ($q) {
+                $q->whereNull('deleted_at');
+            })
+            ->get();
         
         $apprenants = [];
         $evaluations = [];

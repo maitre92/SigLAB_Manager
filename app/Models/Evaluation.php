@@ -28,7 +28,7 @@ class Evaluation extends Model
 
     public function formation()
     {
-        return $this->belongsTo(Formation::class);
+        return $this->belongsTo(Formation::class)->withTrashed();
     }
 
     public function groupeFormation()

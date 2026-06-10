@@ -159,7 +159,7 @@
                                 <span class="fw-bold text-dark small">{{ $eval->titre }}</span>
                                 <span class="badge bg-{{ $eval->type == 'examen' ? 'danger' : 'warning' }} bg-opacity-10 text-{{ $eval->type == 'examen' ? 'danger' : 'warning' }} border-0">{{ ucfirst($eval->type) }}</span>
                             </div>
-                            <div class="small text-muted mb-2"><i class="fas fa-book-open me-1"></i> {{ $eval->formation->nom }}</div>
+                            <div class="small text-muted mb-2"><i class="fas fa-book-open me-1"></i> {{ $eval->formation->nom ?? 'nom indefini'}}</div>
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="small text-dark fw-medium"><i class="far fa-calendar-alt text-primary me-1"></i> {{ $eval->date_evaluation->format('d M, Y') }}</div>
                                 <div class="small text-muted"><i class="far fa-clock me-1"></i> {{ $eval->date_evaluation->format('H:i') }}</div>

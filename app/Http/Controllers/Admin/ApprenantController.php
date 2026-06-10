@@ -64,7 +64,13 @@ class ApprenantController extends Controller
             'statuts' => collect(ApprenantStatut::cases())->mapWithKeys(fn($s) => [$s->value => $s->label()])->toArray(),
             'niveaux' => collect(NiveauEtude::cases())->mapWithKeys(fn($n) => [$n->value => $n->label()])->toArray(),
             'formations' => \App\Models\Formation::orderBy('nom')->get(),
-            'groupesFormation' => \App\Models\GroupeFormation::with('formation')->whereIn('statut', ['planifiee', 'en_cours'])->orderBy('nom')->get(),
+            'groupesFormation' => \App\Models\GroupeFormation::with('formation')
+                ->whereIn('statut', ['planifiee', 'en_cours'])
+                ->whereHas('formation', function ($q) {
+                    $q->whereNull('deleted_at');
+                })
+                ->orderBy('nom')
+                ->get(),
             'selectedFormationId' => request('formation_id'),
             'selectedGroupeFormationId' => request('groupe_formation_id'),
             'page_title' => 'Ajouter un apprenant',
@@ -128,7 +134,13 @@ class ApprenantController extends Controller
             'statuts' => collect(ApprenantStatut::cases())->mapWithKeys(fn($s) => [$s->value => $s->label()])->toArray(),
             'niveaux' => collect(NiveauEtude::cases())->mapWithKeys(fn($n) => [$n->value => $n->label()])->toArray(),
             'formations' => \App\Models\Formation::orderBy('nom')->get(),
-            'groupesFormation' => \App\Models\GroupeFormation::with('formation')->whereIn('statut', ['planifiee', 'en_cours'])->orderBy('nom')->get(),
+            'groupesFormation' => \App\Models\GroupeFormation::with('formation')
+                ->whereIn('statut', ['planifiee', 'en_cours'])
+                ->whereHas('formation', function ($q) {
+                    $q->whereNull('deleted_at');
+                })
+                ->orderBy('nom')
+                ->get(),
             'page_title' => 'Modifier : ' . $apprenant->nom_complet,
             'active_menu' => 'apprenants',
         ]);

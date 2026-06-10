@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Formation;
 use App\Models\CategorieFormation;
 use App\Models\GroupeFormation;
+use App\Models\Inscription;
 use App\Models\User;
 use App\Shared\Enums\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -130,7 +132,23 @@ class FormationController extends Controller
         $pourcentages = Arr::pull($validated, 'formateur_commissions', []);
         $this->validateFormateurPercentages($formateurIds, $pourcentages);
 
+        // Vérifier si les frais ont changé
+        $oldCout = $formation->cout;
+        $oldFraisInscription = $formation->frais_inscription;
+
         $formation->update($validated);
+
+        // Si les frais ont changé, mettre à jour le montant_total des inscriptions actives
+        $newCout = $formation->cout;
+        $newFraisInscription = $formation->frais_inscription;
+
+        if ($oldCout != $newCout || $oldFraisInscription != $newFraisInscription) {
+            $newMontantTotal = ($newCout ?? 0) + ($newFraisInscription ?? 0);
+
+            Inscription::where('formation_id', $formation->id)
+                ->whereNotIn('statut', ['terminee', 'annulee'])
+                ->update(['montant_total' => $newMontantTotal]);
+        }
 
         $formation->formateurs()->sync($this->buildFormateurSyncData($formateurIds, $pourcentages));
         $this->syncDefaultGroupeFromFormation($formation, $formateurIds, $pourcentages);

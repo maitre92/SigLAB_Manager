@@ -20,7 +20,7 @@
                 @forelse($evaluations as $eval)
                     @php
                         $notesCount = $eval->notes->count();
-                        $apprenantsCount = $eval->groupeFormation?->apprenants->count() ?? $eval->formation->apprenants->count();
+                        $apprenantsCount = $eval->groupeFormation?->apprenants?->count() ?? ($eval->formation?->apprenants?->count() ?? 0);
                     @endphp
                     <tr>
                         <td>{{ $eval->date_evaluation->format('d/m/Y') }}</td>
@@ -32,7 +32,7 @@
                         </td>
                         <td>
                             <div class="fw-bold">{{ $eval->groupeFormation->nom ?? 'Groupe non défini' }}</div>
-                            <small class="text-muted">{{ $eval->formation->nom }}</small>
+                            <small class="text-muted">{{ $eval->formation->nom ?? 'Formation non définie' }}</small>
                         </td>
                         <td>
                             <div class="progress" style="height: 10px; width: 100px;">
