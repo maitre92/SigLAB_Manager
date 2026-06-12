@@ -19,8 +19,6 @@
     };
     $dateDebut = $formatLongDate($groupe?->date_debut);
     $dateFin = $formatLongDate($groupe?->date_fin);
-    $verificationUrl = $verificationUrl ?? route('attestations.verify', $attestation->reference);
-    $qrCodeDataUri = $qrCodeDataUri ?? null;
     $isPdf = $isPdf ?? false;
 @endphp
 

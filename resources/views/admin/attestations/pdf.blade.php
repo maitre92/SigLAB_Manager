@@ -289,30 +289,6 @@
             font-weight: 900;
         }
 
-        .qr {
-            display: none;
-        }
-
-        .qr img {
-            width: 26mm;
-            height: 26mm;
-        }
-
-        .qr span {
-            display: block;
-            color: #74747c;
-            font-size: 2.4mm;
-            font-weight: 900;
-            text-transform: uppercase;
-        }
-
-        .qr strong {
-            display: block;
-            color: #191062;
-            font-size: 2.7mm;
-            font-weight: 900;
-        }
-
         .place {
             position: absolute;
             left: 28mm;
@@ -401,7 +377,6 @@
     $groupe = $attestation->groupeFormation;
     $dateDebut = $formatLongDate($groupe?->date_debut);
     $dateFin = $formatLongDate($groupe?->date_fin);
-    $currentQrCodeDataUri = $qrCodeDataUris[$attestation->id] ?? ($qrCodeDataUri ?? null);
 @endphp
     <section class="page">
         <div class="frame"></div>
@@ -449,14 +424,6 @@
         <p class="legal">
             En foi de quoi la présente attestation lui est délivrée pour servir ce que de droit
         </p>
-
-        <div class="qr">
-            @if($currentQrCodeDataUri)
-                <img src="{{ $currentQrCodeDataUri }}" alt="QR code">
-            @endif
-            <span>Vérifier</span>
-            <strong>{{ $attestation->reference }}</strong>
-        </div>
 
         <div class="place">
             <div>BAMAKO,</div>

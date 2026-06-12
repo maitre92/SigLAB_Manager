@@ -9,11 +9,6 @@ use App\Models\Formation;
 use App\Models\GroupeFormation;
 use App\Models\Inscription;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Endroid\QrCode\Builder\Builder;
-use Endroid\QrCode\Encoding\Encoding;
-use Endroid\QrCode\ErrorCorrectionLevel;
-use Endroid\QrCode\RoundBlockSizeMode;
-use Endroid\QrCode\Writer\SvgWriter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -106,25 +101,19 @@ class AttestationController extends Controller
     {
         $page_title = 'Aperçu de l\'Attestation';
         $attestation->load(['apprenant', 'formation', 'groupeFormation']);
-        $verificationUrl = $this->verificationUrl($attestation->reference);
-        $qrCodeDataUri = $this->generateQrCodeDataUri($this->qrPayload($attestation));
         
-        return view('admin.attestations.show', compact('attestation', 'page_title', 'verificationUrl', 'qrCodeDataUri'));
+        return view('admin.attestations.show', compact('attestation', 'page_title'));
     }
 
     public function downloadPdf(Attestation $attestation)
     {
         $attestation->load(['apprenant', 'formation', 'groupeFormation']);
         $page_title = 'Attestation ' . $attestation->reference;
-        $verificationUrl = $this->verificationUrl($attestation->reference);
-        $qrCodeDataUri = $this->generateQrCodeDataUri($this->qrPayload($attestation));
         $isPdf = true;
 
         $pdf = Pdf::loadView('admin.attestations.pdf', compact(
             'attestation',
             'page_title',
-            'verificationUrl',
-            'qrCodeDataUri',
             'isPdf'
         ))->setPaper('a4', 'landscape');
 
@@ -147,18 +136,10 @@ class AttestationController extends Controller
 
         $page_title = 'Attestations du groupe ' . $groupeFormation->nom;
         $isPdf = true;
-        $qrCodeDataUris = [];
-
-        foreach ($attestations as $attestation) {
-            $qrCodeDataUris[$attestation->id] = $this->generateQrCodeDataUri(
-                $this->qrPayload($attestation)
-            );
-        }
 
         $pdf = Pdf::loadView('admin.attestations.pdf', compact(
             'attestations',
             'page_title',
-            'qrCodeDataUris',
             'isPdf'
         ))->setPaper('a4', 'landscape');
 
@@ -183,42 +164,5 @@ class AttestationController extends Controller
     {
         $attestation->delete();
         return redirect()->route('admin.attestations.index')->with('success', 'Attestation supprimée.');
-    }
-
-    private function generateQrCodeDataUri(string $data): string
-    {
-        $builder = new Builder(
-            writer: new SvgWriter(),
-            validateResult: false,
-            data: $data,
-            encoding: new Encoding('UTF-8'),
-            errorCorrectionLevel: ErrorCorrectionLevel::High,
-            size: 280,
-            margin: 8,
-            roundBlockSizeMode: RoundBlockSizeMode::Margin
-        );
-
-        $result   = $builder->build();
-        $svgString = $result->getString();
-
-        // Encode as a data URI usable in <img> and in DomPDF
-        return 'data:image/svg+xml;base64,' . base64_encode($svgString);
-    }
-
-    private function verificationUrl(string $reference): string
-    {
-        return request()->getSchemeAndHttpHost() . route('attestations.verify', $reference, false);
-    }
-
-    private function qrPayload(Attestation $attestation): string
-    {
-        return implode("\n", [
-            'SigLAB Technologie - Attestation de formation',
-            'Reference: ' . $attestation->reference,
-            'Apprenant: ' . ($attestation->apprenant->nom_complet ?? 'Non defini'),
-            'Formation: ' . ($attestation->formation->nom ?? 'Non definie'),
-            'Groupe: ' . ($attestation->groupeFormation->nom ?? 'Non defini'),
-            'Date emission: ' . ($attestation->date_emission?->format('d/m/Y') ?? 'Non definie'),
-        ]);
     }
 }
