@@ -67,6 +67,11 @@ class GroupeFormation extends Model
         return $this->hasMany(Presence::class, 'groupe_formation_id');
     }
 
+    public function emargements()
+    {
+        return $this->hasMany(Emargement::class, 'groupe_formation_id');
+    }
+
     public function evaluations()
     {
         return $this->hasMany(Evaluation::class, 'groupe_formation_id');

@@ -36,14 +36,14 @@ enum UserRole: string
     {
         return match ($this) {
             self::SUPERADMIN => ['*'],
-            self::ADMIN => ['manage.users', 'manage.settings', 'view.reports', 'manage.content'],
-            self::MANAGER => ['manage.content', 'view.reports', 'manage.team'],
-            self::USER => ['view.content', 'edit.own'],
-            self::GUEST => ['view.content'],
-            self::FORMATEUR => ['view.courses', 'manage.own_courses', 'view.students'],
-            self::PERSONNEL_ADMINISTRATIF => ['manage.users', 'view.reports'],
-            self::COMPTABLE => ['manage.finances', 'view.reports'],
-            self::DIRECTEUR => ['view.reports', 'manage.settings', 'manage.users', 'manage.finances'],
+            self::ADMIN => \App\Services\RolePermissionService::permissionsForRole($this),
+            self::MANAGER => \App\Services\RolePermissionService::permissionsForRole($this),
+            self::USER => \App\Services\RolePermissionService::permissionsForRole($this),
+            self::GUEST => [],
+            self::FORMATEUR => \App\Services\RolePermissionService::permissionsForRole($this),
+            self::PERSONNEL_ADMINISTRATIF => \App\Services\RolePermissionService::permissionsForRole($this),
+            self::COMPTABLE => \App\Services\RolePermissionService::permissionsForRole($this),
+            self::DIRECTEUR => \App\Services\RolePermissionService::permissionsForRole($this),
         };
     }
 

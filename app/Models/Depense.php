@@ -18,6 +18,12 @@ class Depense extends Model
         'beneficiaire',
         'description',
         'piece_jointe',
+        'montant_commission_initial',
+        'montant_retranchement',
+        'heures_prevues',
+        'heures_validees',
+        'motif_retranchement',
+        'retranchement_defined_by',
         'formation_id',
         'groupe_formation_id',
         'user_id',
@@ -26,7 +32,11 @@ class Depense extends Model
 
     protected $casts = [
         'date_depense' => 'date',
-        'montant' => 'decimal:2'
+        'montant' => 'decimal:2',
+        'montant_commission_initial' => 'decimal:2',
+        'montant_retranchement' => 'decimal:2',
+        'heures_prevues' => 'decimal:2',
+        'heures_validees' => 'decimal:2',
     ];
 
     public function creator()
@@ -47,6 +57,11 @@ class Depense extends Model
     public function trainer()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function retranchementDefinedBy()
+    {
+        return $this->belongsTo(User::class, 'retranchement_defined_by');
     }
 
     /**

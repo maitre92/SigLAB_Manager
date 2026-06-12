@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Shared\Enums\UserRole;
 use App\Shared\Enums\UserStatus;
 use Database\Seeders\PermissionSeeder;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -43,6 +44,7 @@ class DatabaseSeeder extends Seeder
         );
 
         $this->call(PermissionSeeder::class);
+        $this->call(RolePermissionSeeder::class);
         $this->call(FormationReferenceSeeder::class);
         $this->call(PedagogieSeeder::class);
     }

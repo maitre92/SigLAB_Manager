@@ -15,14 +15,16 @@
                 $user = Auth::user();
                 $canViewLearners = $user && ($user->isSuperAdmin() || $user->hasPermission('view_learners'));
                 $canCreateLearner = $user && ($user->isSuperAdmin() || $user->hasPermission('create_learner'));
+                $isFormateur = $user && (string) $user->role === \App\Shared\Enums\UserRole::FORMATEUR->value;
                 $canViewCourses = $user && ($user->isSuperAdmin() || $user->hasAnyPermission(['voir_formations', 'view_courses']));
                 $canCreateCourse = $user && ($user->isSuperAdmin() || $user->hasAnyPermission(['ajouter_formation', 'create_course']));
                 $canViewCategories = $user && ($user->isSuperAdmin() || $user->hasAnyPermission(['voir_categories_formations', 'gerer_categories_formations', 'voir_formations', 'view_courses']));
-                $canViewPedagogical = $user && ($user->isSuperAdmin() || $user->hasAnyPermission([ 'view_pedagogical', 'view_attendance', 'view_evaluations', 'view_exams', 'view_grades' ]));
+                $canViewPedagogical = $user && ($user->isSuperAdmin() || $isFormateur || $user->hasAnyPermission([ 'view_pedagogical', 'view_attendance', 'view_evaluations', 'view_exams', 'view_grades', 'view_suivi_pedagogique' ]));
                 $canViewAttendance = $user && ($user->isSuperAdmin() || $user->hasPermission('view_attendance'));
                 $canViewEvaluations = $user && ($user->isSuperAdmin() || $user->hasPermission('view_evaluations'));
                 $canViewExams = $user && ($user->isSuperAdmin() || $user->hasPermission('view_exams'));
                 $canViewGrades = $user && ($user->isSuperAdmin() || $user->hasPermission('view_grades'));
+                $canViewSuiviPedagogique = $user && ($user->isSuperAdmin() || $isFormateur || $user->hasPermission('view_suivi_pedagogique'));
                 $canViewFinances = $user && ($user->isSuperAdmin() || $user->hasAnyPermission([ 'view_finances', 'view_payments', 'view_expenses', 'view_revenue' ]));
                 $canViewPayments = $user && ($user->isSuperAdmin() || $user->hasPermission('view_payments'));
                 $canViewExpenses = $user && ($user->isSuperAdmin() || $user->hasPermission('view_expenses'));
@@ -90,12 +92,19 @@
             <!-- Gestion Pédagogique -->
             @if($user && $canViewPedagogical)
                 <div class="nav-item dropdown-menu-like">
-                    <a class="nav-link {{ request()->routeIs('admin.pedagogie.*') ? 'active' : '' }}" 
+                    <a class="nav-link {{ request()->routeIs('admin.pedagogie.*') || request()->routeIs('admin.suivi-pedagogique.*') ? 'active' : '' }}" 
                        href="#" data-bs-toggle="collapse" data-bs-target="#pedagogique-menu">
                         <i class="fas fa-chalkboard"></i> <span class="nav-text">Pédagogique</span>
                         <i class="fas fa-chevron-down ms-auto" style="font-size: 12px;"></i>
                     </a>
-                    <div class="collapse {{ request()->routeIs('admin.pedagogie.*') ? 'show' : '' }}" id="pedagogique-menu">
+                    <div class="collapse {{ request()->routeIs('admin.pedagogie.*') || request()->routeIs('admin.suivi-pedagogique.*') ? 'show' : '' }}" id="pedagogique-menu">
+                        @if($canViewSuiviPedagogique)
+                            <a class="nav-link {{ request()->routeIs('admin.suivi-pedagogique.*') ? 'active' : '' }}" 
+                               style="padding-left: 40px; font-size: 13px;" 
+                               href="{{ route('admin.suivi-pedagogique.index') }}">
+                                <i class="fas fa-user-check"></i> <span class="nav-text">Suivi Pédagogique</span>
+                            </a>
+                        @endif
                         @if($canViewAttendance)
                             <a class="nav-link {{ request()->routeIs('admin.pedagogie.presences') ? 'active' : '' }}" 
                                style="padding-left: 40px; font-size: 13px;" 
@@ -188,12 +197,14 @@
 
             <!-- Traçabilité supprimée -->
 
-            <!-- Paramètres (nouveau) -->
-            <div class="nav-section-title mt-4">Système</div>
-            <a class="nav-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}" 
-               href="{{ route('admin.settings') }}">
-                <i class="fas fa-cog"></i> <span class="nav-text">Paramètres</span>
-            </a>
+            @can('manage_settings')
+                <!-- Paramètres (nouveau) -->
+                <div class="nav-section-title mt-4">Système</div>
+                <a class="nav-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}" 
+                   href="{{ route('admin.settings') }}">
+                    <i class="fas fa-cog"></i> <span class="nav-text">Paramètres</span>
+                </a>
+            @endcan
 
         </nav>
     </div>

@@ -255,6 +255,9 @@
                             <span class="section-label">Bénéficiaire (Formateur)</span>
                             <div class="trainer-name">{{ $depense->trainer->name ?? $depense->beneficiaire }}</div>
                             <div class="small text-muted fw-bold">{{ $depense->formation->nom ?? 'N/A' }}</div>
+                            @if($depense->groupeFormation)
+                                <div class="small text-muted fw-bold">{{ $depense->groupeFormation->nom }}</div>
+                            @endif
                             @if($depense->trainer && $depense->trainer->phone)
                                 <div class="small text-muted" style="font-size: 0.75rem;"><i class="fas fa-phone me-1"></i> {{ $depense->trainer->phone }}</div>
                             @endif
@@ -286,6 +289,26 @@
                                 <td class="text-end fw-bold">{{ $depense->reference }}</td>
                             </tr>
                             @endif
+                            @if(!is_null($depense->montant_commission_initial))
+                            <tr>
+                                <td class="text-muted">Commission calculée</td>
+                                <td class="text-end fw-bold">{{ number_format((float) $depense->montant_commission_initial, 0, ',', ' ') }} FCFA</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Volume horaire validé</td>
+                                <td class="text-end fw-bold">{{ number_format((float) $depense->heures_validees, 2, ',', ' ') }} / {{ number_format((float) $depense->heures_prevues, 2, ',', ' ') }} h</td>
+                            </tr>
+                            @endif
+                            @if((float) $depense->montant_retranchement > 0)
+                            <tr>
+                                <td class="text-muted">Retranchement</td>
+                                <td class="text-end fw-bold text-danger">- {{ number_format((float) $depense->montant_retranchement, 0, ',', ' ') }} FCFA</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Motif</td>
+                                <td class="text-end fw-bold">{{ $depense->motif_retranchement }}</td>
+                            </tr>
+                            @endif
                             <tr>
                                 <td class="summary-total">Montant total réglé</td>
                                 <td class="text-end summary-total text-success">
@@ -308,6 +331,9 @@
                         <div class="signature-box">
                             <span class="section-label">Émis par (Administration)</span>
                             <div class="fw-bold small text-warning">{{ $depense->creator->name ?? 'Responsable' }}</div>
+                            @if($depense->retranchementDefinedBy)
+                                <div class="small text-muted">Décision: {{ $depense->retranchementDefinedBy->name }}</div>
+                            @endif
                             <div class="signature-line"></div>
                         </div>
                     </div>

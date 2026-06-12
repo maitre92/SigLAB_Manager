@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\FormationController;
 use App\Http\Controllers\Admin\GroupeFormationController;
 use App\Http\Controllers\Admin\CategorieFormationController;
 use App\Http\Controllers\Admin\PedagogieController;
+use App\Http\Controllers\Admin\SuiviPedagogiqueController;
 use App\Http\Controllers\Admin\AttestationController;
 use App\Http\Controllers\Admin\MouvementController;
 // use App\Http\Controllers\Admin\GroupeController;
@@ -103,18 +104,20 @@ Route::middleware('auth')->group(function () {
         // Route::put('groupes/{groupe}', [GroupeController::class, 'update'])->name('groupes.update');
         // Route::delete('groupes/{groupe}', [GroupeController::class, 'destroy'])->name('groupes.destroy');
 
-        // Paramètres
-        Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
-        Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
-        Route::post('/settings/salles', [SettingsController::class, 'storeSalle'])->name('settings.salles.store');
-        Route::put('/settings/salles/{salle}', [SettingsController::class, 'updateSalle'])->name('settings.salles.update');
-        Route::delete('/settings/salles/{salle}', [SettingsController::class, 'destroySalle'])->name('settings.salles.destroy');
-        
-        // Permissions
-        Route::post('/permissions', [SettingsController::class, 'storePermission'])->name('permissions.store');
-        Route::put('/permissions/{permission}', [SettingsController::class, 'updatePermission'])->name('permissions.update');
-        Route::delete('/permissions/{permission}', [SettingsController::class, 'destroyPermission'])->name('permissions.destroy');
-        Route::post('/permissions/assign', [SettingsController::class, 'assignPermissions'])->name('permissions.assign');
+        Route::middleware('permission:manage_settings')->group(function () {
+            // Paramètres
+            Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
+            Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+            Route::post('/settings/salles', [SettingsController::class, 'storeSalle'])->name('settings.salles.store');
+            Route::put('/settings/salles/{salle}', [SettingsController::class, 'updateSalle'])->name('settings.salles.update');
+            Route::delete('/settings/salles/{salle}', [SettingsController::class, 'destroySalle'])->name('settings.salles.destroy');
+            
+            // Permissions
+            Route::post('/permissions', [SettingsController::class, 'storePermission'])->name('permissions.store');
+            Route::put('/permissions/{permission}', [SettingsController::class, 'updatePermission'])->name('permissions.update');
+            Route::delete('/permissions/{permission}', [SettingsController::class, 'destroyPermission'])->name('permissions.destroy');
+            Route::post('/permissions/assign', [SettingsController::class, 'assignPermissions'])->name('permissions.assign');
+        });
 
         // Gestion Pédagogique
         Route::prefix('pedagogie')->name('pedagogie.')->group(function () {
@@ -132,6 +135,25 @@ Route::middleware('auth')->group(function () {
             Route::post('/notes/evaluation/{evaluation}', [PedagogieController::class, 'storeNotes'])->name('notes.store');
             
             Route::get('/resultats', [PedagogieController::class, 'resultats'])->name('resultats');
+        });
+
+        // Suivi Pédagogique / Émargements formateurs
+        Route::prefix('suivi-pedagogique')->name('suivi-pedagogique.')->group(function () {
+            Route::get('/', [SuiviPedagogiqueController::class, 'index'])
+                ->middleware('permission:view_suivi_pedagogique')
+                ->name('index');
+            Route::post('/emargements', [SuiviPedagogiqueController::class, 'storeEmargement'])
+                ->middleware('permission:create_emargement')
+                ->name('emargements.store');
+            Route::patch('/emargements/{emargement}/valider', [SuiviPedagogiqueController::class, 'validateEmargement'])
+                ->middleware('permission:validate_emargement')
+                ->name('emargements.validate');
+            Route::patch('/emargements/{emargement}/rejeter', [SuiviPedagogiqueController::class, 'rejectEmargement'])
+                ->middleware('permission:validate_emargement')
+                ->name('emargements.reject');
+            Route::post('/notifications/lues', [SuiviPedagogiqueController::class, 'readNotifications'])
+                ->middleware('permission:view_suivi_pedagogique')
+                ->name('notifications.read');
         });
 
         // Gestion Financière

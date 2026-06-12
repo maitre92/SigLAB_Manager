@@ -3,6 +3,7 @@
 namespace App\Shared\Traits;
 
 use App\Models\Permission;
+use App\Services\RolePermissionService;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -28,6 +29,10 @@ trait HasPermissions
     {
         // Super admin a toutes les permissions
         if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        if (in_array($permission, RolePermissionService::permissionsForRole($this->role), true)) {
             return true;
         }
 
@@ -134,10 +139,13 @@ trait HasPermissions
      */
     public function getPermissionSlugs(): array
     {
-        return $this->permissions()
-            ->where('is_active', true)
-            ->pluck('slug')
-            ->toArray();
+        return array_values(array_unique(array_merge(
+            RolePermissionService::permissionsForRole($this->role),
+            $this->permissions()
+                ->where('is_active', true)
+                ->pluck('slug')
+                ->toArray()
+        )));
     }
 
     /**
@@ -161,6 +169,14 @@ trait HasPermissions
             return true;
         }
 
+        if (in_array($module, Permission::active()
+            ->whereIn('slug', RolePermissionService::permissionsForRole($this->role))
+            ->distinct()
+            ->pluck('module')
+            ->toArray(), true)) {
+            return true;
+        }
+
         return $this->permissions()
             ->where('module', $module)
             ->where('is_active', true)
@@ -176,11 +192,19 @@ trait HasPermissions
             return Permission::active()->distinct()->pluck('module')->toArray();
         }
 
-        return $this->permissions()
+        $roleModules = Permission::active()
+            ->whereIn('slug', RolePermissionService::permissionsForRole($this->role))
+            ->distinct()
+            ->pluck('module')
+            ->toArray();
+
+        $directModules = $this->permissions()
             ->where('is_active', true)
             ->distinct()
             ->pluck('module')
             ->toArray();
+
+        return array_values(array_unique(array_merge($roleModules, $directModules)));
     }
 
     /**

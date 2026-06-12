@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use App\Shared\Enums\UserRole;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -18,7 +19,13 @@ class IsAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user() || ! $request->user()->isAdmin()) {
+        $user = $request->user();
+
+        if ($user && (string) $user->role === UserRole::FORMATEUR->value && $request->routeIs('admin.suivi-pedagogique.*')) {
+            return $next($request);
+        }
+
+        if (! $user || ! $user->isAdmin()) {
             abort(403, 'Accès refusé. Vous devez être administrateur.');
         }
 

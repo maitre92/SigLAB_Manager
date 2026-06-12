@@ -62,6 +62,13 @@ class CheckPermission
             return $next($request);
         }
 
+        $roleValue = (string) $user->role;
+        $formateurSuiviPermissions = ['view_suivi_pedagogique', 'create_emargement'];
+        if ($roleValue === \App\Shared\Enums\UserRole::FORMATEUR->value
+            && count(array_diff($permissions, $formateurSuiviPermissions)) === 0) {
+            return $next($request);
+        }
+
         // Vérifier les permissions
         if (!$user->hasAnyPermission($permissions)) {
             abort(403, 'Vous n\'avez pas la permission d\'accéder à cette page.');

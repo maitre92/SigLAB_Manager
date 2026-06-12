@@ -46,6 +46,34 @@
                         <i class="fas fa-moon"></i>
                     </button>
                 </li>
+
+                <li class="nav-item dropdown me-2">
+                    <button class="btn btn-outline-light btn-sm position-relative" id="suiviNotificationsDropdown" data-bs-toggle="dropdown" title="Notifications">
+                        <i class="fas fa-bell"></i>
+                        @if(($suiviNotificationsCount ?? 0) > 0)
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                {{ $suiviNotificationsCount }}
+                            </span>
+                        @endif
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-0" aria-labelledby="suiviNotificationsDropdown" style="min-width: 300px;">
+                        <div class="px-3 py-2 border-bottom fw-bold small">Notifications</div>
+                        @forelse(($suiviNotifications ?? collect()) as $notification)
+                            <a class="dropdown-item py-2" href="{{ route('admin.suivi-pedagogique.index') }}">
+                                <div class="fw-bold small">{{ $notification->titre }}</div>
+                                <div class="small text-muted">{{ $notification->message }}</div>
+                            </a>
+                        @empty
+                            <div class="px-3 py-3 text-muted small">Aucune notification.</div>
+                        @endforelse
+                        @if(($suiviNotificationsCount ?? 0) > 0)
+                            <form action="{{ route('admin.suivi-pedagogique.notifications.read') }}" method="POST" class="border-top">
+                                @csrf
+                                <button type="submit" class="dropdown-item small text-center">Voir et marquer comme lues</button>
+                            </form>
+                        @endif
+                    </div>
+                </li>
                 
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -77,6 +105,26 @@
         </div>
     </div>
 </nav>
+
+@if(($suiviNotificationsCount ?? 0) > 0 && request()->routeIs('admin.*') && !request()->routeIs('admin.suivi-pedagogique.*'))
+    <div class="modal fade suivi-alert-modal" id="suiviPendingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: var(--navbar-bg); color: var(--navbar-text);">
+                    <h5 class="modal-title"><i class="fas fa-bell text-warning me-2"></i> Émargements en attente</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    Vous avez {{ $suiviNotificationsCount }} émargement(s) à valider dans le suivi pédagogique.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Plus tard</button>
+                    <a href="{{ route('admin.suivi-pedagogique.index') }}" class="btn btn-primary">Voir maintenant</a>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
 
 <style>
     html.dark-mode #navbar {
@@ -171,7 +219,8 @@
         }
 
         #themeSelector,
-        #darkModeToggle {
+        #darkModeToggle,
+        #suiviNotificationsDropdown {
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -197,6 +246,21 @@
             z-index: 1100;
             min-width: 190px;
             max-width: calc(100vw - 24px);
+        }
+    }
+
+    .suivi-alert-modal .modal-dialog {
+        animation: suiviSlideIn 0.32s ease-out;
+    }
+
+    @keyframes suiviSlideIn {
+        from {
+            transform: translateY(-24px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
         }
     }
 
@@ -255,6 +319,17 @@
         --navbar-text: #ffffff;
     }
 </style>
+
+@if(($suiviNotificationsCount ?? 0) > 0 && request()->routeIs('admin.*') && !request()->routeIs('admin.suivi-pedagogique.*'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modalElement = document.getElementById('suiviPendingModal');
+            if (modalElement && window.bootstrap) {
+                new bootstrap.Modal(modalElement).show();
+            }
+        });
+    </script>
+@endif
 
 <script>
     function setTheme(theme) {

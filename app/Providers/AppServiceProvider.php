@@ -10,7 +10,9 @@ use App\Models\User;
 use App\Shared\Enums\UserRole;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\View;
 use Database\Seeders\PermissionSeeder;
+use App\Models\SuiviNotification;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -43,6 +45,26 @@ class AppServiceProvider extends ServiceProvider
                 });
             }
         }
+
+        View::composer('layouts.navbar', function ($view) {
+            $notifications = collect();
+            $notificationsCount = 0;
+
+            if (auth()->check() && $this->hasTableSafely('suivi_notifications')) {
+                $baseQuery = SuiviNotification::where('user_id', auth()->id())
+                    ->whereNull('read_at');
+
+                $notificationsCount = (clone $baseQuery)->count();
+                $notifications = $baseQuery
+                    ->with('emargement.groupeFormation')
+                    ->latest()
+                    ->take(5)
+                    ->get();
+            }
+
+            $view->with('suiviNotifications', $notifications)
+                ->with('suiviNotificationsCount', $notificationsCount);
+        });
     }
 
     private function ensureDefaultPermissions(): void
@@ -108,11 +130,8 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
-        User::where('role', UserRole::ADMIN->value)
-            ->get()
-            ->each(function (User $admin) use ($permissionSlugs) {
-                $admin->grantPermissions($permissionSlugs, 'Initialisation automatique des permissions pour admin');
-            });
+        // Les permissions des administrateurs standards doivent rester explicites.
+        // Seuls les superadmins reçoivent automatiquement toutes les permissions.
     }
 
     private function hasTableSafely(string $table): bool

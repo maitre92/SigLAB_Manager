@@ -59,6 +59,28 @@
                         </div>
                     </div>
 
+                    <div id="pedagogical_summary" class="card border-0 bg-light p-3 mb-3 d-none shadow-none" style="border: 1px dashed var(--card-border) !important;">
+                        <h6 class="fw-bold mb-3 text-dark small d-flex align-items-center">
+                            <i class="fas fa-clipboard-check text-primary me-2"></i> Suivi pédagogique
+                        </h6>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted">Volume prévu :</span>
+                            <span id="summary_heures_prevues" class="fw-bold text-dark">0 h</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted">Heures validées :</span>
+                            <span id="summary_heures_validees" class="fw-bold text-dark">0 h</span>
+                        </div>
+                        <div id="summary_suivi_status" class="alert py-2 px-3 mb-0 small"></div>
+                    </div>
+
+                    <div id="retranchement_block" class="border rounded p-3 mb-3 d-none">
+                        <label class="form-label small fw-bold">Montant à retrancher (FCFA)</label>
+                        <input type="number" id="retranchement_input" name="montant_retranchement" class="form-control" min="0" step="1" value="0">
+                        <label class="form-label small fw-bold mt-3">Motif du retranchement</label>
+                        <textarea id="motif_retranchement_input" name="motif_retranchement" class="form-control" rows="2" placeholder="Justification de la retenue..."></textarea>
+                    </div>
+
                     <div class="mb-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <label class="form-label small fw-bold mb-0"><i class="fas fa-money-bill-wave text-muted me-1"></i> Montant à verser (FCFA)</label>
@@ -120,6 +142,7 @@
                             <th>Formateur / Groupe</th>
                             <th>Mode / Réf</th>
                             <th class="text-end">Montant Versé</th>
+                            <th class="text-end">Suivi</th>
                             <th class="text-center px-4">Action</th>
                         </tr>
                     </thead>
@@ -140,6 +163,16 @@
                                     @endif
                                 </td>
                                 <td class="text-end fw-bold text-danger">{{ number_format($p->montant, 0, ',', ' ') }} FCFA</td>
+                                <td class="text-end small">
+                                    @if(!is_null($p->heures_prevues))
+                                        <div>{{ number_format((float) $p->heures_validees, 2, ',', ' ') }} / {{ number_format((float) $p->heures_prevues, 2, ',', ' ') }} h</div>
+                                        @if((float) $p->montant_retranchement > 0)
+                                            <div class="text-danger">- {{ number_format((float) $p->montant_retranchement, 0, ',', ' ') }} FCFA</div>
+                                        @endif
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
                                 <td class="text-center px-4">
                                     <div class="d-flex justify-content-center gap-2">
                                         <a href="{{ route('admin.finances.trainer_payments.receipt', $p) }}" target="_blank" class="btn btn-sm btn-light border" title="Imprimer le reçu">
@@ -173,7 +206,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">Aucun versement enregistré</td>
+                                <td colspan="6" class="text-center py-5 text-muted">Aucun versement enregistré</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -204,6 +237,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const summaryCommissionAcquise = document.getElementById('summary_commission_acquise');
     const summaryDejaPaye = document.getElementById('summary_deja_paye');
     const summaryReste = document.getElementById('summary_reste');
+    const pedagogicalSummary = document.getElementById('pedagogical_summary');
+    const summaryHeuresPrevues = document.getElementById('summary_heures_prevues');
+    const summaryHeuresValidees = document.getElementById('summary_heures_validees');
+    const summarySuiviStatus = document.getElementById('summary_suivi_status');
+    const retranchementBlock = document.getElementById('retranchement_block');
+    const retranchementInput = document.getElementById('retranchement_input');
+    const motifRetranchementInput = document.getElementById('motif_retranchement_input');
     
     const montantInput = document.getElementById('montant_input');
     const payAllBtn = document.getElementById('pay_all_btn');
@@ -225,6 +265,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Réinitialiser les sélecteurs
         trainerSelect.innerHTML = '<option value="">Sélectionner un formateur...</option>';
         commissionSummary.classList.add('d-none');
+        pedagogicalSummary.classList.add('d-none');
+        retranchementBlock.classList.add('d-none');
+        retranchementInput.value = '0';
+        motifRetranchementInput.value = '';
         montantInput.disabled = true;
         montantInput.value = '';
         payAllBtn.classList.add('d-none');
@@ -270,6 +314,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!trainerId || !selectedFormation) {
             commissionSummary.classList.add('d-none');
+            pedagogicalSummary.classList.add('d-none');
+            retranchementBlock.classList.add('d-none');
             montantInput.disabled = true;
             montantInput.value = '';
             payAllBtn.classList.add('d-none');
@@ -296,6 +342,22 @@ document.addEventListener('DOMContentLoaded', function() {
             summaryReste.textContent = formatFCFA(reste);
 
             commissionSummary.classList.remove('d-none');
+            pedagogicalSummary.classList.remove('d-none');
+            summaryHeuresPrevues.textContent = `${selectedTrainer.heures_prevues || 0} h`;
+            summaryHeuresValidees.textContent = `${selectedTrainer.heures_validees || 0} h`;
+
+            if (selectedTrainer.suivi_complet) {
+                summarySuiviStatus.className = 'alert alert-success py-2 px-3 mb-0 small';
+                summarySuiviStatus.innerHTML = '<i class="fas fa-check-circle me-1"></i> Volume horaire complet. Aucun retranchement requis.';
+                retranchementBlock.classList.add('d-none');
+                retranchementInput.value = '0';
+                motifRetranchementInput.value = '';
+            } else {
+                summarySuiviStatus.className = 'alert alert-warning py-2 px-3 mb-0 small';
+                summarySuiviStatus.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> Il manque ${selectedTrainer.heures_manquantes} h validée(s). Renseignez le retranchement éventuel.`;
+                retranchementBlock.classList.remove('d-none');
+                retranchementInput.max = reste;
+            }
 
             // Vérifier le solde de paiement
             if (reste <= 0) {
@@ -309,7 +371,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitBtn.disabled = true;
             } else {
                 montantInput.disabled = false;
-                montantInput.max = reste;
+                montantInput.max = getAllowedReste();
                 montantInput.min = 1;
                 montantInput.value = '';
                 
@@ -322,17 +384,26 @@ document.addEventListener('DOMContentLoaded', function() {
     payAllBtn.addEventListener('click', function(e) {
         e.preventDefault();
         if (selectedTrainer) {
-            montantInput.value = selectedTrainer.reste_a_payer;
+            montantInput.value = getAllowedReste();
             montantInput.dispatchEvent(new Event('input'));
         }
     });
+
+    function getAllowedReste() {
+        if (!selectedTrainer) {
+            return 0;
+        }
+
+        const retranchement = selectedTrainer.suivi_complet ? 0 : (parseFloat(retranchementInput.value) || 0);
+        return Math.max(0, selectedTrainer.reste_a_payer - retranchement);
+    }
 
     // Validation dynamique du montant
     montantInput.addEventListener('input', function() {
         if (!selectedTrainer) return;
 
         const val = parseFloat(this.value) || 0;
-        const reste = selectedTrainer.reste_a_payer;
+        const reste = getAllowedReste();
 
         if (val > reste) {
             montantWarning.classList.remove('d-none');
@@ -348,6 +419,28 @@ document.addEventListener('DOMContentLoaded', function() {
             montantWarning.classList.add('d-none');
             submitBtn.disabled = false;
         }
+    });
+
+    retranchementInput.addEventListener('input', function() {
+        if (!selectedTrainer || selectedTrainer.suivi_complet) return;
+
+        const retranchement = parseFloat(this.value) || 0;
+        const resteInitial = selectedTrainer.reste_a_payer;
+        const allowedReste = getAllowedReste();
+
+        if (retranchement > resteInitial) {
+            montantWarning.classList.remove('d-none');
+            montantWarning.className = 'text-danger small mt-2';
+            montantWarning.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> Le retranchement dépasse le solde restant (${formatFCFA(resteInitial)}).`;
+            submitBtn.disabled = true;
+            return;
+        }
+
+        montantInput.max = allowedReste;
+        if ((parseFloat(montantInput.value) || 0) > allowedReste) {
+            montantInput.value = allowedReste;
+        }
+        montantInput.dispatchEvent(new Event('input'));
     });
 
     // Modal de modification de versement formateur (triggers)

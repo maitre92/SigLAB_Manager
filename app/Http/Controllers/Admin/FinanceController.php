@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Paiement;
 use App\Models\Depense;
+use App\Models\Emargement;
 use App\Models\Inscription;
 use App\Models\Apprenant;
 use App\Models\Formation;
@@ -275,7 +276,7 @@ class FinanceController extends Controller
     public function trainerPayments()
     {
         // Charger les groupes qui ont des formateurs et charger avec inscriptions.paiements et inscriptions.formation
-        $groupesFormation = GroupeFormation::with(['formation', 'formateurs', 'inscriptions.paiements', 'inscriptions.formation'])
+        $groupesFormation = GroupeFormation::with(['formation', 'formateurs', 'inscriptions.paiements', 'inscriptions.formation', 'emargements'])
             ->whereHas('formateurs')
             ->get();
             
@@ -318,9 +319,16 @@ class FinanceController extends Controller
                 // Déjà payé à ce formateur pour ce groupe
                 $deja_paye = Depense::where('user_id', $trainer->id)
                     ->where('groupe_formation_id', $groupe->id)
+                    ->where('categorie', 'Rémunération Formateur')
                     ->sum('montant');
                     
                 $reste_a_payer = $commission_acquise - $deja_paye;
+                $heures_prevues = (float) ($groupe->formation->duree_heures ?? 0);
+                $minutes_validees = $groupe->emargements
+                    ->where('formateur_id', $trainer->id)
+                    ->where('statut', Emargement::STATUT_VALIDE)
+                    ->sum('duree_minutes');
+                $heures_validees = round($minutes_validees / 60, 2);
                 
                 return [
                     'id' => $trainer->id,
@@ -333,7 +341,11 @@ class FinanceController extends Controller
                     'commission_contrat' => $commission_contrat,
                     'commission_acquise' => $commission_acquise,
                     'deja_paye' => $deja_paye,
-                    'reste_a_payer' => max(0, $reste_a_payer)
+                    'reste_a_payer' => max(0, $reste_a_payer),
+                    'heures_prevues' => $heures_prevues,
+                    'heures_validees' => $heures_validees,
+                    'heures_manquantes' => max(0, round($heures_prevues - $heures_validees, 2)),
+                    'suivi_complet' => $heures_prevues <= 0 || $heures_validees >= $heures_prevues,
                 ];
             });
             
@@ -361,6 +373,8 @@ class FinanceController extends Controller
             'mode_paiement' => 'required|string',
             'reference' => 'nullable|string',
             'notes' => 'nullable|string',
+            'montant_retranchement' => 'nullable|numeric|min:0',
+            'motif_retranchement' => 'nullable|string|max:1000',
         ]);
         
         $groupeFormation = GroupeFormation::with(['formation', 'formateurs' => function($q) use ($request) {
@@ -388,6 +402,7 @@ class FinanceController extends Controller
         
         $deja_paye = Depense::where('user_id', $request->user_id)
             ->where('groupe_formation_id', $request->groupe_formation_id)
+            ->where('categorie', 'Rémunération Formateur')
             ->sum('montant');
             
         $reste = $commission_acquise - $deja_paye;
@@ -398,10 +413,39 @@ class FinanceController extends Controller
                 ->withErrors(['montant' => "Ce formateur a déjà perçu la totalité de sa commission acquise."]);
         }
         
-        if ($request->montant > $reste) {
+        $heuresPrevues = (float) ($groupeFormation->formation->duree_heures ?? 0);
+        $minutesValidees = Emargement::where('groupe_formation_id', $groupeFormation->id)
+            ->where('formateur_id', $trainer->id)
+            ->where('statut', Emargement::STATUT_VALIDE)
+            ->get()
+            ->sum('duree_minutes');
+        $heuresValidees = round($minutesValidees / 60, 2);
+        $suiviComplet = $heuresPrevues <= 0 || $heuresValidees >= $heuresPrevues;
+        $retranchement = $suiviComplet ? 0 : (float) ($request->montant_retranchement ?? 0);
+        $resteApresRetranchement = max(0, $reste - $retranchement);
+
+        if (!$suiviComplet && !$request->has('montant_retranchement')) {
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['montant' => "Le montant de commission (" . number_format($request->montant, 0, ',', ' ') . " FCFA) dépasse le reste à payer (" . number_format($reste, 0, ',', ' ') . " FCFA)."]);
+                ->withErrors(['montant_retranchement' => "Le retranchement doit être renseigné car le volume horaire validé est incomplet."]);
+        }
+
+        if (!$suiviComplet && $retranchement > 0 && !$request->filled('motif_retranchement')) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['motif_retranchement' => "Le motif du retranchement est obligatoire."]);
+        }
+
+        if ($retranchement > $reste) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['montant_retranchement' => "Le retranchement ne peut pas dépasser le solde de commission restant."]);
+        }
+
+        if ($request->montant > $resteApresRetranchement) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['montant' => "Le montant final (" . number_format($request->montant, 0, ',', ' ') . " FCFA) dépasse le solde autorisé après retranchement (" . number_format($resteApresRetranchement, 0, ',', ' ') . " FCFA)."]);
         }
         
         // Contrôle de caisse
@@ -417,19 +461,36 @@ class FinanceController extends Controller
             }
         }
         
+        $description = ($commissionType === 'montant'
+            ? "Commission fixe de " . number_format($fixedAmount, 0, ',', ' ') . " FCFA sur le groupe " . $groupeFormation->nom
+            : "Commission de " . $percentage . "% sur le groupe " . $groupeFormation->nom)
+            . ". Suivi pédagogique: " . number_format($heuresValidees, 2, ',', ' ') . " h validées sur "
+            . number_format($heuresPrevues, 2, ',', ' ') . " h prévues.";
+
+        if ($retranchement > 0) {
+            $description .= " Retranchement de " . number_format($retranchement, 0, ',', ' ') . " FCFA: " . $request->motif_retranchement . ".";
+        }
+
+        $description .= " Règlement via " . ucfirst($request->mode_paiement)
+            . ($request->reference ? " (Réf: " . $request->reference . ")" : "")
+            . ". Notes: " . $request->notes;
+
         Depense::create([
             'titre' => "Commission Formateur : " . $trainer->name . " - " . $groupeFormation->nom,
             'categorie' => 'Rémunération Formateur',
             'montant' => $request->montant,
             'date_depense' => $request->date_paiement,
             'beneficiaire' => $trainer->name,
-            'description' => ($commissionType === 'montant'
-                ? "Commission fixe de " . number_format($fixedAmount, 0, ',', ' ') . " FCFA sur le groupe " . $groupeFormation->nom
-                : "Commission de " . $percentage . "% sur le groupe " . $groupeFormation->nom)
-                . ". Règlement via " . ucfirst($request->mode_paiement) . ($request->reference ? " (Réf: " . $request->reference . ")" : "") . ". Notes: " . $request->notes,
+            'description' => $description,
             'formation_id' => $groupeFormation->formation_id,
             'groupe_formation_id' => $groupeFormation->id,
             'user_id' => $request->user_id,
+            'montant_commission_initial' => $commission_acquise,
+            'montant_retranchement' => $retranchement,
+            'heures_prevues' => $heuresPrevues,
+            'heures_validees' => $heuresValidees,
+            'motif_retranchement' => $retranchement > 0 ? $request->motif_retranchement : null,
+            'retranchement_defined_by' => Auth::id(),
             'created_by' => Auth::id()
         ]);
         
@@ -438,7 +499,7 @@ class FinanceController extends Controller
 
     public function trainerReceipt(Depense $depense)
     {
-        $depense->load(['formation', 'trainer', 'creator']);
+        $depense->load(['formation', 'groupeFormation', 'trainer', 'creator', 'retranchementDefinedBy']);
         return view('admin.finances.trainer_receipt', compact('depense'));
     }
 
@@ -504,27 +565,6 @@ class FinanceController extends Controller
                 ->withErrors(['montant' => "Le montant d'un règlement formateur est automatiquement généré et ne peut pas être modifié."]);
         }
 
-        $trainer = User::findOrFail($depense->user_id);
-        $formation = Formation::findOrFail($depense->formation_id);
-
-        $pivot = $formation->formateurs()->where('user_id', $trainer->id)->first()?->pivot;
-        $percentage = $pivot->pourcentage_commission ?? 0;
-
-        $total_collecte = $formation->inscriptions->flatMap->paiements->sum('montant');
-        $commission_acquise = ($total_collecte * $percentage) / 100;
-
-        $deja_paye = Depense::where('user_id', $trainer->id)
-            ->where('formation_id', $formation->id)
-            ->where('id', '!=', $depense->id)
-            ->sum('montant');
-
-        $reste = $commission_acquise - $deja_paye;
-
-        if ($request->montant > $reste) {
-            return redirect()->back()
-                ->withErrors(['montant' => "Le montant saisi (" . number_format($request->montant, 0, ',', ' ') . " FCFA) dépasse le solde restant dû pour ce formateur (" . number_format($reste, 0, ',', ' ') . " FCFA)."]);
-        }
-
         $total_revenue = Paiement::sum('montant');
         $total_expenses = Depense::where('id', '!=', $depense->id)->sum('montant');
         $balance = $total_revenue - $total_expenses;
@@ -534,11 +574,42 @@ class FinanceController extends Controller
                 ->withErrors(['montant' => "Le montant du versement (" . number_format($request->montant, 0, ',', ' ') . " FCFA) dépasse le solde de caisse général disponible (" . number_format($balance, 0, ',', ' ') . " FCFA)."]);
         }
 
+        $trainer = $depense->trainer;
+        $groupe = $depense->groupeFormation;
+        $formation = $depense->formation;
+        $description = "Versement formateur";
+
+        if ($depense->montant_commission_initial !== null) {
+            $description .= ". Commission calculée: " . number_format((float) $depense->montant_commission_initial, 0, ',', ' ') . " FCFA";
+        }
+
+        if ($formation) {
+            $description .= " sur " . $formation->nom;
+        }
+
+        if ($groupe) {
+            $description .= " / groupe " . $groupe->nom;
+        }
+
+        if ($depense->heures_prevues !== null) {
+            $description .= ". Suivi pédagogique: " . number_format((float) $depense->heures_validees, 2, ',', ' ')
+                . " h validées sur " . number_format((float) $depense->heures_prevues, 2, ',', ' ') . " h prévues.";
+        }
+
+        if ((float) $depense->montant_retranchement > 0) {
+            $description .= " Retranchement de " . number_format((float) $depense->montant_retranchement, 0, ',', ' ')
+                . " FCFA: " . $depense->motif_retranchement . ".";
+        }
+
+        $description .= " Règlement via " . ucfirst($request->mode_paiement)
+            . ($request->reference ? " (Réf: " . $request->reference . ")" : "")
+            . ". Notes: " . $request->notes;
+
         $depense->update([
-            'titre' => "Commission Formateur : " . $trainer->name . " - " . $formation->nom,
+            'titre' => "Commission Formateur : " . ($trainer->name ?? $depense->beneficiaire) . " - " . ($groupe->nom ?? $formation->nom ?? 'Formation'),
             'montant' => $request->montant,
             'date_depense' => $request->date_paiement,
-            'description' => "Commission de " . $percentage . "% sur la formation " . $formation->nom . ". Règlement via " . ucfirst($request->mode_paiement) . ($request->reference ? " (Réf: " . $request->reference . ")" : "") . ". Notes: " . $request->notes,
+            'description' => $description,
         ]);
 
         return redirect()->back()->with('success', 'Versement formateur modifié avec succès.');

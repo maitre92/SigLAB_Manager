@@ -49,6 +49,10 @@ class PermissionSeeder extends Seeder
             ['name' => 'Voir les évaluations', 'module' => 'Évaluations', 'slug' => 'view_evaluations'],
             ['name' => 'Voir les examens', 'module' => 'Examens', 'slug' => 'view_exams'],
             ['name' => 'Voir les notes', 'module' => 'Notes', 'slug' => 'view_grades'],
+            ['name' => 'Voir le suivi pédagogique', 'module' => 'Suivi Pédagogique', 'slug' => 'view_suivi_pedagogique'],
+            ['name' => 'Créer un émargement', 'module' => 'Suivi Pédagogique', 'slug' => 'create_emargement'],
+            ['name' => 'Valider un émargement', 'module' => 'Suivi Pédagogique', 'slug' => 'validate_emargement'],
+            ['name' => 'Voir les rapports émargements', 'module' => 'Suivi Pédagogique', 'slug' => 'view_emargement_reports'],
 
             // Emplois du temps
             ['name' => 'Voir les emplois du temps', 'module' => 'Emplois du Temps', 'slug' => 'view_schedules'],

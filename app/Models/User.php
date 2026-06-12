@@ -8,6 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use App\Shared\Traits\HasPermissions;
 use App\Shared\Enums\UserRole;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Services\RolePermissionService;
 
 /**
  * @method bool hasPermission(string $permission)
@@ -94,6 +95,10 @@ class User extends Authenticatable
             return true;
         }
 
+        if (!empty(RolePermissionService::permissionsForRole($this->role))) {
+            return true;
+        }
+
         return $this->permissions()
             ->where('is_active', true)
             ->exists();
@@ -111,5 +116,15 @@ class User extends Authenticatable
         return $this->belongsToMany(GroupeFormation::class, 'groupe_formation_formateur', 'formateur_id', 'groupe_formation_id')
             ->withPivot('role', 'taux_commission', 'commission_type', 'montant_commission', 'observations', 'assigned_at')
             ->withTimestamps();
+    }
+
+    public function emargements()
+    {
+        return $this->hasMany(Emargement::class, 'formateur_id');
+    }
+
+    public function suiviNotifications()
+    {
+        return $this->hasMany(SuiviNotification::class);
     }
 }
