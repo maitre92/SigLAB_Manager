@@ -455,13 +455,13 @@
 
     .legal-text {
         position: absolute;
-        top: 572px;
+        top: 592px;
         left: 70px;
         right: 70px;
         margin: 0;
         color: #c5161d;
         font-size: 22px;
-        line-height: 1.25;
+        line-height: 1.35;
         font-family: Arial, Helvetica, sans-serif;
         font-weight: 900;
     }
@@ -470,7 +470,7 @@
         position: absolute;
         left: 90px;
         right: 115px;
-        bottom: 92px;
+        bottom: 48px;
         display: grid;
         grid-template-columns: 230px 1fr 290px;
         align-items: end;
