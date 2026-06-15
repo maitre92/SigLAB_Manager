@@ -279,20 +279,20 @@
 
         .legal {
             position: absolute;
-            top: 143mm;
+            top: 149mm;
             left: 20mm;
             right: 20mm;
             color: #c5161d;
             text-align: center;
             font-size: 4.35mm;
-            line-height: 1.2;
+            line-height: 1.35;
             font-weight: 900;
         }
 
         .place {
             position: absolute;
             left: 28mm;
-            bottom: 35mm;
+            bottom: 22mm;
             width: 60mm;
             color: #102c66;
             text-align: center;
@@ -304,7 +304,7 @@
         .ornament {
             position: absolute;
             left: 105mm;
-            bottom: 39mm;
+            bottom: 26mm;
             width: 78mm;
             color: #d9b851;
             text-align: center;
@@ -315,7 +315,7 @@
         .director {
             position: absolute;
             right: 26mm;
-            bottom: 34mm;
+            bottom: 21mm;
             width: 82mm;
             color: #102c66;
             text-align: center;
@@ -369,6 +369,11 @@
 
         return $date->format('d') . ' ' . $months[(int) $date->format('m')] . ' ' . $date->format('Y');
     };
+
+    $pdfAssets = $pdfAssets ?? [
+        'ribbon' => is_file(public_path('images/attestation_right_ribbon.png')) ? 'file://' . public_path('images/attestation_right_ribbon.png') : null,
+        'logo' => is_file(public_path('images/logo_siglab.jpeg')) ? 'file://' . public_path('images/logo_siglab.jpeg') : null,
+    ];
 @endphp
 @foreach($certificateList as $attestation)
 @php
@@ -388,12 +393,16 @@
         <div class="blue-corner"></div>
         <div class="blue-top"></div>
         <div class="right-blue-corner"></div>
-        <img src="{{ public_path('images/attestation_right_ribbon.png') }}" alt="" class="top-right-ribbon">
+        @if($pdfAssets['ribbon'])
+            <img src="{{ $pdfAssets['ribbon'] }}" alt="" class="top-right-ribbon">
+        @endif
         <div class="blue-bottom"></div>
         <div class="blue-bottom-corner"></div>
         <div class="red-bottom"></div>
 
-        <img class="logo" src="{{ public_path('images/logo_siglab.jpeg') }}" alt="SigLAB Technologie">
+        @if($pdfAssets['logo'])
+            <img class="logo" src="{{ $pdfAssets['logo'] }}" alt="SigLAB Technologie">
+        @endif
 
         <div class="seal">
             <div class="ribbon-left"></div>

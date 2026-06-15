@@ -11,6 +11,7 @@ use App\Models\Inscription;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 
 class AttestationController extends Controller
 {
@@ -110,11 +111,13 @@ class AttestationController extends Controller
         $attestation->load(['apprenant', 'formation', 'groupeFormation']);
         $page_title = 'Attestation ' . $attestation->reference;
         $isPdf = true;
+        $pdfAssets = $this->preparePdfAssets();
 
         $pdf = Pdf::loadView('admin.attestations.pdf', compact(
             'attestation',
             'page_title',
-            'isPdf'
+            'isPdf',
+            'pdfAssets'
         ))->setPaper('a4', 'landscape');
 
         return $pdf->download('attestation-' . $attestation->reference . '.pdf');
@@ -136,11 +139,13 @@ class AttestationController extends Controller
 
         $page_title = 'Attestations du groupe ' . $groupeFormation->nom;
         $isPdf = true;
+        $pdfAssets = $this->preparePdfAssets();
 
         $pdf = Pdf::loadView('admin.attestations.pdf', compact(
             'attestations',
             'page_title',
-            'isPdf'
+            'isPdf',
+            'pdfAssets'
         ))->setPaper('a4', 'landscape');
 
         $filename = 'attestations-groupe-' . preg_replace('/[^A-Za-z0-9_-]+/', '-', $groupeFormation->nom) . '.pdf';
@@ -164,5 +169,37 @@ class AttestationController extends Controller
     {
         $attestation->delete();
         return redirect()->route('admin.attestations.index')->with('success', 'Attestation supprimée.');
+    }
+
+    private function preparePdfAssets(): array
+    {
+        $tempDir = storage_path('framework/cache/dompdf');
+        $fontDir = storage_path('fonts');
+
+        File::ensureDirectoryExists($tempDir);
+        File::ensureDirectoryExists($fontDir);
+
+        config([
+            'dompdf.options.temp_dir' => $tempDir,
+            'dompdf.options.font_dir' => $fontDir,
+            'dompdf.options.font_cache' => $fontDir,
+            'dompdf.options.chroot' => realpath(base_path()) ?: base_path(),
+        ]);
+
+        return [
+            'ribbon' => $this->pdfFileUri('images/attestation_right_ribbon.png'),
+            'logo' => $this->pdfFileUri('images/logo_siglab.jpeg'),
+        ];
+    }
+
+    private function pdfFileUri(string $publicPath): ?string
+    {
+        $path = public_path($publicPath);
+
+        if (!is_file($path)) {
+            return null;
+        }
+
+        return 'file://' . $path;
     }
 }
