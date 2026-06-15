@@ -120,7 +120,14 @@ class AttestationController extends Controller
             'pdfAssets'
         ))->setPaper('a4', 'landscape');
 
-        return $pdf->download('attestation-' . $attestation->reference . '.pdf');
+        // Build a filename using the apprenant's prenom + nom when available
+        $apprenant = $attestation->apprenant;
+        $nameBase = trim((string) (($apprenant->prenom ?? '') . ' ' . ($apprenant->nom ?? '')));
+        $sanitized = $nameBase ? preg_replace('/[^A-Za-z0-9_-]+/', '-', $nameBase) : '';
+        $sanitized = trim($sanitized, '-');
+        $filename = $sanitized ? $sanitized . '.pdf' : 'attestation-' . $attestation->reference . '.pdf';
+
+        return $pdf->download($filename);
     }
 
     public function downloadGroupPdf(GroupeFormation $groupeFormation)

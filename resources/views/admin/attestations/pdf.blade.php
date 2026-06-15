@@ -448,7 +448,6 @@
         </div>
 
         <div class="footer">La présente attestation n'est délivrée qu'une fois</div>
-        <div class="page-count">1/1</div>
     </section>
 @endforeach
 </body>
