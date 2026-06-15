@@ -221,10 +221,9 @@
                 <div class="row align-items-center mb-3">
                     <div class="col-7">
                         <div class="d-flex align-items-center gap-3">
-                            <img src="{{ asset('images/siglab_img2.jpeg') }}" alt="sigLAB Logo" style="height: 70px; width: auto; object-fit: contain; border-radius: 6px;">
+                            <img src="{{ asset('images/siglab_img2.jpeg') }}" alt="sigLAB Logo" style="height: 80px; width: auto; object-fit: contain; border-radius: 6px;">
                             <div>
-                                <h2 class="logo-text" style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; margin: 0; line-height: 1.1;">SigLAB</h2>
-                                <small class="text-muted" style="font-size: 9px; display: block; margin-top: 2px; font-weight: 500; line-height: 1.2;">
+                                <small class="text-muted" style="font-size: 10px; display: block; margin-top: 2px; font-weight: 600; line-height: 1.3;">
                                     Technologie SARL<br>
                                     Tél: +223 93 38 73 25
                                 </small>

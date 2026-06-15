@@ -221,14 +221,12 @@
                 <!-- Header -->
                 <div class="row align-items-center mb-3">
                     <div class="col-7">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="bg-primary text-white rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 14px;">
-                                <i class="fas fa-laptop-code"></i>
-                            </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="{{ asset('images/siglab_img2.jpeg') }}" alt="sigLAB Logo" style="height: 80px; width: auto; object-fit: contain; border-radius: 6px;">
                             <div>
-                                <h2 class="logo-text" style="line-height: 1.1;">sigLAB <span>Technologie SARL</span></h2>
-                                <small class="text-muted d-block" style="font-size: 9px; font-weight: 500; margin-top: 2px;">
-                                    SigLAB Technologie SARL &nbsp;|&nbsp; Tél: +223 93 38 73 25
+                                <small class="text-muted" style="font-size: 10px; display: block; margin-top: 2px; font-weight: 600; line-height: 1.3;">
+                                    Technologie SARL<br>
+                                    Tél: +223 93 38 73 25
                                 </small>
                             </div>
                         </div>
