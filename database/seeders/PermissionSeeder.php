@@ -69,6 +69,12 @@ class PermissionSeeder extends Seeder
             ['name' => 'Modifier un versement formateur', 'module' => 'Finances', 'slug' => 'edit_trainer_payment'],
             ['name' => 'Supprimer un versement formateur', 'module' => 'Finances', 'slug' => 'delete_trainer_payment'],
 
+            // Prestations
+            ['name' => 'Voir les prestations', 'module' => 'Prestations', 'slug' => 'view_prestations'],
+            ['name' => 'Ajouter une prestation', 'module' => 'Prestations', 'slug' => 'create_prestation'],
+            ['name' => 'Modifier une prestation', 'module' => 'Prestations', 'slug' => 'edit_prestation'],
+            ['name' => 'Supprimer une prestation', 'module' => 'Prestations', 'slug' => 'delete_prestation'],
+
             // Attestations
             ['name' => 'Voir les attestations', 'module' => 'Attestations', 'slug' => 'view_certificates'],
 

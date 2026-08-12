@@ -25,6 +25,7 @@ class RolePermissionService
                 'view_schedules', 'view_finances', 'view_payments', 'view_expenses', 'view_revenue',
                 'edit_payment', 'edit_expense', 'edit_trainer_payment',
                 'view_certificates', 'view_reports', 'view_movements',
+                'view_prestations', 'create_prestation', 'edit_prestation', 'delete_prestation',
                 'manage_settings',
             ],
 
@@ -35,6 +36,7 @@ class RolePermissionService
                 'view_suivi_pedagogique', 'validate_emargement', 'view_emargement_reports',
                 'view_finances', 'view_payments', 'view_expenses', 'view_revenue',
                 'view_certificates', 'view_reports', 'view_movements',
+                'view_prestations',
             ],
 
             UserRole::MANAGER->value => [
@@ -45,6 +47,7 @@ class RolePermissionService
                 'view_pedagogical', 'view_attendance', 'view_evaluations', 'view_exams', 'view_grades',
                 'view_suivi_pedagogique', 'validate_emargement', 'view_emargement_reports',
                 'view_schedules', 'view_certificates', 'view_movements',
+                'view_prestations', 'create_prestation', 'edit_prestation',
             ],
 
             UserRole::PERSONNEL_ADMINISTRATIF->value => [
@@ -52,6 +55,7 @@ class RolePermissionService
                 'voir_formations', 'voir_details_formation', 'voir_categories_formations',
                 'view_pedagogical', 'view_attendance', 'view_evaluations', 'view_exams', 'view_grades',
                 'view_certificates', 'view_schedules',
+                'view_prestations', 'create_prestation',
             ],
 
             UserRole::COMPTABLE->value => [
@@ -61,6 +65,7 @@ class RolePermissionService
                 'edit_payment', 'delete_payment', 'edit_expense', 'delete_expense',
                 'edit_trainer_payment', 'delete_trainer_payment',
                 'view_suivi_pedagogique', 'view_emargement_reports',
+                'view_prestations', 'edit_prestation',
             ],
 
             UserRole::FORMATEUR->value => [

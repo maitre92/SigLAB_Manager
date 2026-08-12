@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\PedagogieController;
 use App\Http\Controllers\Admin\SuiviPedagogiqueController;
 use App\Http\Controllers\Admin\AttestationController;
 use App\Http\Controllers\Admin\MouvementController;
+use App\Http\Controllers\Admin\PrestationController;
 // use App\Http\Controllers\Admin\GroupeController;
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
@@ -175,6 +176,15 @@ Route::middleware('auth')->group(function () {
             Route::get('/formateurs/{depense}/recu', [App\Http\Controllers\Admin\FinanceController::class, 'trainerReceipt'])->name('trainer_payments.receipt');
             Route::put('/formateurs/{depense}', [App\Http\Controllers\Admin\FinanceController::class, 'updateTrainerPayment'])->name('trainer_payments.update');
             Route::delete('/formateurs/{depense}', [App\Http\Controllers\Admin\FinanceController::class, 'destroyTrainerPayment'])->name('trainer_payments.destroy');
+        });
+
+        // Gestion des Prestations de services
+        Route::prefix('prestations')->name('prestations.')->group(function () {
+            Route::get('/', [PrestationController::class, 'index'])->name('index');
+            Route::post('/', [PrestationController::class, 'store'])->name('store');
+            Route::put('/{prestation}', [PrestationController::class, 'update'])->name('update');
+            Route::delete('/{prestation}', [PrestationController::class, 'destroy'])->name('destroy');
+            Route::get('/{prestation}/recu', [PrestationController::class, 'receipt'])->name('receipt');
         });
 
         // Gestion des Attestations

@@ -30,6 +30,7 @@
                 $canViewExpenses = $user && ($user->isSuperAdmin() || $user->hasPermission('view_expenses'));
                 $canViewRevenue = $user && ($user->isSuperAdmin() || $user->hasPermission('view_revenue'));
                 $canViewMovements = $user && ($user->isSuperAdmin() || $user->hasPermission('view_movements'));
+                $canViewPrestations = $user && ($user->isSuperAdmin() || $user->hasAnyPermission(['view_prestations', 'view_finances']));
                 $canViewCertificates = $user && ($user->isSuperAdmin() || $user->hasPermission('view_certificates'));
             @endphp
 
@@ -189,6 +190,13 @@
                 <a class="nav-link {{ request()->routeIs('admin.attestations.*') ? 'active' : '' }}" 
                    href="{{ route('admin.attestations.index') }}">
                     <i class="fas fa-certificate"></i> <span class="nav-text">Attestations</span>
+                </a>
+            @endif
+
+            @if($user && $canViewPrestations)
+                <a class="nav-link {{ request()->routeIs('admin.prestations.*') ? 'active' : '' }}" 
+                   href="{{ route('admin.prestations.index') }}">
+                    <i class="fas fa-tools"></i> <span class="nav-text">Prestations</span>
                 </a>
             @endif
 

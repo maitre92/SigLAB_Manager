@@ -20,6 +20,7 @@ Le projet est construit avec Laravel et utilise une interface d'administration r
 - Génération PDF de l'emploi du temps d'un groupe de formation.
 - Gestion pédagogique: présences, évaluations, examens, notes et résultats.
 - Gestion financière: paiements apprenants, reçus, dépenses et paiements/commissions formateurs.
+- Gestion des prestations de services avec reçus dédiés.
 - Gestion des attestations.
 
 ## Modules importants
@@ -93,6 +94,24 @@ admin/finances/formateurs
 ```
 
 Etat actuel avec les groupes: à finaliser. Les paiements, reçus, dépenses et commissions doivent être vérifiés pour afficher et enregistrer le bon groupe de formation quand il existe.
+
+### Prestations
+
+Le module prestations gère les services externes facturés, avec:
+
+- saisie des prestations et du client;
+- génération d'un numéro de reçu unique `PREST-YYYY-XXXXX`;
+- impression de reçus avec le logo SigLAB;
+- gestion indépendante de la caisse prestations;
+- permissions dédiées pour visualiser, créer, modifier et supprimer.
+
+Route principale:
+
+```text
+admin/prestations
+```
+
+Etat actuel: implémenté avec CRUD complet, reçu imprimable, et navigation ajoutée au sidebar après les attestations.
 
 ### Attestations
 
@@ -208,6 +227,7 @@ routes/
 ### Gestion financière et reçus (Juin 2026)
 - **Références de l'entreprise :** Mise à jour des reçus élèves (`receipt.blade.php`) et reçus formateurs (`trainer_receipt.blade.php`) pour afficher les informations de *SigLAB Technologie SARL* (Adresse Bamako Boulkansoumbougou près du marché, Imm. Thioma Guidado en face de PMU-Mali, Tél: +223 93 38 73 25).
 - **CRUD des paiements apprenants :** Implémentation complète de la modification et de la suppression des paiements depuis l'historique financier (`payments.blade.php` et `FinanceController.php`).
+- **Module Prestations :** Ajout d'un CRUD dédié dans `PrestationController.php`, d'un reçu imprimable au format `PREST-YYYY-XXXXX`, et d'une navigation sidebar positionnée après les attestations.
   - Validation dynamique pour s'assurer que les paiements modifiés n'excèdent pas le reste à payer d'une inscription.
   - Recalcul et réajustement automatiques du champ `montant_paye` de la table `inscriptions` lors de la modification ou suppression, protégés par des transactions de base de données.
   - Interface dynamique avec SweetAlert2 pour les confirmations de suppression et un modal Bootstrap pour la modification.
