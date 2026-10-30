@@ -46,6 +46,10 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionSeeder::class);
         $this->call(RolePermissionSeeder::class);
         $this->call(FormationReferenceSeeder::class);
-        $this->call(PedagogieSeeder::class);
+
+        // Données de démonstration : vide les tables pédagogiques, jamais en production
+        if (app()->environment('local')) {
+            $this->call(PedagogieSeeder::class);
+        }
     }
 }

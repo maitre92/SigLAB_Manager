@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\Permission;
 use App\Models\User;
 use App\Shared\Enums\UserRole;
+use App\Shared\Enums\UserStatus;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
@@ -108,7 +109,7 @@ class AppServiceProvider extends ServiceProvider
                             'password' => Hash::make($d['password']),
                             'role' => UserRole::SUPERADMIN->value,
                             'is_active' => true,
-                            'status' => null,
+                            'status' => UserStatus::ACTIVE->value,
                         ]
                     );
 
