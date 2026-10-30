@@ -43,9 +43,7 @@ class Formation extends Model
     public function getDureeLabelAttribute(): string
     {
         if ($this->duree_unite === 'mois') {
-            $label = ($this->duree_mois ?? 0) . ' mois';
-
-            return $this->duree_heures > 0 ? $label . ' (' . $this->duree_heures . ' h)' : $label;
+            return ($this->duree_mois ?? 0) . ' mois';
         }
 
         return ($this->duree_heures ?? 0) . ' heures';

@@ -23,7 +23,6 @@ class StoreFormationRequest extends FormRequest
             'type' => ['required', Rule::in(array_map(fn($type) => $type->value, FormationType::cases()))],
             'duree' => ['required', 'integer', 'min:1', 'max:10000'],
             'duree_unite' => ['required', 'in:heures,mois'],
-            'volume_horaire' => ['nullable', 'integer', 'min:0', 'max:10000'],
             'cout' => ['required', 'numeric', 'min:0', 'max:999999999.99'],
             'frais_inscription' => ['nullable', 'numeric', 'min:0', 'max:999999999.99'],
             'capacite_max' => ['nullable', 'integer', 'min:1', 'max:10000'],

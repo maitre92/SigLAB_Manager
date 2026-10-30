@@ -60,7 +60,6 @@ class FormationController extends Controller
             'type' => 'required|in:Présentiel,En ligne,Hybride',
             'duree' => 'nullable|integer|min:0|max:10000',
             'duree_unite' => 'required|in:heures,mois',
-            'volume_horaire' => 'nullable|integer|min:0|max:10000',
             'cout' => 'nullable|numeric|min:0',
             'frais_inscription' => 'nullable|numeric|min:0',
             'capacite_max' => 'nullable|integer|min:0',
@@ -119,7 +118,6 @@ class FormationController extends Controller
             'type' => 'required|in:Présentiel,En ligne,Hybride',
             'duree' => 'nullable|integer|min:0|max:10000',
             'duree_unite' => 'required|in:heures,mois',
-            'volume_horaire' => 'nullable|integer|min:0|max:10000',
             'cout' => 'nullable|numeric|min:0',
             'frais_inscription' => 'nullable|numeric|min:0',
             'capacite_max' => 'nullable|integer|min:0',
@@ -177,12 +175,11 @@ class FormationController extends Controller
     private function mapDuree(array $validated): array
     {
         $duree = (int) Arr::pull($validated, 'duree', 0);
-        $volumeHoraire = (int) Arr::pull($validated, 'volume_horaire', 0);
 
-        // duree_heures reste le volume horaire prévu (suivi pédagogique et paie des formateurs)
+        // En mois, le volume horaire est calculé par groupe depuis son emploi du temps
         if ($validated['duree_unite'] === 'mois') {
             $validated['duree_mois'] = $duree;
-            $validated['duree_heures'] = $volumeHoraire;
+            $validated['duree_heures'] = 0;
         } else {
             $validated['duree_heures'] = $duree;
             $validated['duree_mois'] = null;

@@ -68,27 +68,13 @@
                         <label class="form-label fw-bold">Durée</label>
                         <div class="input-group">
                             <input type="number" name="duree" class="form-control @error('duree') is-invalid @enderror" value="{{ old('duree', 0) }}" min="0">
-                            <select name="duree_unite" id="duree_unite_select" class="form-select" style="max-width: 110px;">
+                            <select name="duree_unite" class="form-select" style="max-width: 110px;">
                                 <option value="heures" {{ old('duree_unite', 'heures') === 'heures' ? 'selected' : '' }}>Heures</option>
                                 <option value="mois" {{ old('duree_unite', 'heures') === 'mois' ? 'selected' : '' }}>Mois</option>
                             </select>
                         </div>
                         @error('duree')<div class="text-danger small">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-4 {{ old('duree_unite', 'heures') === 'mois' ? '' : 'd-none' }}" id="volume_horaire_wrapper">
-                        <label class="form-label fw-bold">Volume horaire <small class="text-muted fw-normal">(facultatif)</small></label>
-                        <div class="input-group">
-                            <input type="number" name="volume_horaire" class="form-control @error('volume_horaire') is-invalid @enderror" value="{{ old('volume_horaire') }}" min="0">
-                            <span class="input-group-text">h</span>
-                        </div>
-                        <div class="form-text">Utilisé pour le suivi des heures et la paie des formateurs.</div>
-                        @error('volume_horaire')<div class="text-danger small">{{ $message }}</div>@enderror
-                    </div>
-                    <script>
-                        document.getElementById('duree_unite_select').addEventListener('change', function () {
-                            document.getElementById('volume_horaire_wrapper').classList.toggle('d-none', this.value !== 'mois');
-                        });
-                    </script>
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Coût (FCFA)</label>
                         <div class="input-group">

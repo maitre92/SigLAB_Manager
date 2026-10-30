@@ -38,7 +38,7 @@
                             ->when(!$canValidate, fn($items) => $items->where('formateur_id', $user->id))
                             ->sum('duree_minutes');
                         $validatedHours = round($validatedMinutes / 60, 2);
-                        $plannedHours = $groupe->formation->duree_heures ?? 0;
+                        $plannedHours = $groupe->heures_prevues;
                         $percent = $plannedHours > 0 ? min(100, round(($validatedHours / $plannedHours) * 100)) : 0;
                         $times = $suggestedTimes[$groupe->id] ?? ['date' => date('Y-m-d'), 'start' => now()->format('H:i'), 'end' => now()->addHour()->format('H:i')];
                     @endphp

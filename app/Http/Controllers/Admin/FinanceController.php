@@ -323,7 +323,7 @@ class FinanceController extends Controller
                     ->sum('montant');
                     
                 $reste_a_payer = $commission_acquise - $deja_paye;
-                $heures_prevues = (float) ($groupe->formation->duree_heures ?? 0);
+                $heures_prevues = $groupe->heures_prevues;
                 $minutes_validees = $groupe->emargements
                     ->where('formateur_id', $trainer->id)
                     ->where('statut', Emargement::STATUT_VALIDE)
@@ -413,7 +413,7 @@ class FinanceController extends Controller
                 ->withErrors(['montant' => "Ce formateur a déjà perçu la totalité de sa commission acquise."]);
         }
         
-        $heuresPrevues = (float) ($groupeFormation->formation->duree_heures ?? 0);
+        $heuresPrevues = $groupeFormation->heures_prevues;
         $minutesValidees = Emargement::where('groupe_formation_id', $groupeFormation->id)
             ->where('formateur_id', $trainer->id)
             ->where('statut', Emargement::STATUT_VALIDE)

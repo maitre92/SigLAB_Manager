@@ -89,6 +89,9 @@
                                         -
                                         {{ $groupe->date_fin ? $groupe->date_fin->format('d/m/Y') : '?' }}
                                     </span>
+                                    @if($groupe->heures_prevues > 0)
+                                        <div class="small fw-bold">{{ $groupe->heures_prevues }} h prévues</div>
+                                    @endif
                                 </td>
                                 <td>
                                     @php

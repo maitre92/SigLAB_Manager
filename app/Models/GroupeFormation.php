@@ -92,6 +92,79 @@ class GroupeFormation extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    private const JOURS_ISO = [
+        'Lundi' => 1, 'Mardi' => 2, 'Mercredi' => 3, 'Jeudi' => 4,
+        'Vendredi' => 5, 'Samedi' => 6, 'Dimanche' => 7,
+    ];
+
+    /**
+     * Minutes de cours par jour ISO (1 = lundi) d'après l'emploi du temps.
+     */
+    public function minutesParJour(): array
+    {
+        $rows = json_decode($this->emploi_du_temps ?? '', true);
+        $minutes = [];
+
+        foreach (is_array($rows) ? $rows : [] as $row) {
+            $jour = self::JOURS_ISO[$row['day'] ?? ''] ?? null;
+            if (!$jour || empty($row['start']) || empty($row['end'])) {
+                continue;
+            }
+
+            [$hd, $md] = array_map('intval', explode(':', $row['start']));
+            [$hf, $mf] = array_map('intval', explode(':', $row['end']));
+            $duree = ($hf * 60 + $mf) - ($hd * 60 + $md);
+
+            if ($duree > 0) {
+                $minutes[$jour] = ($minutes[$jour] ?? 0) + $duree;
+            }
+        }
+
+        return $minutes;
+    }
+
+    public function getHeuresHebdomadairesAttribute(): float
+    {
+        return round(array_sum($this->minutesParJour()) / 60, 2);
+    }
+
+    /**
+     * Volume horaire prévu du groupe : saisi sur la formation (en heures),
+     * ou calculé depuis l'emploi du temps et la période (formation en mois).
+     */
+    public function getHeuresPrevuesAttribute(): float
+    {
+        $formation = $this->formation;
+        if (!$formation) {
+            return 0;
+        }
+
+        if ($formation->duree_unite !== 'mois') {
+            return (float) $formation->duree_heures;
+        }
+
+        $minutesParJour = $this->minutesParJour();
+        if (empty($minutesParJour)) {
+            return 0;
+        }
+
+        $debut = $this->date_debut ?? $formation->date_debut;
+        $fin = $this->date_fin
+            ?? ($debut && $formation->duree_mois ? $debut->copy()->addMonths($formation->duree_mois)->subDay() : null);
+
+        // Sans période connue : moyenne de 52 semaines / 12 mois
+        if (!$debut || !$fin || $fin->lt($debut)) {
+            return round(array_sum($minutesParJour) / 60 * ($formation->duree_mois ?? 0) * 52 / 12, 2);
+        }
+
+        $total = 0;
+        for ($jour = $debut->copy(); $jour->lte($fin); $jour->addDay()) {
+            $total += $minutesParJour[$jour->dayOfWeekIso] ?? 0;
+        }
+
+        return round($total / 60, 2);
+    }
+
     public function getStatutLabelAttribute()
     {
         $statuts = [
