@@ -165,7 +165,7 @@
                                 <td class="text-end fw-bold text-danger">{{ number_format($p->montant, 0, ',', ' ') }} FCFA</td>
                                 <td class="text-end small">
                                     @if(!is_null($p->heures_prevues))
-                                        <div>{{ number_format((float) $p->heures_validees, 2, ',', ' ') }} / {{ number_format((float) $p->heures_prevues, 2, ',', ' ') }} h</div>
+                                        <div>{{ number_format((float) $p->heures_validees, 2, ',', ' ') }}{{ (float) $p->heures_prevues > 0 ? ' / ' . number_format((float) $p->heures_prevues, 2, ',', ' ') : '' }} h</div>
                                         @if((float) $p->montant_retranchement > 0)
                                             <div class="text-danger">- {{ number_format((float) $p->montant_retranchement, 0, ',', ' ') }} FCFA</div>
                                         @endif
@@ -343,12 +343,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             commissionSummary.classList.remove('d-none');
             pedagogicalSummary.classList.remove('d-none');
-            summaryHeuresPrevues.textContent = `${selectedTrainer.heures_prevues || 0} h`;
+            summaryHeuresPrevues.textContent = selectedTrainer.heures_prevues > 0 ? `${selectedTrainer.heures_prevues} h` : 'Non défini';
             summaryHeuresValidees.textContent = `${selectedTrainer.heures_validees || 0} h`;
 
             if (selectedTrainer.suivi_complet) {
                 summarySuiviStatus.className = 'alert alert-success py-2 px-3 mb-0 small';
-                summarySuiviStatus.innerHTML = '<i class="fas fa-check-circle me-1"></i> Volume horaire complet. Aucun retranchement requis.';
+                summarySuiviStatus.innerHTML = '<i class="fas fa-check-circle me-1"></i> ' + (selectedTrainer.heures_prevues > 0 ? 'Volume horaire complet.' : 'Aucun volume horaire défini pour cette formation.') + ' Aucun retranchement requis.';
                 retranchementBlock.classList.add('d-none');
                 retranchementInput.value = '0';
                 motifRetranchementInput.value = '';

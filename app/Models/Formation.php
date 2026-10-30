@@ -17,6 +17,8 @@ class Formation extends Model
         'categorie_formation_id',
         'type',
         'duree_heures',
+        'duree_unite',
+        'duree_mois',
         'cout',
         'frais_inscription',
         'capacite_max',
@@ -34,8 +36,20 @@ class Formation extends Model
         'cout' => 'decimal:2',
         'frais_inscription' => 'decimal:2',
         'duree_heures' => 'integer',
+        'duree_mois' => 'integer',
         'capacite_max' => 'integer',
     ];
+
+    public function getDureeLabelAttribute(): string
+    {
+        if ($this->duree_unite === 'mois') {
+            $label = ($this->duree_mois ?? 0) . ' mois';
+
+            return $this->duree_heures > 0 ? $label . ' (' . $this->duree_heures . ' h)' : $label;
+        }
+
+        return ($this->duree_heures ?? 0) . ' heures';
+    }
 
     public function categorie()
     {

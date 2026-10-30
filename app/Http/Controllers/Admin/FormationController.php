@@ -58,7 +58,9 @@ class FormationController extends Controller
             'code' => 'nullable|string|max:50|unique:formations,code',
             'categorie_formation_id' => 'required|exists:categorie_formations,id',
             'type' => 'required|in:Présentiel,En ligne,Hybride',
-            'duree_heures' => 'nullable|integer|min:0',
+            'duree' => 'nullable|integer|min:0|max:10000',
+            'duree_unite' => 'required|in:heures,mois',
+            'volume_horaire' => 'nullable|integer|min:0|max:10000',
             'cout' => 'nullable|numeric|min:0',
             'frais_inscription' => 'nullable|numeric|min:0',
             'capacite_max' => 'nullable|integer|min:0',
@@ -74,6 +76,7 @@ class FormationController extends Controller
         $formateurIds = Arr::pull($validated, 'formateurs', []);
         $pourcentages = Arr::pull($validated, 'formateur_commissions', []);
         $this->validateFormateurPercentages($formateurIds, $pourcentages);
+        $validated = $this->mapDuree($validated);
 
         $validated['code'] = $validated['code'] ?? $this->generateFormationCode($validated['nom']);
         $validated['created_by'] = Auth::id();
@@ -114,7 +117,9 @@ class FormationController extends Controller
             'code' => 'required|string|max:50|unique:formations,code,' . $formation->id,
             'categorie_formation_id' => 'required|exists:categorie_formations,id',
             'type' => 'required|in:Présentiel,En ligne,Hybride',
-            'duree_heures' => 'nullable|integer|min:0',
+            'duree' => 'nullable|integer|min:0|max:10000',
+            'duree_unite' => 'required|in:heures,mois',
+            'volume_horaire' => 'nullable|integer|min:0|max:10000',
             'cout' => 'nullable|numeric|min:0',
             'frais_inscription' => 'nullable|numeric|min:0',
             'capacite_max' => 'nullable|integer|min:0',
@@ -131,6 +136,7 @@ class FormationController extends Controller
         $formateurIds = Arr::pull($validated, 'formateurs', []);
         $pourcentages = Arr::pull($validated, 'formateur_commissions', []);
         $this->validateFormateurPercentages($formateurIds, $pourcentages);
+        $validated = $this->mapDuree($validated);
 
         // Vérifier si les frais ont changé
         $oldCout = $formation->cout;
@@ -166,6 +172,23 @@ class FormationController extends Controller
     {
         $formations = $formateur->formations()->with('categorie')->latest()->paginate(10);
         return view('admin.formations.index', compact('formations', 'formateur'));
+    }
+
+    private function mapDuree(array $validated): array
+    {
+        $duree = (int) Arr::pull($validated, 'duree', 0);
+        $volumeHoraire = (int) Arr::pull($validated, 'volume_horaire', 0);
+
+        // duree_heures reste le volume horaire prévu (suivi pédagogique et paie des formateurs)
+        if ($validated['duree_unite'] === 'mois') {
+            $validated['duree_mois'] = $duree;
+            $validated['duree_heures'] = $volumeHoraire;
+        } else {
+            $validated['duree_heures'] = $duree;
+            $validated['duree_mois'] = null;
+        }
+
+        return $validated;
     }
 
     private function validateFormateurPercentages(array $formateurIds, array $pourcentages): void

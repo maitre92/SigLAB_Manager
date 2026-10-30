@@ -54,7 +54,7 @@
                         <div class="mt-3">
                             <div class="d-flex justify-content-between small mb-1">
                                 <span>Heures validées</span>
-                                <strong>{{ $validatedHours }} / {{ $plannedHours }} h</strong>
+                                <strong>{{ $validatedHours }}{{ $plannedHours > 0 ? ' / ' . $plannedHours : '' }} h</strong>
                             </div>
                             <div class="progress" style="height: 6px;">
                                 <div class="progress-bar bg-success" role="progressbar" style="width: {{ $percent }}%;"></div>

@@ -73,7 +73,7 @@
                                     <td class="fw-bold">{{ $groupe->nom }}</td>
                                     <td>{{ $groupe->formation->nom ?? '-' }}</td>
                                     <td><span class="badge bg-light text-dark border">{{ $groupe->statut_label }}</span></td>
-                                    <td class="text-end fw-bold">{{ $hours }} / {{ $groupe->formation->duree_heures ?? 0 }} h</td>
+                                    <td class="text-end fw-bold">{{ $hours }}{{ ($groupe->formation->duree_heures ?? 0) > 0 ? ' / ' . $groupe->formation->duree_heures : '' }} h</td>
                                 </tr>
                             @empty
                                 <tr><td colspan="4" class="text-center py-4 text-muted">Aucun groupe affecté.</td></tr>

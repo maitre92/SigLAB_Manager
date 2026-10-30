@@ -464,8 +464,8 @@ class FinanceController extends Controller
         $description = ($commissionType === 'montant'
             ? "Commission fixe de " . number_format($fixedAmount, 0, ',', ' ') . " FCFA sur le groupe " . $groupeFormation->nom
             : "Commission de " . $percentage . "% sur le groupe " . $groupeFormation->nom)
-            . ". Suivi pédagogique: " . number_format($heuresValidees, 2, ',', ' ') . " h validées sur "
-            . number_format($heuresPrevues, 2, ',', ' ') . " h prévues.";
+            . ". Suivi pédagogique: " . number_format($heuresValidees, 2, ',', ' ') . " h validées"
+            . ($heuresPrevues > 0 ? " sur " . number_format($heuresPrevues, 2, ',', ' ') . " h prévues." : " (volume horaire non défini).");
 
         if ($retranchement > 0) {
             $description .= " Retranchement de " . number_format($retranchement, 0, ',', ' ') . " FCFA: " . $request->motif_retranchement . ".";
@@ -592,8 +592,8 @@ class FinanceController extends Controller
         }
 
         if ($depense->heures_prevues !== null) {
-            $description .= ". Suivi pédagogique: " . number_format((float) $depense->heures_validees, 2, ',', ' ')
-                . " h validées sur " . number_format((float) $depense->heures_prevues, 2, ',', ' ') . " h prévues.";
+            $description .= ". Suivi pédagogique: " . number_format((float) $depense->heures_validees, 2, ',', ' ') . " h validées"
+                . ((float) $depense->heures_prevues > 0 ? " sur " . number_format((float) $depense->heures_prevues, 2, ',', ' ') . " h prévues." : " (volume horaire non défini).");
         }
 
         if ((float) $depense->montant_retranchement > 0) {

@@ -85,7 +85,7 @@
                                     </div>
                                     <div>
                                         <div class="fw-bold text-dark">{{ $formation->nom }}</div>
-                                        <small class="text-muted">{{ $formation->duree_heures }} heures</small>
+                                        <small class="text-muted">{{ $formation->duree_label }}</small>
                                     </div>
                                 </div>
                             </td>

@@ -295,7 +295,7 @@
                             </tr>
                             <tr>
                                 <td class="text-muted">Volume horaire validé</td>
-                                <td class="text-end fw-bold">{{ number_format((float) $depense->heures_validees, 2, ',', ' ') }} / {{ number_format((float) $depense->heures_prevues, 2, ',', ' ') }} h</td>
+                                <td class="text-end fw-bold">{{ number_format((float) $depense->heures_validees, 2, ',', ' ') }}{{ (float) $depense->heures_prevues > 0 ? ' / ' . number_format((float) $depense->heures_prevues, 2, ',', ' ') : '' }} h</td>
                             </tr>
                             @endif
                             @if((float) $depense->montant_retranchement > 0)

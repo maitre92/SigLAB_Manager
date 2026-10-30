@@ -72,7 +72,7 @@
                         </div>
                         <div class="col-md-4">
                             <h6 class="text-muted text-uppercase small fw-bold">Durée</h6>
-                            <p class="fw-bold"><i class="fas fa-clock me-2 text-primary"></i> {{ $formation->duree_heures }} heures</p>
+                            <p class="fw-bold"><i class="fas fa-clock me-2 text-primary"></i> {{ $formation->duree_label }}</p>
                         </div>
                         <div class="col-md-4">
                             <h6 class="text-muted text-uppercase small fw-bold">Coût</h6>

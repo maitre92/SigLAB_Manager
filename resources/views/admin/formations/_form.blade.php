@@ -83,9 +83,15 @@
             </div>
             <div class="card-body">
                 <div class="mb-3">
-                    <label for="duree_heures" class="form-label">Durée (heures) <span class="text-danger">*</span></label>
-                    <input type="number" min="1" class="form-control @error('duree_heures') is-invalid @enderror" id="duree_heures" name="duree_heures" value="{{ old('duree_heures', $formation->duree_heures) }}" required>
-                    @error('duree_heures')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <label for="duree" class="form-label">Durée <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <input type="number" min="1" class="form-control @error('duree') is-invalid @enderror" id="duree" name="duree" value="{{ old('duree', $formation->duree_unite === 'mois' ? $formation->duree_mois : $formation->duree_heures) }}" required>
+                        <select name="duree_unite" class="form-select" style="max-width: 110px;">
+                            <option value="heures" {{ old('duree_unite', $formation->duree_unite ?? 'heures') === 'heures' ? 'selected' : '' }}>Heures</option>
+                            <option value="mois" {{ old('duree_unite', $formation->duree_unite ?? 'heures') === 'mois' ? 'selected' : '' }}>Mois</option>
+                        </select>
+                    </div>
+                    @error('duree')<div class="text-danger small">{{ $message }}</div>@enderror
                 </div>
                 <div class="mb-3">
                     <label for="cout" class="form-label">Coût <span class="text-danger">*</span></label>
