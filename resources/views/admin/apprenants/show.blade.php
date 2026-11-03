@@ -229,7 +229,12 @@
                                             @endphp
                                             <span class="badge bg-{{ $color }}">{{ ucfirst($inscription->statut) }}</span>
                                         </td>
-                                        <td>{{ number_format($inscription->montant_total, 0, ',', ' ') }} FCFA</td>
+                                        <td>
+                                            {{ number_format($inscription->montant_total, 0, ',', ' ') }} FCFA
+                                            @if($inscription->montant_remise > 0)
+                                                <div class="small text-muted">Remise : {{ number_format($inscription->montant_remise, 0, ',', ' ') }} FCFA</div>
+                                            @endif
+                                        </td>
                                         <td class="text-danger fw-bold">
                                             {{ number_format($inscription->montant_total - $inscription->montant_paye, 0, ',', ' ') }} FCFA
                                         </td>

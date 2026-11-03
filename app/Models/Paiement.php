@@ -13,6 +13,7 @@ class Paiement extends Model
     protected $fillable = [
         'inscription_id',
         'montant',
+        'remise',
         'date_paiement',
         'mode_paiement',
         'reference',
@@ -23,7 +24,8 @@ class Paiement extends Model
 
     protected $casts = [
         'date_paiement' => 'date',
-        'montant' => 'decimal:2'
+        'montant' => 'decimal:2',
+        'remise' => 'decimal:2'
     ];
 
     public function inscription()

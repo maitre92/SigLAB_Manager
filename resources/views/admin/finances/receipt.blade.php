@@ -271,8 +271,14 @@
                         <table class="summary-table">
                             <tr>
                                 <td class="text-muted">Total Formation</td>
-                                <td class="text-end fw-bold">{{ number_format($paiement->inscription->montant_total, 0, ',', ' ') }}</td>
+                                <td class="text-end fw-bold">{{ number_format($paiement->inscription->montant_brut, 0, ',', ' ') }}</td>
                             </tr>
+                            @if($paiement->inscription->montant_remise > 0)
+                            <tr>
+                                <td class="text-muted">Remise accordée</td>
+                                <td class="text-end fw-bold">- {{ number_format($paiement->inscription->montant_remise, 0, ',', ' ') }}</td>
+                            </tr>
+                            @endif
                             <tr>
                                 <td class="text-muted">Déjà payé</td>
                                 <td class="text-end fw-bold">{{ number_format($paiement->inscription->montant_paye - $paiement->montant, 0, ',', ' ') }}</td>

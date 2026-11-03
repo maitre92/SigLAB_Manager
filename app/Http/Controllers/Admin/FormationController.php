@@ -151,7 +151,10 @@ class FormationController extends Controller
 
             Inscription::where('formation_id', $formation->id)
                 ->whereNotIn('statut', ['terminee', 'annulee'])
-                ->update(['montant_total' => $newMontantTotal]);
+                ->get()
+                ->each(fn ($inscription) => $inscription->update([
+                    'montant_total' => max(0, $newMontantTotal - $inscription->montant_remise),
+                ]));
         }
 
         $formation->formateurs()->sync($this->buildFormateurSyncData($formateurIds, $pourcentages));

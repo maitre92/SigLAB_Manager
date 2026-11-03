@@ -17,6 +17,7 @@ class Inscription extends Model
         'date_inscription',
         'montant_total',
         'montant_paye',
+        'montant_remise',
         'statut',
         'notes',
         'created_by'
@@ -26,6 +27,7 @@ class Inscription extends Model
         'date_inscription' => 'date',
         'montant_total' => 'decimal:2',
         'montant_paye' => 'decimal:2',
+        'montant_remise' => 'decimal:2',
     ];
 
     public function apprenant()
@@ -56,5 +58,23 @@ class Inscription extends Model
     public function getResteAPayerAttribute()
     {
         return $this->montant_total - $this->montant_paye;
+    }
+
+    /**
+     * Prix de la formation avant remises (montant_total est le montant net dû).
+     */
+    public function getMontantBrutAttribute()
+    {
+        return $this->montant_total + $this->montant_remise;
+    }
+
+    public function ajusterRemise(float $variation): void
+    {
+        if ($variation == 0) {
+            return;
+        }
+
+        $this->decrement('montant_total', $variation);
+        $this->increment('montant_remise', $variation);
     }
 }

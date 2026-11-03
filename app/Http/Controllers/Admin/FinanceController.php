@@ -109,7 +109,8 @@ class FinanceController extends Controller
     {
         $request->validate([
             'inscription_id' => 'required|exists:inscriptions,id',
-            'montant' => 'required|numeric|min:1',
+            'montant' => 'required|numeric|min:0',
+            'remise' => 'nullable|numeric|min:0',
             'date_paiement' => 'required|date|before_or_equal:today',
             'mode_paiement' => 'required|string',
             'reference' => 'nullable|string',
@@ -132,16 +133,25 @@ class FinanceController extends Controller
                 ->withErrors(['montant' => "Cette inscription est déjà entièrement réglée."]);
         }
 
-        if ($request->montant > $reste) {
+        $remise = (float) ($request->remise ?? 0);
+
+        if ($request->montant + $remise <= 0) {
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['montant' => "Le montant saisi (" . number_format($request->montant, 0, ',', ' ') . " FCFA) dépasse le reste à payer (" . number_format($reste, 0, ',', ' ') . " FCFA)."]);
+                ->withErrors(['montant' => "Saisissez un montant ou une remise."]);
         }
 
-        DB::transaction(function () use ($request, $inscription) {
+        if ($request->montant + $remise > $reste) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['montant' => "Le montant saisi et la remise (" . number_format($request->montant + $remise, 0, ',', ' ') . " FCFA) dépassent le reste à payer (" . number_format($reste, 0, ',', ' ') . " FCFA)."]);
+        }
+
+        DB::transaction(function () use ($request, $inscription, $remise) {
             $paiement = Paiement::create([
                 'inscription_id' => $request->inscription_id,
                 'montant' => $request->montant,
+                'remise' => $remise,
                 'date_paiement' => $request->date_paiement,
                 'mode_paiement' => $request->mode_paiement,
                 'reference' => $request->reference,
@@ -152,9 +162,11 @@ class FinanceController extends Controller
 
             // Update inscription paid amount
             $inscription->increment('montant_paye', $request->montant);
+            $inscription->ajusterRemise($remise);
 
             // Automatically transition status from 'en_attente' to 'validee' upon payment
-            if ($inscription->statut === 'en_attente') {
+            // (une remise seule ne valide l'inscription que si elle la solde)
+            if ($inscription->statut === 'en_attente' && ($request->montant > 0 || $inscription->reste_a_payer <= 0)) {
                 $inscription->update(['statut' => 'validee']);
             }
         });
@@ -213,7 +225,8 @@ class FinanceController extends Controller
         }
 
         $request->validate([
-            'montant' => 'required|numeric|min:1',
+            'montant' => 'required|numeric|min:0',
+            'remise' => 'nullable|numeric|min:0',
             'date_paiement' => 'required|date|before_or_equal:today',
             'mode_paiement' => 'required|string',
             'reference' => 'nullable|string',
@@ -228,22 +241,32 @@ class FinanceController extends Controller
         }
 
         $other_payments_sum = $inscription->paiements()->where('id', '!=', $paiement->id)->sum('montant');
-        $reste = $inscription->montant_total - $other_payments_sum;
+        $remise = (float) ($request->remise ?? 0);
+        $ancienneRemise = (float) $paiement->remise;
+        $reste = $inscription->montant_total + $ancienneRemise - $other_payments_sum;
 
-        if ($request->montant > $reste) {
+        if ($request->montant + $remise <= 0) {
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['montant' => "Le montant saisi (" . number_format($request->montant, 0, ',', ' ') . " FCFA) dépasse le reste à payer (" . number_format($reste, 0, ',', ' ') . " FCFA)."]);
+                ->withErrors(['montant' => "Saisissez un montant ou une remise."]);
         }
 
-        DB::transaction(function () use ($request, $paiement, $inscription) {
+        if ($request->montant + $remise > $reste) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['montant' => "Le montant saisi et la remise (" . number_format($request->montant + $remise, 0, ',', ' ') . " FCFA) dépassent le reste à payer (" . number_format($reste, 0, ',', ' ') . " FCFA)."]);
+        }
+
+        DB::transaction(function () use ($request, $paiement, $inscription, $remise, $ancienneRemise) {
             // Ajuster le montant payé de l'inscription
             $diff = $request->montant - $paiement->montant;
             $inscription->increment('montant_paye', $diff);
+            $inscription->ajusterRemise($remise - $ancienneRemise);
 
             // Mettre à jour le paiement
             $paiement->update([
                 'montant' => $request->montant,
+                'remise' => $remise,
                 'date_paiement' => $request->date_paiement,
                 'mode_paiement' => $request->mode_paiement,
                 'reference' => $request->reference,
@@ -265,6 +288,7 @@ class FinanceController extends Controller
             
             // Déduire le montant du paiement de l'inscription
             $inscription->decrement('montant_paye', $paiement->montant);
+            $inscription->ajusterRemise(-(float) $paiement->remise);
 
             // Supprimer le paiement
             $paiement->delete();
@@ -297,7 +321,7 @@ class FinanceController extends Controller
             
             // Calculer le total des contrats uniquement sur les frais de formation
             $total_contrats_formation = $groupe->inscriptions->sum(function($ins) {
-                return $ins->formation->cout ?? 0;
+                return max(0, ($ins->formation->cout ?? 0) - $ins->montant_remise);
             });
             
             $formateurs = $groupe->formateurs->map(function($trainer) use ($groupe, $total_collecte_formation, $total_contrats_formation) {

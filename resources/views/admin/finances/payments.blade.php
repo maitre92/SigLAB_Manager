@@ -69,6 +69,10 @@
                             <span class="text-muted">Montant Déjà Payé :</span>
                             <span id="summary_paye" class="fw-bold text-success">0 FCFA</span>
                         </div>
+                        <div id="summary_remise_row" class="d-flex justify-content-between mb-2 small d-none">
+                            <span class="text-muted">Remises déjà accordées :</span>
+                            <span id="summary_remise" class="fw-bold text-dark">0 FCFA</span>
+                        </div>
                         <div class="d-flex justify-content-between mb-2 small">
                             <span class="text-muted">Statut Inscription :</span>
                             <span id="summary_status" class="badge">---</span>
@@ -87,7 +91,12 @@
                                 <i class="fas fa-coins me-1"></i> Tout payer
                             </button>
                         </div>
-                        <input type="number" id="montant_input" name="montant" class="form-control mt-1" placeholder="0" min="1" required disabled>
+                        <input type="number" id="montant_input" name="montant" class="form-control mt-1" placeholder="0" min="0" required disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold"><i class="fas fa-percent text-muted me-1"></i> Remise (FCFA) <span class="text-muted fw-normal">- facultatif</span></label>
+                        <input type="number" id="remise_input" name="remise" class="form-control" placeholder="0" min="0" disabled>
+                        <div id="reste_apres" class="small text-muted mt-2 d-none"></div>
                         <div id="montant_warning" class="text-danger small mt-2 d-none">
                             <i class="fas fa-exclamation-triangle me-1"></i> Le montant dépasse le reste à payer.
                         </div>
@@ -217,6 +226,9 @@
                                 </td>
                                 <td class="text-end fw-bold text-success">
                                     {{ number_format($p->montant, 0, ',', ' ') }} FCFA
+                                    @if($p->remise > 0)
+                                        <div class="text-muted fw-normal" style="font-size: 0.7rem;">Remise : {{ number_format($p->remise, 0, ',', ' ') }} FCFA</div>
+                                    @endif
                                 </td>
                                 <td class="text-end fw-bold text-dark">
                                     @if($p->inscription)
@@ -238,13 +250,14 @@
                                             <button type="button" class="btn btn-sm btn-outline-primary btn-edit-payment"
                                                     data-id="{{ $p->id }}"
                                                     data-montant="{{ (int)$p->montant }}"
+                                                    data-remise="{{ (int)$p->remise }}"
                                                     data-date_paiement="{{ $p->date_paiement->format('Y-m-d') }}"
                                                     data-mode_paiement="{{ $p->mode_paiement }}"
                                                     data-reference="{{ $p->reference }}"
                                                     data-notes="{{ $p->notes }}"
                                                     data-apprenant="{{ $p->inscription?->apprenant?->nom_complet ?? 'Apprenant' }}"
                                                     data-formation="{{ $p->inscription?->formation?->nom ?? 'Formation' }}"
-                                                    data-max_montant="{{ (int)($p->inscription->montant_total - ($p->inscription->montant_paye - $p->montant)) }}"
+                                                    data-max_montant="{{ (int)($p->inscription->montant_total + $p->remise - ($p->inscription->montant_paye - $p->montant)) }}"
                                                     title="Modifier">
                                                 <i class="fas fa-edit"></i>
                                             </button>
@@ -299,7 +312,11 @@
 
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Montant (FCFA)</label>
-                        <input type="number" name="montant" id="edit_montant" class="form-control" required min="1">
+                        <input type="number" name="montant" id="edit_montant" class="form-control" required min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Remise (FCFA)</label>
+                        <input type="number" name="remise" id="edit_remise" class="form-control" min="0">
                         <div id="edit_montant_warning" class="text-danger small mt-2 d-none">
                             <i class="fas fa-exclamation-triangle me-1"></i> Le montant dépasse le reste à payer.
                         </div>
@@ -353,12 +370,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const summaryPaye = document.getElementById('summary_paye');
     const summaryStatus = document.getElementById('summary_status');
     const summaryReste = document.getElementById('summary_reste');
+    const summaryRemiseRow = document.getElementById('summary_remise_row');
+    const summaryRemise = document.getElementById('summary_remise');
     const montantInput = document.getElementById('montant_input');
+    const remiseInput = document.getElementById('remise_input');
+    const resteApres = document.getElementById('reste_apres');
     const payAllBtn = document.getElementById('pay_all_btn');
     const montantWarning = document.getElementById('montant_warning');
-    const submitBtn = document.querySelector('form button[type="submit"]');
+    const submitBtn = montantInput.form.querySelector('button[type="submit"]');
 
     let selectedInscription = null;
+
+    function resetRemise() {
+        remiseInput.disabled = true;
+        remiseInput.value = '';
+        resteApres.classList.add('d-none');
+    }
 
     // Formater en monnaie FCFA
     function formatFCFA(value) {
@@ -374,6 +401,7 @@ document.addEventListener('DOMContentLoaded', function() {
         financialSummary.classList.add('d-none');
         montantInput.disabled = true;
         montantInput.value = '';
+        resetRemise();
         payAllBtn.classList.add('d-none');
         montantWarning.classList.add('d-none');
         submitBtn.disabled = false;
@@ -409,6 +437,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const insId = this.value;
         montantWarning.classList.add('d-none');
         submitBtn.disabled = false;
+        resetRemise();
 
         if (!insId) {
             financialSummary.classList.add('d-none');
@@ -425,10 +454,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (selectedInscription) {
             const total = parseFloat(selectedInscription.montant_total);
             const paye = parseFloat(selectedInscription.montant_paye);
+            const remise = parseFloat(selectedInscription.montant_remise) || 0;
             const reste = total - paye;
 
             // Mettre à jour le résumé financier
-            summaryTotal.textContent = formatFCFA(total);
+            summaryTotal.textContent = formatFCFA(total + remise);
+            summaryRemise.textContent = formatFCFA(remise);
+            summaryRemiseRow.classList.toggle('d-none', remise <= 0);
             summaryPaye.textContent = formatFCFA(paye);
             summaryReste.textContent = formatFCFA(reste);
 
@@ -469,8 +501,9 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 montantInput.disabled = false;
                 montantInput.max = reste;
-                montantInput.min = 1;
                 montantInput.value = '';
+                remiseInput.disabled = false;
+                remiseInput.max = reste;
                 
                 payAllBtn.classList.remove('d-none');
                 payAllBtn.title = `Régler le reste de ${formatFCFA(reste)}`;
@@ -483,39 +516,47 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         if (selectedInscription) {
             const reste = parseFloat(selectedInscription.montant_total) - parseFloat(selectedInscription.montant_paye);
-            montantInput.value = reste;
+            montantInput.value = Math.max(0, reste - (parseFloat(remiseInput.value) || 0));
             // Déclencher l'événement input pour la validation
             montantInput.dispatchEvent(new Event('input'));
         }
     });
 
-    // Validation dynamique du montant saisi
-    montantInput.addEventListener('input', function() {
+    // Validation dynamique du montant et de la remise
+    function validerMontants() {
         if (!selectedInscription) return;
 
-        const val = parseFloat(this.value) || 0;
+        const val = parseFloat(montantInput.value) || 0;
+        const remise = parseFloat(remiseInput.value) || 0;
         const reste = parseFloat(selectedInscription.montant_total) - parseFloat(selectedInscription.montant_paye);
 
-        if (val > reste) {
+        resteApres.classList.toggle('d-none', val + remise > reste || val + remise <= 0);
+        resteApres.textContent = `Reste à payer après cette opération : ${formatFCFA(reste - val - remise)}`;
+
+        if (val + remise > reste) {
             montantWarning.classList.remove('d-none');
             montantWarning.className = 'text-danger small mt-2';
-            montantWarning.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> Le montant saisi (${formatFCFA(val)}) dépasse le reste à payer (${formatFCFA(reste)}).`;
+            montantWarning.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> Le montant et la remise (${formatFCFA(val + remise)}) dépassent le reste à payer (${formatFCFA(reste)}).`;
             submitBtn.disabled = true;
-        } else if (val <= 0) {
+        } else if (val + remise <= 0) {
             montantWarning.classList.remove('d-none');
             montantWarning.className = 'text-danger small mt-2';
-            montantWarning.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> Le montant doit être supérieur à 0.`;
+            montantWarning.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> Saisissez un montant ou une remise.`;
             submitBtn.disabled = true;
         } else {
             montantWarning.classList.add('d-none');
             submitBtn.disabled = false;
         }
-    });
+    }
+
+    montantInput.addEventListener('input', validerMontants);
+    remiseInput.addEventListener('input', validerMontants);
 
     // Modal de modification
     const editModal = new bootstrap.Modal(document.getElementById('editPaymentModal'));
     const editForm = document.getElementById('editPaymentForm');
     const editMontant = document.getElementById('edit_montant');
+    const editRemise = document.getElementById('edit_remise');
     const editMontantWarning = document.getElementById('edit_montant_warning');
     const editSubmitBtn = document.getElementById('edit_submit_btn');
     let currentMaxMontant = 0;
@@ -536,6 +577,8 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit_info_formation').textContent = formation;
             editMontant.value = montant;
             editMontant.max = currentMaxMontant;
+            editRemise.value = this.dataset.remise;
+            editRemise.max = currentMaxMontant;
             document.getElementById('edit_date_paiement').value = date;
             document.getElementById('edit_mode_paiement').value = mode;
             document.getElementById('edit_reference').value = reference;
@@ -549,21 +592,25 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    editMontant.addEventListener('input', function() {
-        const val = parseFloat(this.value) || 0;
-        if (val > currentMaxMontant) {
+    function validerEdition() {
+        const val = parseFloat(editMontant.value) || 0;
+        const remise = parseFloat(editRemise.value) || 0;
+        if (val + remise > currentMaxMontant) {
             editMontantWarning.classList.remove('d-none');
-            editMontantWarning.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> Le montant saisi (${formatFCFA(val)}) dépasse le reste à payer maximum autorisé (${formatFCFA(currentMaxMontant)}).`;
+            editMontantWarning.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> Le montant et la remise (${formatFCFA(val + remise)}) dépassent le reste à payer maximum autorisé (${formatFCFA(currentMaxMontant)}).`;
             editSubmitBtn.disabled = true;
-        } else if (val <= 0) {
+        } else if (val + remise <= 0) {
             editMontantWarning.classList.remove('d-none');
-            editMontantWarning.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> Le montant doit être supérieur à 0.`;
+            editMontantWarning.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> Saisissez un montant ou une remise.`;
             editSubmitBtn.disabled = true;
         } else {
             editMontantWarning.classList.add('d-none');
             editSubmitBtn.disabled = false;
         }
-    });
+    }
+
+    editMontant.addEventListener('input', validerEdition);
+    editRemise.addEventListener('input', validerEdition);
 
     // Confirmation de suppression
     document.querySelectorAll('.btn-delete-payment').forEach(button => {
